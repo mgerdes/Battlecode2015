@@ -1,8 +1,6 @@
 package Navigation;
 
-import battlecode.common.Direction;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
+import battlecode.common.*;
 
 //--Version 0.1
 
@@ -11,6 +9,7 @@ public class Bug {
     private MapLocation destination;
     private RobotController rc;
     private boolean followingWall;
+    private Direction followDirection;
 
     public Bug(MapLocation destination, RobotController rc) {
         this.destination = destination;
@@ -22,6 +21,7 @@ public class Bug {
 
     public Direction getDirection() {
         if (!followingWall) {
+            rc.setIndicatorString(0, "direct");
             MapLocation current = rc.getLocation();
             Direction direct = current.directionTo(destination);
             if (rc.canMove(direct)) {
@@ -29,17 +29,21 @@ public class Bug {
             }
 
             followingWall = true;
-            return getTurnDirection(direct);
+            Direction turnDirection = getTurnDirection(direct);
+            rc.setIndicatorString(1, "turning");
+            followDirection = turnDirection;
+            return getTurnDirection(followDirection);
         }
 
-        return null;
+        rc.setIndicatorString(0, "following");
+        return followDirection;
     }
 
     private Direction getTurnDirection(Direction initial) {
         if (DEFAULT_LEFT) {
             Direction turn = initial.rotateLeft();
             while (!rc.canMove(turn)) {
-                turn.rotateLeft();
+                turn = turn.rotateLeft();
             }
 
             return turn;
@@ -47,7 +51,7 @@ public class Bug {
 
         Direction turn = initial.rotateRight();
         while (!rc.canMove(turn)) {
-            turn.rotateRight();
+            turn = turn.rotateRight();
         }
 
         return turn;
