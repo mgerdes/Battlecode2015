@@ -17,10 +17,14 @@ public class Bug {
         this.rc = rc;
     }
 
-    //--This method returns a navigable direction that
+    //--Returns a navigable direction that
     //- leads (eventually) to the destination
     public Direction getDirection() {
         MapLocation currentLocation = rc.getLocation();
+        return getDirection(currentLocation);
+    }
+
+    public Direction getDirection(MapLocation currentLocation) {
         if (followingWall) {
             return getDirectionFollowingWall(currentLocation);
         }
