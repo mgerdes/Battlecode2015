@@ -2,14 +2,15 @@ package Navigation;
 
 import battlecode.common.*;
 
-//--Version 0.1
+//--Version 1.0
 
 public class Bug {
     private static final boolean DEFAULT_LEFT = true;
     private MapLocation destination;
     private RobotController rc;
     private boolean followingWall;
-    private Direction followDirection;
+    private Direction previousDirection;
+    private int distanceStartBugging;
 
     public Bug(MapLocation destination, RobotController rc) {
         this.destination = destination;
@@ -17,26 +18,51 @@ public class Bug {
     }
 
     //--This method returns a navigable direction that
-    //- leads to the destination
-
+    //- leads (eventually) to the destination
     public Direction getDirection() {
-        if (!followingWall) {
-            rc.setIndicatorString(0, "direct");
-            MapLocation current = rc.getLocation();
-            Direction direct = current.directionTo(destination);
-            if (rc.canMove(direct)) {
-                return direct;
-            }
-
-            followingWall = true;
-            Direction turnDirection = getTurnDirection(direct);
-            rc.setIndicatorString(1, "turning");
-            followDirection = turnDirection;
-            return getTurnDirection(followDirection);
+        MapLocation currentLocation = rc.getLocation();
+        if (followingWall) {
+            return getDirectionFollowingWall(currentLocation);
         }
 
-        rc.setIndicatorString(0, "following");
+        return getDirectionNotFollowingWall(currentLocation);
+    }
+
+    private Direction getDirectionFollowingWall(MapLocation currentLocation) {
+        if (currentLocation.distanceSquaredTo(destination) < distanceStartBugging) {
+            followingWall = false;
+            return getDirectionNotFollowingWall(currentLocation);
+        }
+
+        Direction followDirection = getFollowDirection(previousDirection);
+        previousDirection = followDirection;
         return followDirection;
+    }
+
+    private Direction getDirectionNotFollowingWall(MapLocation currentLocation) {
+        Direction direct = currentLocation.directionTo(destination);
+        if (rc.canMove(direct)) {
+            return direct;
+        }
+
+        followingWall = true;
+        distanceStartBugging = currentLocation.distanceSquaredTo(destination);
+
+        Direction turnDirection = getTurnDirection(direct);
+        previousDirection = turnDirection;
+        return turnDirection;
+    }
+
+    //--We turn the opposite way because we may need
+    //- to round the corner
+    private Direction getFollowDirection(Direction initial) {
+        if (DEFAULT_LEFT) {
+            //--TODO: optimize
+            return getTurnDirection(initial.rotateRight().rotateRight().rotateRight());
+        }
+
+        //--TODO: optimize
+        return getTurnDirection(initial.rotateLeft().rotateLeft().rotateLeft());
     }
 
     private Direction getTurnDirection(Direction initial) {

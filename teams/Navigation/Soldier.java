@@ -1,13 +1,12 @@
 package Navigation;
 
-import battlecode.common.Direction;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
+import battlecode.common.*;
 
+//--This is a dumb soldier used to test the bug nav
 public class Soldier {
     private RobotController rc;
     private Bug bugNav;
-    private static final MapLocation TEST_DESTINATION = new MapLocation(24, 9);
+    private static final MapLocation TEST_DESTINATION = new MapLocation(19, 20);
 
     public Soldier(RobotController rc) {
         this.rc = rc;
