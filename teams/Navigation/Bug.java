@@ -40,6 +40,7 @@ public class Bug {
 
         Direction followDirection = getFollowDirection(previousDirection);
         previousDirection = followDirection;
+        rc.setIndicatorString(0, previousDirection.toString());
         return followDirection;
     }
 
@@ -54,36 +55,44 @@ public class Bug {
 
         Direction turnDirection = getTurnDirection(direct);
         previousDirection = turnDirection;
+        rc.setIndicatorString(0, previousDirection.toString());
         return turnDirection;
     }
 
     //--We turn the opposite way because we may need
     //- to round the corner
     private Direction getFollowDirection(Direction initial) {
+        //--TODO: optimize the double turn
         if (DEFAULT_LEFT) {
-            //--TODO: optimize
-            return getTurnDirection(initial.rotateRight().rotateRight().rotateRight());
+            return rotateLeftUntilCanMove(initial.rotateRight().rotateRight());
         }
 
-        //--TODO: optimize
-        return getTurnDirection(initial.rotateLeft().rotateLeft().rotateLeft());
+        return rotateRightUntilCanMove(initial.rotateLeft().rotateLeft());
     }
 
     private Direction getTurnDirection(Direction initial) {
         if (DEFAULT_LEFT) {
             Direction turn = initial.rotateLeft();
-            while (!rc.canMove(turn)) {
-                turn = turn.rotateLeft();
-            }
-
-            return turn;
+            return rotateLeftUntilCanMove(turn);
         }
 
         Direction turn = initial.rotateRight();
-        while (!rc.canMove(turn)) {
-            turn = turn.rotateRight();
+        return rotateRightUntilCanMove(turn);
+    }
+
+    private Direction rotateLeftUntilCanMove(Direction direction) {
+        while (!rc.canMove(direction)) {
+            direction = direction.rotateLeft();
         }
 
-        return turn;
+        return direction;
+    }
+
+    private Direction rotateRightUntilCanMove(Direction direction) {
+        while (!rc.canMove(direction)) {
+            direction = direction.rotateRight();
+        }
+
+        return direction;
     }
 }
