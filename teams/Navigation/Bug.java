@@ -6,25 +6,26 @@ import battlecode.common.*;
 
 public class Bug {
     private static final boolean DEFAULT_LEFT = true;
-    private MapLocation destination;
-    private RobotController rc;
-    private boolean followingWall;
-    private Direction previousDirection;
-    private int distanceStartBugging;
 
-    public Bug(MapLocation destination, RobotController rc) {
-        this.destination = destination;
-        this.rc = rc;
+    private static MapLocation destination;
+    private static RobotController rc;
+    private static boolean followingWall;
+    private static Direction previousDirection;
+    private static int distanceStartBugging;
+
+    public static void init(MapLocation destinationC, RobotController rcC) {
+        destination = destinationC;
+        rc = rcC;
     }
 
     //--Returns a navigable direction that
     //- leads (eventually) to the destination
-    public Direction getDirection() {
+    public static Direction getDirection() {
         MapLocation currentLocation = rc.getLocation();
         return getDirection(currentLocation);
     }
 
-    public Direction getDirection(MapLocation currentLocation) {
+    public static Direction getDirection(MapLocation currentLocation) {
         if (followingWall) {
             return getDirectionFollowingWall(currentLocation);
         }
@@ -32,7 +33,7 @@ public class Bug {
         return getDirectionNotFollowingWall(currentLocation);
     }
 
-    private Direction getDirectionFollowingWall(MapLocation currentLocation) {
+    private static Direction getDirectionFollowingWall(MapLocation currentLocation) {
         if (currentLocation.distanceSquaredTo(destination) < distanceStartBugging) {
             followingWall = false;
             return getDirectionNotFollowingWall(currentLocation);
@@ -44,7 +45,7 @@ public class Bug {
         return followDirection;
     }
 
-    private Direction getDirectionNotFollowingWall(MapLocation currentLocation) {
+    private static Direction getDirectionNotFollowingWall(MapLocation currentLocation) {
         Direction direct = currentLocation.directionTo(destination);
         if (rc.canMove(direct)) {
             return direct;
@@ -61,7 +62,7 @@ public class Bug {
 
     //--We turn the opposite way because we may need
     //- to round the corner
-    private Direction getFollowDirection(Direction initial) {
+    private static Direction getFollowDirection(Direction initial) {
         //--TODO: optimize the double turn
         if (DEFAULT_LEFT) {
             return rotateLeftUntilCanMove(initial.rotateRight().rotateRight());
@@ -70,7 +71,7 @@ public class Bug {
         return rotateRightUntilCanMove(initial.rotateLeft().rotateLeft());
     }
 
-    private Direction getTurnDirection(Direction initial) {
+    private static Direction getTurnDirection(Direction initial) {
         if (DEFAULT_LEFT) {
             Direction turn = initial.rotateLeft();
             return rotateLeftUntilCanMove(turn);
@@ -80,7 +81,7 @@ public class Bug {
         return rotateRightUntilCanMove(turn);
     }
 
-    private Direction rotateLeftUntilCanMove(Direction direction) {
+    private static Direction rotateLeftUntilCanMove(Direction direction) {
         while (!rc.canMove(direction)) {
             direction = direction.rotateLeft();
         }
@@ -88,7 +89,7 @@ public class Bug {
         return direction;
     }
 
-    private Direction rotateRightUntilCanMove(Direction direction) {
+    private static Direction rotateRightUntilCanMove(Direction direction) {
         while (!rc.canMove(direction)) {
             direction = direction.rotateRight();
         }

@@ -4,20 +4,19 @@ import battlecode.common.*;
 
 //--This is a dumb soldier used to test the bug nav
 public class Soldier {
-    private RobotController rc;
-    private Bug bugNav;
+    private static RobotController rc;
     private static final MapLocation TEST_DESTINATION = new MapLocation(19, 20);
 
-    public Soldier(RobotController rc) {
-        this.rc = rc;
+    public static void init(RobotController rcC) {
+        rc = rcC;
     }
 
-    public void run() {
-        Bug bugNav = new Bug(TEST_DESTINATION, rc);
+    public static void run() {
+        Bug.init(TEST_DESTINATION, rc);
         while (true) {
             try {
                 if (rc.isActive()) {
-                    Direction d = bugNav.getDirection();
+                    Direction d = Bug.getDirection();
                     rc.move(d);
                 }
 
