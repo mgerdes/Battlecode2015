@@ -23,19 +23,40 @@ public class LookaheadBug {
     public static Direction getDirection(int lookahead) {
         MapLocation currentLocation = rc.getLocation();
         if (followingWall) {
+            rc.setIndicatorString(0, "following wall");
             return getDirectionFollowingWall(currentLocation);
         }
 
+        rc.setIndicatorString(0, "not following wall");
         return getDirectionNotFollowingWall(currentLocation, lookahead);
     }
 
     private static Direction getDirectionFollowingWall(MapLocation currentLocation) {
-        return null;
+        int currentDistance = currentLocation.distanceSquaredTo(destination);
+        rc.setIndicatorString(1, "current distance" + currentDistance);
+        if (currentDistance < distanceStartBugging) {
+            followingWall = false;
+        }
+
+        overallDirection = getFollowDirection(overallDirection);
+        return overallDirection;
+    }
+
+    private static Direction getFollowDirection(Direction initial) {
+        //TODO: use DEFAULT_DIRECTION so that left and right are supported
+        Direction turn = initial.rotateRight().rotateRight();
+
+        while (!rc.canMove(turn)) {
+            turn = turn.rotateLeft();
+        }
+
+        return turn;
     }
 
     private static Direction getDirectionNotFollowingWall(MapLocation currentLocation, int lookahead) {
 		//--Get direction to destination. This is our overall direction.
         overallDirection = currentLocation.directionTo(destination);
+
         MapLocation location = currentLocation;
 
 		//--Follow the path in that direction
@@ -43,13 +64,13 @@ public class LookaheadBug {
 		Direction other = null;
 		for (int i = 0; i < lookahead; i++) {
 			other = getDirection(location, overallDirection);
-            rc.setIndicatorString(i, other.toString());
-			
+
 			if (other != overallDirection) {
 				//--If this is our first step, we have hit a wall
 				if (i == 0) {
 					followingWall = true;
 					distanceStartBugging = currentLocation.distanceSquaredTo(destination);
+                    rc.setIndicatorString(2, "bug distance" + distanceStartBugging);
                     overallDirection = other;
 					return other;
 				}
