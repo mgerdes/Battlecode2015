@@ -34,6 +34,7 @@ public class LookaheadBug {
     private static Direction getDirectionFollowingWall(MapLocation currentLocation) {
         int currentDistance = currentLocation.distanceSquaredTo(destination);
         rc.setIndicatorString(1, "current distance" + currentDistance);
+
         if (currentDistance < distanceStartBugging) {
             followingWall = false;
         }
@@ -54,48 +55,48 @@ public class LookaheadBug {
     }
 
     private static Direction getDirectionNotFollowingWall(MapLocation currentLocation, int lookahead) {
-		//--Get direction to destination. This is our overall direction.
+        //--Get direction to destination. This is our overall direction.
         overallDirection = currentLocation.directionTo(destination);
+        Direction other = getDirection(currentLocation, overallDirection);
 
-        MapLocation location = currentLocation;
+        if (other != overallDirection) {
+            //--We have hit a wall
+            followingWall = true;
+            distanceStartBugging = currentLocation.distanceSquaredTo(destination);
+            rc.setIndicatorString(2, "bug distance" + distanceStartBugging);
+            overallDirection = other;
+            return other;
+        }
 
-		//--Follow the path in that direction
-		//  until we reach an obstacle or we go all lookahead steps.
-		Direction other = null;
-		for (int i = 0; i < lookahead; i++) {
-			other = getDirection(location, overallDirection);
+        MapLocation location = currentLocation.add(other);
 
-			if (other != overallDirection) {
-				//--If this is our first step, we have hit a wall
-				if (i == 0) {
-					followingWall = true;
-					distanceStartBugging = currentLocation.distanceSquaredTo(destination);
-                    rc.setIndicatorString(2, "bug distance" + distanceStartBugging);
-                    overallDirection = other;
-					return other;
-				}
+        //--Follow the path in that direction
+        //  until we reach an obstacle or we go all lookahead steps.
+        for (int i = 1; i < lookahead; i++) {
+            other = getDirection(location, overallDirection);
 
-				//--If turn direction is 90 degrees from the overall direction,
-				//  go in the diagonal direction
-				if (other == overallDirection.rotateLeft().rotateLeft()) {
-					return overallDirection.rotateLeft();
-				}
-			}
+            if (other != overallDirection) {
+                //--If turn direction is 90 degrees from the overall direction,
+                //  go in the diagonal direction
+                if (other == overallDirection.rotateLeft().rotateLeft()) {
+                    return overallDirection.rotateLeft();
+                }
+            }
 
             location = location.add(other);
-		}
+        }
 
-		//--We looked ahead and have seen no obstacles. Press on.
-		return overallDirection;
+        //--We looked ahead and have seen no obstacles. Press on.
+        return overallDirection;
     }
 
-	private static Direction getDirection(MapLocation location, Direction direction) {
+    private static Direction getDirection(MapLocation location, Direction direction) {
         if (CachedMap.isNavigable(location, direction)) {
             return direction;
         }
 
         return getTurnDirection(location, direction);
-	}
+    }
 
     private static Direction getTurnDirection(MapLocation location, Direction initial) {
         if (DEFAULT_LEFT) {
