@@ -3,9 +3,8 @@ package Navigation;
 import battlecode.common.*;
 
 public class CachedMap {
-    static RobotController rc;
-
-    static TerrainTile[][] map;
+    private static RobotController rc;
+    private static TerrainTile[][] map;
 
     public static void init(RobotController rcC) {
         rc = rcC;
