@@ -42,7 +42,7 @@ public class LookaheadBug {
 
     private static Direction getDirectionWithLookahead(MapLocation currentLocation, int lookahead) {
         //--Get direction to destination. This is our overall direction.
-        Direction other = getDirection(currentLocation, overallDirection);
+        Direction other = getDirectionFromHere(currentLocation, overallDirection);
 
         if (other != overallDirection) {
             //--We have hit a wall
@@ -57,7 +57,7 @@ public class LookaheadBug {
         //--Follow the path in that direction
         //  until we reach an obstacle or we go all lookahead steps.
         for (int i = 1; i < lookahead; i++) {
-            other = getDirection(location, overallDirection);
+            other = getDirectionFromHere(location, overallDirection);
 
             if (other != overallDirection) {
                 //--If turn direction is 90 degrees from the overall direction,
@@ -108,37 +108,25 @@ public class LookaheadBug {
         return null;
     }
 
-    private static Direction getDirection(MapLocation location, Direction direction) {
+    private static Direction getDirectionFromHere(MapLocation location, Direction direction) {
         if (CachedMap.isNavigable(location, direction)) {
             return direction;
         }
 
-        return getTurnDirection(location, direction);
-    }
-
-    private static Direction getTurnDirection(MapLocation location, Direction initial) {
         if (DEFAULT_LEFT) {
-            Direction turn = initial.rotateLeft();
-            return rotateLeftUntilNoWall(location, turn);
+            Direction turn = direction.rotateLeft();
+            while (!CachedMap.isNavigable(location, turn)) {
+                turn = turn.rotateLeft();
+            }
+
+            return turn;
         }
 
-        Direction turn = initial.rotateRight();
-        return rotateRightUntilNoWall(location, turn);
-    }
-
-    private static Direction rotateLeftUntilNoWall(MapLocation location, Direction direction) {
-        while (!CachedMap.isNavigable(location, direction)) {
-            direction = direction.rotateLeft();
+        Direction turn = direction.rotateRight();
+        while (!CachedMap.isNavigable(location, turn)) {
+            turn = turn.rotateRight();
         }
 
-        return direction;
-    }
-
-    private static Direction rotateRightUntilNoWall(MapLocation location, Direction direction) {
-        while (!CachedMap.isNavigable(location, direction)) {
-            direction = direction.rotateRight();
-        }
-
-        return direction;
+        return turn;
     }
 }
