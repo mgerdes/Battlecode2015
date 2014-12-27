@@ -8,6 +8,7 @@ public class LookaheadBug {
     private static MapLocation destination;
     private static RobotController rc;
     private static boolean followingWall;
+    private static boolean onWallEdge;
     private static Direction overallDirection;
     private static int distanceStartBugging;
 
@@ -48,6 +49,7 @@ public class LookaheadBug {
                 followingWall = true;
             }
 
+            onWallEdge = true;
             overallDirection = other;
 
             return other;
@@ -55,14 +57,16 @@ public class LookaheadBug {
 
         //--Follow the path in that direction
         //  until we reach an obstacle or we go all lookahead steps.
+        MapLocation location = currentLocation;
         for (int i = 0; i < lookahead; i++) {
-            MapLocation location = currentLocation.add(other);
+            location = location.add(other);
             other = getDirectionFrom(location, overallDirection);
 
             if (other != overallDirection) {
                 //--If turn direction is 90 degrees from the overall direction,
                 //  go in the diagonal direction
                 if (other == overallDirection.rotateLeft().rotateLeft()) {
+                    onWallEdge = false;
                     return overallDirection.rotateLeft();
                 }
             }
@@ -80,10 +84,12 @@ public class LookaheadBug {
             return getDirectionWithLookahead(currentLocation, lookahead);
         }
 
-        //--Try to round the corner
-        Direction checkDirection = getCheckDirection(overallDirection);
-        if (checkDirection != null) {
-            return checkDirection;
+        //--Try to round the corner if we are on wall edge
+        if (onWallEdge) {
+            Direction checkDirection = getCheckDirection(overallDirection);
+            if (checkDirection != null) {
+                return checkDirection;
+            }
         }
 
         return getDirectionWithLookahead(currentLocation, lookahead);
