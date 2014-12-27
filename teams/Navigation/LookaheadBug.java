@@ -29,6 +29,8 @@ public class LookaheadBug {
         }
         else {
             overallDirection = currentLocation.directionTo(destination);
+            Debug.setIndicatorString(String.format("overall (31): %s", overallDirection), rc);
+
             direction = getDirectionWithLookahead(currentLocation, lookahead);
         }
 
@@ -81,6 +83,7 @@ public class LookaheadBug {
 
         if (currentDistance < distanceStartBugging) {
             followingWall = false;
+            Debug.setIndicatorString("not following wall", rc);
             return getDirectionWithLookahead(currentLocation, lookahead);
         }
 
@@ -102,7 +105,6 @@ public class LookaheadBug {
             overallDirection = turn;
             return turn;
         }
-
 
         turn = turn.rotateLeft();
         if (rc.canMove(turn)) {
