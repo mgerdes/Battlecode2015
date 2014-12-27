@@ -21,34 +21,29 @@ public class LookaheadBug {
 
     //--Returns a navigable direction that leads (eventually) to the destination
     public static Direction getDirection(int lookahead) {
+        Debug.setIndicatorString(String.format("following: %s, on wall: %s", followingWall, onWallEdge), rc);
         MapLocation currentLocation = rc.getLocation();
-
-        Direction direction;
         if (followingWall) {
-            direction = getDirectionFollowingWall(currentLocation, lookahead);
+            return getDirectionFollowingWall(currentLocation, lookahead);
+        } else {
+            return getDirectionWithLookahead(currentLocation, lookahead);
         }
-        else {
-            overallDirection = currentLocation.directionTo(destination);
-            Debug.setIndicatorString(String.format("overall (31): %s", overallDirection), rc);
-
-            direction = getDirectionWithLookahead(currentLocation, lookahead);
-        }
-
-        if (rc.canMove(direction)) {
-            return direction;
-        }
-
-        return null;
     }
 
     private static Direction getDirectionWithLookahead(MapLocation currentLocation, int lookahead) {
+        if (!followingWall) {
+            overallDirection = currentLocation.directionTo(destination);
+        }
+
         Direction other = getDirectionFromHere(overallDirection);
 
         if (other != overallDirection) {
+            Debug.setIndicatorString(String.format("overall is %s, other is %s", overallDirection, other), rc);
             //--We have hit a wall
             if (!followingWall) {
                 distanceStartBugging = currentLocation.distanceSquaredTo(destination);
                 followingWall = true;
+                Debug.setIndicatorString("following wall", rc);
             }
 
             onWallEdge = true;
@@ -64,21 +59,16 @@ public class LookaheadBug {
             location = location.add(other);
             other = getDirectionFrom(location, overallDirection);
 
-            Debug.setIndicatorString(String.format("other %s overall %s lookahead %d", other, overallDirection, i), rc);
-
             if (other != overallDirection) {
+                Debug.setIndicatorString(String.format("overall is %s, other is %s", overallDirection, other), rc);
                 //--If turn direction is 90 degrees from the overall direction,
                 //  go in the diagonal direction
                 if (other == overallDirection.rotateLeft().rotateLeft()) {
-                    onWallEdge = false;
-                    return overallDirection.rotateLeft();
-                }
-
-                Direction backtrack = overallDirection.rotateLeft().rotateLeft().rotateLeft().rotateLeft();
-                if (other == backtrack) {
-                    overallDirection = backtrack;
-                    onWallEdge = true;
-                    return backtrack;
+                    Direction diagonal = overallDirection.rotateLeft();
+                    if (rc.canMove(diagonal)) {
+                        onWallEdge = false;
+                        return diagonal;
+                    }
                 }
             }
         }

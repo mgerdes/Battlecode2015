@@ -16,11 +16,7 @@ public class Soldier {
         while (true) {
             try {
                 if (rc.isActive()) {
-                    Direction d = LookaheadBug.getDirection(3);
-                    if (d != null) {
-                        //--TODO: should the method return null?
-                        rc.move(d);
-                    }
+                    rc.move(LookaheadBug.getDirection(3));
                 }
 
                 rc.yield();
