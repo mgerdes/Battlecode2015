@@ -64,12 +64,21 @@ public class LookaheadBug {
             location = location.add(other);
             other = getDirectionFrom(location, overallDirection);
 
+            Debug.setIndicatorString(String.format("other %s overall %s lookahead %d", other, overallDirection, i), rc);
+
             if (other != overallDirection) {
                 //--If turn direction is 90 degrees from the overall direction,
                 //  go in the diagonal direction
                 if (other == overallDirection.rotateLeft().rotateLeft()) {
                     onWallEdge = false;
                     return overallDirection.rotateLeft();
+                }
+
+                Direction backtrack = overallDirection.rotateLeft().rotateLeft().rotateLeft().rotateLeft();
+                if (other == backtrack) {
+                    overallDirection = backtrack;
+                    onWallEdge = true;
+                    return backtrack;
                 }
             }
         }
