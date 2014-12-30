@@ -21,7 +21,6 @@ public class LookaheadBug {
     //--Returns a navigable direction that leads (eventually) to the destination
     //--Looks ahead one square and optimizes a 90 degree turn to a diagonal
     public static Direction getDirection() {
-        Debug.setIndicatorString(String.format("following: %s", followingWall), rc);
         MapLocation currentLocation = rc.getLocation();
         if (followingWall) {
             return getDirectionFollowingWall(currentLocation);
@@ -35,39 +34,38 @@ public class LookaheadBug {
             overallDirection = currentLocation.directionTo(destination);
         }
 
-        Direction other = getDirectionFromHere(overallDirection);
-
-        if (other != overallDirection) {
-            Debug.setIndicatorString(String.format("overall is %s, other is %s", overallDirection, other), rc);
+        Direction firstDirection;
+        if (rc.canMove(overallDirection)) {
+            firstDirection = overallDirection;
+        } else {
             //--We have hit a wall
+            Direction other = getTurnDirectionFromHere(overallDirection);
             if (!followingWall) {
                 distanceStartBugging = currentLocation.distanceSquaredTo(destination);
                 followingWall = true;
-                Debug.setIndicatorString("following wall", rc);
             }
 
             overallDirection = other;
-            return other;
+            firstDirection = other;
         }
 
         //--Get direction for next move and do diagonal if possible
         MapLocation location = currentLocation.add(overallDirection);
-        other = getDirectionFrom(location, overallDirection);
+        Direction secondDirection = getDirectionFrom(location, firstDirection);
 
-        if (other != overallDirection) {
-            Debug.setIndicatorString(String.format("lookahead: overall is %s, other is %s", overallDirection, other), rc);
-            //--If turn direction is 90 degrees from the overall direction,
-            //  go in the diagonal direction
-            if (other == overallDirection.rotateLeft().rotateLeft()) {
-                Direction diagonal = overallDirection.rotateLeft();
-                if (rc.canMove(diagonal)) {
-                    overallDirection = other;
-                    return diagonal;
-                }
+        if (firstDirection == secondDirection) {
+            return firstDirection;
+        }
+
+        if (secondDirection == firstDirection.rotateLeft().rotateLeft()) {
+            Direction diagonal = firstDirection.rotateLeft();
+            if (rc.canMove(diagonal)) {
+                overallDirection = secondDirection;
+                return diagonal;
             }
         }
 
-        return overallDirection;
+        return firstDirection;
     }
 
     private static Direction getDirectionFollowingWall(MapLocation currentLocation) {
@@ -105,11 +103,7 @@ public class LookaheadBug {
         return null;
     }
 
-    private static Direction getDirectionFromHere(Direction direction) {
-        if (rc.canMove(direction)) {
-            return direction;
-        }
-
+    private static Direction getTurnDirectionFromHere(Direction direction) {
         if (DEFAULT_LEFT) {
             Direction turn = direction.rotateLeft();
             while (!rc.canMove(turn)) {
