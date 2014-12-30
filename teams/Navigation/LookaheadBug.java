@@ -8,7 +8,6 @@ public class LookaheadBug {
     private static MapLocation destination;
     private static RobotController rc;
     private static boolean followingWall;
-    private static boolean onWallEdge;
     private static Direction overallDirection;
     private static int distanceStartBugging;
 
@@ -22,7 +21,7 @@ public class LookaheadBug {
     //--Returns a navigable direction that leads (eventually) to the destination
     //--Looks ahead one square and optimizes a 90 degree turn to a diagonal
     public static Direction getDirection() {
-        Debug.setIndicatorString(String.format("following: %s, on wall: %s", followingWall, onWallEdge), rc);
+        Debug.setIndicatorString(String.format("following: %s", followingWall), rc);
         MapLocation currentLocation = rc.getLocation();
         if (followingWall) {
             return getDirectionFollowingWall(currentLocation);
@@ -47,25 +46,22 @@ public class LookaheadBug {
                 Debug.setIndicatorString("following wall", rc);
             }
 
-            onWallEdge = true;
             overallDirection = other;
-
             return other;
         }
 
-        //--Follow the path in that direction
-        //  until we reach an obstacle or we go all lookahead steps.
+        //--Get direction for next move and do diagonal if possible
         MapLocation location = currentLocation.add(overallDirection);
         other = getDirectionFrom(location, overallDirection);
 
         if (other != overallDirection) {
-            Debug.setIndicatorString(String.format("overall is %s, other is %s", overallDirection, other), rc);
+            Debug.setIndicatorString(String.format("lookahead: overall is %s, other is %s", overallDirection, other), rc);
             //--If turn direction is 90 degrees from the overall direction,
             //  go in the diagonal direction
             if (other == overallDirection.rotateLeft().rotateLeft()) {
                 Direction diagonal = overallDirection.rotateLeft();
                 if (rc.canMove(diagonal)) {
-                    onWallEdge = false;
+                    overallDirection = other;
                     return diagonal;
                 }
             }
@@ -84,11 +80,9 @@ public class LookaheadBug {
         }
 
         //--Try to round the corner if we are on wall edge
-        if (onWallEdge) {
-            Direction checkDirection = getCheckDirection(overallDirection);
-            if (checkDirection != null) {
-                return checkDirection;
-            }
+        Direction checkDirection = getCheckDirection(overallDirection);
+        if (checkDirection != null) {
+            return checkDirection;
         }
 
         return getDirectionWithLookahead(currentLocation);
@@ -133,13 +127,17 @@ public class LookaheadBug {
         return turn;
     }
 
+    //--Returns the next direction given a location and an orientation
     private static Direction getDirectionFrom(MapLocation location, Direction direction) {
-        if (CachedMap.isNavigable(location, direction)) {
-            return direction;
-        }
+        //--If we are following wall, we first try to round the corner
+        //  Then, continue to turn in the turn direction
+        Direction turn = direction;
 
         if (DEFAULT_LEFT) {
-            Direction turn = direction.rotateLeft();
+            if (followingWall) {
+                turn = direction.rotateRight().rotateRight();
+            }
+
             while (!CachedMap.isNavigable(location, turn)) {
                 turn = turn.rotateLeft();
             }
@@ -147,7 +145,10 @@ public class LookaheadBug {
             return turn;
         }
 
-        Direction turn = direction.rotateRight();
+        if (followingWall) {
+            turn = direction.rotateLeft().rotateLeft();
+        }
+
         while (!CachedMap.isNavigable(location, turn)) {
             turn = turn.rotateRight();
         }
