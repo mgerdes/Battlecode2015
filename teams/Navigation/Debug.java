@@ -1,4 +1,4 @@
-package Navigation;
+package navigation;
 
 import battlecode.common.Clock;
 import battlecode.common.RobotController;

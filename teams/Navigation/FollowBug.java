@@ -1,4 +1,4 @@
-package Navigation;
+package navigation;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
