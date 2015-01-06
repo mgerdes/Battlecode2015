@@ -13,16 +13,18 @@ public class JobsQueue {
 
 	static RobotController rc = RobotPlayer.rc; 
 
+	static RobotType[] robotTypes = RobotType.values();
+
 	public static void init() throws GameActionException {
 		rc.broadcast(LENGTH_CHANNEL, 0);
 		rc.broadcast(HEAD_POS_CHANNEL, START_POS);
 		rc.broadcast(TAIL_POS_CHANNEL, START_POS);
 	}
 
-	public static void addJob(int robotTypeRequired, int robotTypeToCreate, int cost) throws GameActionException {
+	public static void addJob(int robotTypeRequired, int robotTypeToCreate) throws GameActionException {
 		int headPos = getHeadPos();
 		// XXYYZZZZ - XX = robotTypeRequired, YY = robotTypeToBeCreated, ZZZZ = cost
-		int whatToBroadcast = robotTypeRequired * 1000000 + robotTypeToCreate * 10000 + cost ;
+		int whatToBroadcast = robotTypeRequired * 1000 + robotTypeToCreate;
 		rc.broadcast(headPos, whatToBroadcast);
 		updateHeadPos(headPos + 1);
 		increaseLength();
@@ -39,7 +41,8 @@ public class JobsQueue {
 		if (length() > 0) {
 			int job = getCurrentJob();
 			int typeRequired = getTypeRequired(job);
-			int cost = getCost(job);
+			int typeToCreate = getTypeToCreate(job);
+			int cost = robotTypes[typeToCreate].oreCost;
 
 			if (rc.getType().ordinal() == typeRequired && rc.getTeamOre() > cost) {
 				return true;
@@ -56,15 +59,11 @@ public class JobsQueue {
 	}
 
 	public static int getTypeRequired(int job) throws GameActionException {
-		return job / 1000000;
+		return job / 1000;
 	}
 
 	public static int getTypeToCreate(int job) throws GameActionException {
-		return (job % 1000000) / 10000;
-	}
-
-	public static int getCost(int job) throws GameActionException {
-		return job % 10000;
+		return job % 1000;
 	}
 
 	public static int getHeadPos() throws GameActionException {

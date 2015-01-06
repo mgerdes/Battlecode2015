@@ -11,9 +11,9 @@ public class HQ {
 		try {
 			JobsQueue.init();
 			for (int i = 0; i < 5; i++) {
-				JobsQueue.addJob(RobotType.HQ.ordinal(), RobotType.BEAVER.ordinal(), RobotType.BEAVER.oreCost); 	
+				JobsQueue.addJob(RobotType.HQ.ordinal(), RobotType.BEAVER.ordinal()); 	
 			}
-			JobsQueue.addJob(RobotType.BEAVER.ordinal(), RobotType.BARRACKS.ordinal(), RobotType.BARRACKS.oreCost);
+			JobsQueue.addJob(RobotType.BEAVER.ordinal(), RobotType.BARRACKS.ordinal());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
