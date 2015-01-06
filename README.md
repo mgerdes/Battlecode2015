@@ -12,8 +12,13 @@ Micro Strategy Ideas
 * Use robots with greater range than enemy and quickly move away after attacking
 * Avoid clustering when facing enemy weapons that have proximity damage
 * Find optimal mixes of robots to minimize weaknesses
+* Attack the enemy robot that will die first (lower HP, less armor, etc...)
 
 Small map vs big map
 --------------------
 * Harder to rush on big map
 
+Using for spare bytecodes
+-------------------------
+* Broadcast bug paths (towers can potentially do this)
+* Optimize bug paths that have been broadcast
