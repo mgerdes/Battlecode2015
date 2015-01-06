@@ -3,7 +3,7 @@ package JobsQueue;
 import battlecode.common.*;
 import java.util.*;
 
-// use slots 65000 - 65536
+// use slots 60000 - 65536
 
 public class JobsQueue {
 	static final int LENGTH_CHANNEL = 60000;
@@ -14,6 +14,8 @@ public class JobsQueue {
 	static RobotController rc = RobotPlayer.rc; 
 
 	static RobotType[] robotTypes = RobotType.values();
+
+	static int[] numberOfTypeInQueue = new int[100];
 
 	public static void init() throws GameActionException {
 		rc.broadcast(LENGTH_CHANNEL, 0);
@@ -64,6 +66,10 @@ public class JobsQueue {
 
 	public static int getTypeToCreate(int job) throws GameActionException {
 		return job % 1000;
+	}
+
+	public static RobotType getRobotTypeToCreate(int job) throws GameActionException {
+		return robotTypes[getTypeToCreate(job)];
 	}
 
 	public static int getHeadPos() throws GameActionException {

@@ -13,7 +13,11 @@ public class HQ {
 			for (int i = 0; i < 5; i++) {
 				JobsQueue.addJob(RobotType.HQ.ordinal(), RobotType.BEAVER.ordinal()); 	
 			}
+			JobsQueue.addJob(RobotType.BEAVER.ordinal(), RobotType.MINERFACTORY.ordinal());
 			JobsQueue.addJob(RobotType.BEAVER.ordinal(), RobotType.BARRACKS.ordinal());
+			JobsQueue.addJob(RobotType.MINERFACTORY.ordinal(), RobotType.MINER.ordinal());
+			JobsQueue.addJob(RobotType.MINERFACTORY.ordinal(), RobotType.MINER.ordinal());
+			JobsQueue.addJob(RobotType.MINERFACTORY.ordinal(), RobotType.MINER.ordinal());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -40,8 +44,9 @@ public class HQ {
 	}
 
 	public static void doJob(int job) throws GameActionException {
-		if (rc.isCoreReady() && rc.canSpawn(Navigation.randomDirection(), RobotType.BEAVER)) {
-			rc.spawn(Navigation.randomDirection(), RobotType.BEAVER);
+		Direction randomDirection = Navigation.randomDirection();
+		if (rc.isCoreReady() && rc.canSpawn(randomDirection, RobotType.BEAVER)) {
+			rc.spawn(randomDirection, RobotType.BEAVER);
 			JobsQueue.currentJobCompleted();	
 		}
 	}

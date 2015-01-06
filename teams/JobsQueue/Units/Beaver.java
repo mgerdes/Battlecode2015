@@ -32,13 +32,12 @@ public class Beaver {
 	}
 
 	static void doJob(int job) throws GameActionException {
-		int typeToCreate = JobsQueue.getTypeToCreate(job);
-		if (typeToCreate == RobotType.BARRACKS.ordinal()) {
-			Direction randomDirection = Navigation.randomDirection();
-			if (rc.isCoreReady() && rc.canBuild(randomDirection, RobotType.BARRACKS)) {
-				JobsQueue.currentJobCompleted();
-				rc.build(randomDirection, RobotType.BARRACKS);
-			}
+		RobotType typeToCreate = JobsQueue.getRobotTypeToCreate(job);
+
+		Direction randomDirection = Navigation.randomDirection();
+		if (rc.isCoreReady() && rc.canBuild(randomDirection, typeToCreate)) {
+			JobsQueue.currentJobCompleted();
+			rc.build(randomDirection, typeToCreate);
 		}
 	}
 }
