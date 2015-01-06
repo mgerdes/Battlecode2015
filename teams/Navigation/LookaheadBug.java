@@ -14,8 +14,6 @@ public class LookaheadBug {
     public static void init(MapLocation destinationC, RobotController rcC) {
         destination = destinationC;
         rc = rcC;
-
-        CachedMap.init(rc);
     }
 
     //--Returns a navigable direction that leads (eventually) to the destination
@@ -132,7 +130,8 @@ public class LookaheadBug {
                 turn = direction.rotateRight().rotateRight();
             }
 
-            while (!CachedMap.isNavigable(location, turn)) {
+            MapLocation moveLocation = location.add(turn);
+            while (!rc.isPathable(rc.getType(), moveLocation)) {
                 turn = turn.rotateLeft();
             }
 
@@ -143,7 +142,8 @@ public class LookaheadBug {
             turn = direction.rotateLeft().rotateLeft();
         }
 
-        while (!CachedMap.isNavigable(location, turn)) {
+        MapLocation moveLocation = location.add(turn);
+        while (!rc.isPathable(rc.getType(), moveLocation)) {
             turn = turn.rotateRight();
         }
 
