@@ -2,10 +2,10 @@ package navigation;
 
 import battlecode.common.*;
 
-//--This is a dumb soldier used to test the bug nav
-public class Soldier {
+//--This is a dumb beaver used to test the bug nav
+public class Beaver {
     private static RobotController rc;
-    private static final MapLocation TEST_DESTINATION = new MapLocation(1, 6);
+    private static final MapLocation TEST_DESTINATION = new MapLocation(14094, 13473);
 
     public static void init(RobotController rcC) {
         rc = rcC;
@@ -13,10 +13,10 @@ public class Soldier {
 
     public static void run() {
         try {
-            FollowBug.init(TEST_DESTINATION, rc);
+            Bug.init(TEST_DESTINATION, rc);
             while (true) {
-                if (rc.isActive()) {
-                    rc.move(FollowBug.getDirection());
+                if (rc.isCoreReady()) {
+                    rc.move(Bug.getDirection());
                 }
 
                 rc.yield();

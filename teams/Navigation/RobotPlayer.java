@@ -9,21 +9,23 @@ public class RobotPlayer {
             if (rc.getType() == RobotType.HQ) {
                 try {
                     //Check if a robot is spawnable and spawn one if it is
-                    if (rc.isActive() && rc.senseRobotCount() < 25) {
+                    if (rc.isCoreReady()) {
                         Direction toEnemy = rc.getLocation().directionTo(rc.senseEnemyHQLocation());
-
-                        if (rc.senseObjectAtLocation(rc.getLocation().add(toEnemy)) == null) {
-                            rc.spawn(toEnemy);
+                        if (rc.canSpawn(toEnemy, RobotType.BEAVER)) {
+                            rc.spawn(toEnemy, RobotType.BEAVER);
                         }
                     }
+
+                    rc.yield();
                 } catch (Exception e) {
                     System.out.println("HQ Exception");
+                    e.printStackTrace();
                 }
             }
 
-            if (rc.getType() == RobotType.SOLDIER) {
-                Soldier.init(rc);
-                Soldier.run();
+            if (rc.getType() == RobotType.BEAVER) {
+                Beaver.init(rc);
+                Beaver.run();
             }
         }
     }

@@ -5,13 +5,11 @@ import battlecode.common.*;
 public class CachedMap {
     private static RobotController rc;
     private static TerrainTile[][] map;
-    private static int mapHeight;
-    private static int mapWidth;
+    private static int mapHeight = GameConstants.MAP_MAX_HEIGHT;
+    private static int mapWidth = GameConstants.MAP_MIN_WIDTH;
 
     public static void init(RobotController rcC) {
         rc = rcC;
-        mapHeight = rc.getMapHeight();
-        mapWidth = rc.getMapWidth();
         map = new TerrainTile[mapHeight][mapWidth];
     }
 
