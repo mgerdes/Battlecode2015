@@ -1,4 +1,4 @@
-package beaverAgainstTower;
+package tankAgainstTower;
 
 import battlecode.common.Direction;
 import battlecode.common.MapLocation;

@@ -1,4 +1,4 @@
-package beaverAgainstTower;
+package tankAgainstTower;
 
 import battlecode.common.Direction;
 import battlecode.common.RobotController;
@@ -18,7 +18,9 @@ public class RobotPlayer {
                         }
                     }
 
-                    rc.yield();
+                    while (true) {
+                        rc.yield();
+                    }
                 } catch (Exception e) {
                     System.out.println("HQ Exception");
                     e.printStackTrace();

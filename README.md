@@ -13,6 +13,7 @@ Micro Strategy Ideas
 * Avoid clustering when facing enemy weapons that have proximity damage
 * Find optimal mixes of robots to minimize weaknesses
 * Attack the enemy robot that will die first (lower HP, less armor, etc...)
+* Transfer supplies before building??
 
 Small map vs big map
 --------------------
