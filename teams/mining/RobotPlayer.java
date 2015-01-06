@@ -1,8 +1,6 @@
 package mining;
 
-import battlecode.common.Direction;
-import battlecode.common.RobotController;
-import battlecode.common.RobotType;
+import battlecode.common.*;
 
 public class RobotPlayer {
 
@@ -21,6 +19,14 @@ public class RobotPlayer {
                         }
                         else {
                             currentDirection++;
+                        }
+                    }
+
+                    RobotInfo[] friendlies = rc.senseNearbyRobots(GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, rc.getTeam());
+                    double mySupply = rc.getSupplyLevel();
+                    for (int i = 0; i < friendlies.length; i++) {
+                        if (friendlies[i].supplyLevel == 0) {
+                            rc.transferSupplies((int) mySupply / friendlies.length, friendlies[i].location);
                         }
                     }
 
