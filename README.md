@@ -1,3 +1,10 @@
+Managing Tech Tree
+------------------
+* Have a class that has a list of all robots (units and structures)
+* Beavers will mine and build buildings in that order
+* This will allow us to change our overall strategy at compile time, later we will need to be able to adjust strategy at run time
+* List example: Beaver, Beaver, Beaver, MiningStation, Miner, Miner, Barracks, Soldier, Soldier, Soldier, TankStation, etc...
+`
 Macro Strategy Ideas
 --------------------
 * Defend and try to win via tiebreaker
