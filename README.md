@@ -1,7 +1,7 @@
 Equivalencies
 -------------
 * 4 tanks === 1 tower
-* 7 tanks === 1 hq
+* 7 tanks === 1 hq (no upgrades)
 
 Managing Tech Tree
 ------------------
