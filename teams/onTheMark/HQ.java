@@ -10,8 +10,6 @@ public class HQ {
 		try {
 			JobsQueue.init();
 
-				
-
 			JobsQueue.addJob(RobotType.BEAVER);
 			JobsQueue.addJob(RobotType.BARRACKS);
 			JobsQueue.addJob(RobotType.BEAVER);
@@ -26,32 +24,6 @@ public class HQ {
 				}
 				JobsQueue.addJob(RobotType.TANK);
 			}
-
-
-//			JobsQueue.addJob(RobotType.BARRACKS);
-//			JobsQueue.addJob(RobotType.MINERFACTORY);
-//			JobsQueue.addJob(RobotType.MINER);
-//			for (int i = 0; i < 10; i++) {
-//				if (i == 3) {
-//					JobsQueue.addJob(RobotType.TANKFACTORY);
-//				}
-//				if (i == 8) {
-//					JobsQueue.addJob(RobotType.TECHNOLOGYINSTITUTE);
-//				}
-//				JobsQueue.addJob(RobotType.SOLDIER);
-//			}
-//			for (int i = 0; i < 20; i++) {
-//				if (i == 5) {
-//					JobsQueue.addJob(RobotType.TRAININGFIELD);
-//				}
-//				if (i == 10) {
-//					JobsQueue.addJob(RobotType.COMMANDER);
-//				}
-//				JobsQueue.addJob(RobotType.TANK);
-//			}
-//			for (int i = 0; i < 100; i++) {
-//				JobsQueue.addJob(RobotType.SOLDIER);
-//			}
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -74,6 +46,18 @@ public class HQ {
 		if (JobsQueue.canDoCurrentJob()) {
 			int job = JobsQueue.getCurrentJob();			
 			doJob(job);
+		}
+
+		shareSupplyWithNearbyFriendlies();
+	}
+
+	private static void shareSupplyWithNearbyFriendlies() throws GameActionException {
+		RobotInfo[] friendlies = rc.senseNearbyRobots(GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, rc.getTeam());
+		double mySupply = rc.getSupplyLevel();
+		for (int i = 0; i < friendlies.length; i++) {
+			if (friendlies[i].supplyLevel == 0) {
+				rc.transferSupplies((int) mySupply / friendlies.length, friendlies[i].location);
+			}
 		}
 	}
 
