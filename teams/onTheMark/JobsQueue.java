@@ -41,7 +41,7 @@ public class JobsQueue {
 		if (length() > 0) {
 			int job = getCurrentJob();
 			int typeRequired = getTypeRequired(job);
-			int typeToCreate = getTypeToCreate(job);
+			int typeToCreate = job;
 			int cost = robotTypes[typeToCreate].oreCost;
 
 			if (rc.getType().ordinal() == typeRequired && rc.getTeamOre() > cost) {
@@ -67,12 +67,8 @@ public class JobsQueue {
 		}
 	}
 
-	public static int getTypeToCreate(int job) throws GameActionException {
-		return job;
-	}
-
 	public static RobotType getRobotTypeToCreate(int job) throws GameActionException {
-		return robotTypes[getTypeToCreate(job)];
+		return robotTypes[job];
 	}
 
 	public static int getHeadPos() throws GameActionException {

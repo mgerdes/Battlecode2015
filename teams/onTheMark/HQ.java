@@ -44,8 +44,7 @@ public class HQ {
 
 	static void doYourThing() throws GameActionException {
 		if (JobsQueue.canDoCurrentJob()) {
-			int job = JobsQueue.getCurrentJob();			
-			doJob(job);
+			doJob();
 		}
 
 		shareSupplyWithNearbyFriendlies();
@@ -61,7 +60,8 @@ public class HQ {
 		}
 	}
 
-	static void doJob(int job) throws GameActionException {
+	static void doJob() throws GameActionException {
+		int job = JobsQueue.getCurrentJob();
 		RobotType spawnType = JobsQueue.getRobotTypeToCreate(job);
 		spawn(spawnType);
 	}
