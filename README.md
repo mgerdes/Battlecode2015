@@ -1,3 +1,8 @@
+Equivalencies
+-------------
+* 4 tanks === 1 tower
+* 7 tanks === 1 hq (no upgrades)
+
 Managing Tech Tree
 ------------------
 * Have a class that has a list of all robots (units and structures)
