@@ -9,21 +9,11 @@ public class HQ {
 		rc = RobotPlayer.rc;
 		try {
 			JobsQueue.init();
-
-			JobsQueue.addJob(RobotType.BEAVER);
-			JobsQueue.addJob(RobotType.BARRACKS);
-			JobsQueue.addJob(RobotType.BEAVER);
-			JobsQueue.addJob(RobotType.BEAVER);
-			JobsQueue.addJob(RobotType.BEAVER);
-			JobsQueue.addJob(RobotType.TANKFACTORY);
+			JobsQueue.addJob(RobotType.BEAVER, 4);
 			JobsQueue.addJob(RobotType.MINERFACTORY);
-			for (int i = 0; i < 500; i++) {
-				if (i == 10) {
-					JobsQueue.addJob(RobotType.MINER);
-					JobsQueue.addJob(RobotType.MINER);
-				}
-				JobsQueue.addJob(RobotType.TANK);
-			}
+			JobsQueue.addJob(RobotType.MINER, 5);
+			JobsQueue.addJob(RobotType.HELIPAD);
+			JobsQueue.addJob(RobotType.DRONE, 8);
 
 		} catch (Exception e) {
 			e.printStackTrace();

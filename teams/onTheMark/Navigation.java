@@ -33,7 +33,6 @@ public class Navigation {
 			for (MapLocation towerloc : towers) {
 				int distance = curLoc.distanceSquaredTo(towerloc);
 				if (distance < shortest) {
-					shortest = shortest;
 					shortestloc = towerloc;
 				}
 			}
@@ -43,15 +42,7 @@ public class Navigation {
 
 	public static void moveRandomly() throws GameActionException {
 		if (rc.isCoreReady()) {
-			if (Clock.getRoundNum() < 1000) {
-				if (rc.getLocation().distanceSquaredTo(hqLocation) > 81) {
-					tryMoveTowards(hqLocation);
-				} else {
-					tryMoveInDirection(directions[rand.nextInt(8)]);			
-				}
-			} else {
-				tryMoveTowards(enemyHQLocation);
-			}
+			tryMoveInDirection(directions[rand.nextInt(8)]);
 		}
 	}
 

@@ -23,6 +23,12 @@ public class JobsQueue {
 		addJob(robotTypeToCreate.ordinal());
 	}
 
+	public static void addJob(RobotType robotTypeToCreate, int count) throws GameActionException {
+		for (int i = 0; i < count; i++) {
+			addJob(robotTypeToCreate.ordinal());
+		}
+	}
+
 	public static void addJob(int robotTypeToCreate) throws GameActionException {
 		int headPos = getHeadPos();
 		rc.broadcast(headPos, robotTypeToCreate);
