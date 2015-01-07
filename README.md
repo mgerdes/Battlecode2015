@@ -22,6 +22,7 @@ Macro Strategy Ideas
 
 Micro Strategy Ideas
 --------------------
+* Mine a square's ore before building a building there
 * Use robots with greater range than enemy and quickly move away after attacking
 * Avoid clustering when facing enemy weapons that have proximity damage
 * Find optimal mixes of robots to minimize weaknesses
@@ -31,6 +32,19 @@ Micro Strategy Ideas
 Small map vs big map
 --------------------
 * Harder to rush on big map
+
+Tower count
+-----------
+* Fewer towers will be shorter game
+* Easier to attack HQ
+
+Overall Ore Amount in Map
+-------------------------
+* Less Ore ---> fewer building and fewer miners
+
+Map Size
+--------
+
 
 Using for spare bytecodes
 -------------------------
