@@ -41,7 +41,6 @@ public class Beaver {
 			int job = JobsQueue.getCurrentJob();			
 			doJob(job);
 		} else if (mine()) {
-			;	
 		} else {
 			Navigation.moveRandomly();
 		}
