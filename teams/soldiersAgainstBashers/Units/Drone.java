@@ -1,24 +1,24 @@
 package soldiersAgainstBashers.Units;
 
 import battlecode.common.*;
+import battlecode.world.Robot;
 import soldiersAgainstBashers.Navigation;
 import soldiersAgainstBashers.RobotPlayer;
 
 public class Drone {
 	static RobotController rc = RobotPlayer.rc;
-	static RobotType type;
-	static int sensorRadiusSquared;
-	static int attackRadiusSquared;
 	static Team goodGuys;
 	static Team badGuys;
+	static MapLocation myHQ;
+
+	static final int MIN_SUPPY = 300;
+	static final int DRONE_MIN_SUPPLY = 1000;
 
 	public static void init() {
 		rc = RobotPlayer.rc;
-		type = rc.getType();
-		sensorRadiusSquared = type.sensorRadiusSquared;
-		attackRadiusSquared = type.attackRadiusSquared;
 		goodGuys = rc.getTeam();
 		badGuys = goodGuys.opponent();
+		myHQ = rc.senseHQLocation();
 		loop();
 	}
 
@@ -35,12 +35,34 @@ public class Drone {
 	}
 
 	static void doYourThing() throws GameActionException {
-		MapLocation current = rc.getLocation();
-		TerrainTile below = rc.senseTerrainTile(current.add(Direction.SOUTH));
-		rc.setIndicatorString(0, below.toString());
-
-		if (rc.isCoreReady()) {
-			Navigation.circleMap();
+		double currentSupply = rc.getSupplyLevel();
+		if (currentSupply < DRONE_MIN_SUPPLY) {
+			Navigation.tryMoveTowards(myHQ);
+			return;
 		}
+
+		RobotInfo[] friendlies = rc.senseNearbyRobots(1000000, goodGuys);
+		MapLocation current = rc.getLocation();
+
+		for (RobotInfo ri : friendlies) {
+			if (ri.type == RobotType.TOWER) {
+				continue;
+			}
+
+			if (ri.supplyLevel < MIN_SUPPY) {
+				if (current.distanceSquaredTo(ri.location) <= GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED) {
+					rc.transferSupplies((int) currentSupply / 10, ri.location);
+				}
+				else if (rc.isCoreReady()) {
+					Navigation.tryMoveTowards(ri.location);
+					break;
+				}
+
+				if (rc.getSupplyLevel() < DRONE_MIN_SUPPLY) {
+					break;
+				}
+			}
+		}
+
 	}
 }
