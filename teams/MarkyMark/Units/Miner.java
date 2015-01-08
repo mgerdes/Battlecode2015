@@ -5,9 +5,10 @@ import java.util.*;
 import MarkyMark.*;
 
 public class Miner {
-	static RobotController rc = RobotPlayer.rc;
+	static RobotController rc;
 
-	public static void init() {
+	public static void init(RobotController rcin) {
+		rc = rcin;
 		loop();
 	}
 

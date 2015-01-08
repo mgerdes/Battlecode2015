@@ -13,11 +13,13 @@ public class HQ {
 			for (int i = 0; i < 5; i++) {
 				JobsQueue.addJob(RobotType.HQ.ordinal(), RobotType.BEAVER.ordinal()); 	
 			}
+
 			JobsQueue.addJob(RobotType.BEAVER.ordinal(), RobotType.MINERFACTORY.ordinal());
 			JobsQueue.addJob(RobotType.BEAVER.ordinal(), RobotType.BARRACKS.ordinal());
 			JobsQueue.addJob(RobotType.MINERFACTORY.ordinal(), RobotType.MINER.ordinal());
 			JobsQueue.addJob(RobotType.MINERFACTORY.ordinal(), RobotType.MINER.ordinal());
 			JobsQueue.addJob(RobotType.MINERFACTORY.ordinal(), RobotType.MINER.ordinal());
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

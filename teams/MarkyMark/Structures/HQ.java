@@ -4,13 +4,21 @@ import battlecode.common.*;
 import java.util.*;
 import MarkyMark.*;
 
-public class Spawner {
+public class HQ {
 	public static RobotController rc;
 
 	public static void init(RobotController rcin) {
 		rc = rcin;
 		try {
-			RobotCreationQueue.init(rc);
+			RobotCreationQueue.initFromHQ(rc);
+
+			RobotCreationQueue.addRobotToCreate(RobotType.BEAVER);
+			RobotCreationQueue.addRobotToCreate(RobotType.BARRACKS);
+			RobotCreationQueue.addRobotToCreate(RobotType.TANKFACTORY);
+			for (int i = 0; i < 8; i++) {
+				RobotCreationQueue.addRobotToCreate(RobotType.TANK);
+			}
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -32,7 +40,7 @@ public class Spawner {
 		tryToCreateRobot();
 	}
 
-	public static void tryToCreateRobot() throws GameActionException {
+	static void tryToCreateRobot() throws GameActionException {
 		RobotType robotToCreate = RobotCreationQueue.getNextRobotToCreate();
 		if (robotToCreate != null) {
 			createRobot(robotToCreate);
@@ -40,7 +48,7 @@ public class Spawner {
 	}
 
 	static void createRobot(RobotType type) throws GameActionException {
-		Direction d = Navigation.randomDirection();		
+		Direction d = Navigation.randomDirection();
 		if (rc.isCoreReady() && rc.canSpawn(d, type)) {
 			RobotCreationQueue.completedCreatingRobot();
 			rc.spawn(d, type);

@@ -4,6 +4,7 @@ import battlecode.common.*;
 import java.util.*;
 import MarkyMark.*;
 
+// TODO -- Make attacking smarter.
 public class Attack {
 	static RobotController rc = RobotPlayer.rc;
 
@@ -13,7 +14,7 @@ public class Attack {
 		}
 	}
 
-	public static void attackTower() throws GameActionException {
-				
+	public static void attackTowers() throws GameActionException {
+		// go to closest tower. and Destroy it.				
 	}
 }

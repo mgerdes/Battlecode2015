@@ -5,15 +5,15 @@ import java.util.*;
 import MarkyMark.*;
 
 public class Soldier {
-	static RobotController rc = RobotPlayer.rc;
+	static RobotController rc;
 	static RobotType type;
 	static int sensorRadiusSquared;
 	static int attackRadiusSquared;
 	static Team goodGuys;
 	static Team badGuys;
 
-	public static void init() {
-		rc = RobotPlayer.rc;
+	public static void init(RobotController rcin) {
+		rc = rcin;
 		type = rc.getType();
 		sensorRadiusSquared = type.sensorRadiusSquared;
 		attackRadiusSquared = type.attackRadiusSquared;

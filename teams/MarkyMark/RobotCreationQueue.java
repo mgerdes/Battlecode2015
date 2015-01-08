@@ -1,10 +1,12 @@
-package RobotCreationQueue;
+package MarkyMark;
 
-    import battlecode.common.*;
+import battlecode.common.*;
 import java.util.*;
+import MarkyMark.*;
 
 // use slots 60000 - 65536
 
+// TODO -- Deal with dependencies.
 public class RobotCreationQueue {
 	static final int LENGTH_CHANNEL = 60000;
 	static final int HEAD_POS_CHANNEL = 60001;
@@ -12,19 +14,18 @@ public class RobotCreationQueue {
 	static final int START_POS = 60003;
 
 	static RobotController rc;
-	static RobotType[] robotTypes;
+	static RobotType[] robotTypes = RobotType.values();
 
-	// Special init from HQ so it's run only once at beginning. Or can be used to reset queue if a change in strategy is needed.
 	public static void initFromHQ(RobotController rcin) throws GameActionException {
 		init(rcin);
+		robotTypes = RobotType.values();
 		rc.broadcast(LENGTH_CHANNEL, 0);
 		rc.broadcast(HEAD_POS_CHANNEL, START_POS);
 		rc.broadcast(TAIL_POS_CHANNEL, START_POS);
 	}
 
-	public static void init(RobotController rcin) {
-		rc = rcin;	
-		robotTypes = RobotType.values();
+	public static void init(RobotController rcin) throws GameActionException {
+		rc = rcin;
 	}
 
 	public static void addRobotToCreate(RobotType robotTypeToCreate) throws GameActionException {
@@ -38,12 +39,11 @@ public class RobotCreationQueue {
 		increaseLength();
 	}
 
-	// TODO -- also deal with dependencies.
 	// This returns NULL if the caller of the method cannot create the robot.
 	public static RobotType getNextRobotToCreate() throws GameActionException {
 		if (length() > 0) {
-			RobotType typeToCreate = robotTypes[getItemInQueue()];
-			RobotType typeRequired = getTypeRequiredToCreateRobot(typeToCreate);
+			RobotType typeToCreate = robotTypes[getGetItemInQueue()];
+			RobotType typeRequired = getTypeRequiredToCreate(typeToCreate);
 
 			if (rc.getType() == typeRequired && rc.getTeamOre() > typeToCreate.oreCost) {
 				return typeToCreate;
@@ -53,7 +53,7 @@ public class RobotCreationQueue {
 	}
 
 	// Returns the robot type that can create the type of robot we want to create.
-	public static RobotType getTypeRequiredToCreateRobot(RobotType robotTypeToCreate) throws GameActionException {
+	public static RobotType getTypeRequiredToCreate(RobotType robotTypeToCreate) throws GameActionException {
 		if (robotTypeToCreate.isBuilding) {
 			return RobotType.BEAVER;
 		} else {
@@ -67,7 +67,7 @@ public class RobotCreationQueue {
 		decreaseLength();
 	}
 
-	public static int getItemInQueue() throws GameActionException {
+	public static int getGetItemInQueue() throws GameActionException {
 		return rc.readBroadcast(getTailPos());
 	}
 

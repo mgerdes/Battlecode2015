@@ -11,8 +11,8 @@ public class Tower {
 	static Team goodGuys;
 	static Team badGuys;
 
-	public static void init() {
-		rc = RobotPlayer.rc;
+	public static void init(RobotController rcin) {
+		rc = rcin;
 		sensorRadiusSquared = RobotType.TOWER.sensorRadiusSquared;
 		attackRadiusSquared = RobotType.TOWER.attackRadiusSquared;
 		goodGuys = rc.getTeam();
