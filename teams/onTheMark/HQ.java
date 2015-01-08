@@ -7,13 +7,18 @@ public class HQ {
 
 	public static void init() {
 		rc = RobotPlayer.rc;
+		Orders.init();
+
 		try {
 			JobsQueue.init();
-			JobsQueue.addJob(RobotType.BEAVER, 4);
+			JobsQueue.addJob(RobotType.BEAVER, 2);
 			JobsQueue.addJob(RobotType.MINERFACTORY);
+			JobsQueue.addJob(RobotType.BEAVER, 2);
 			JobsQueue.addJob(RobotType.MINER, 5);
-			JobsQueue.addJob(RobotType.HELIPAD);
-			JobsQueue.addJob(RobotType.DRONE, 8);
+			JobsQueue.addJob(RobotType.BARRACKS);
+			JobsQueue.addJob(RobotType.MINER, 5);
+			JobsQueue.addJob(RobotType.BASHER, 50);
+			rc.setIndicatorString(0, String.format("used %d bytecodes in init", Clock.getBytecodeNum()));
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -24,6 +29,7 @@ public class HQ {
 	static void loop() {
 		while (true) {
 			try {
+				rc.setIndicatorString(1, String.format("current ore: %f", rc.getTeamOre()));
 				doYourThing();
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -35,6 +41,10 @@ public class HQ {
 	static void doYourThing() throws GameActionException {
 		if (JobsQueue.canDoCurrentJob()) {
 			doJob();
+		}
+
+		if (Clock.getRoundNum() == 500) {
+			Orders.sendBashersTo(new MapLocation(8158, 11992));
 		}
 
 		shareSupplyWithNearbyFriendlies();

@@ -1,7 +1,6 @@
 package onTheMark.Units;
 
 import battlecode.common.*;
-import onTheMark.Attack;
 import onTheMark.Navigation;
 import onTheMark.RobotPlayer;
 
@@ -36,10 +35,12 @@ public class Drone {
 	}
 
 	static void doYourThing() throws GameActionException {
-		if (rc.isWeaponReady()) {
-			RobotInfo[] enemies = rc.senseNearbyRobots(attackRadiusSquared, badGuys);
-			Attack.something(enemies);
+		MapLocation current = rc.getLocation();
+		TerrainTile below = rc.senseTerrainTile(current.add(Direction.SOUTH));
+		rc.setIndicatorString(0, below.toString());
+
+		if (rc.isCoreReady()) {
+			Navigation.circleMap();
 		}
-		Navigation.moveRandomly();
 	}
 }

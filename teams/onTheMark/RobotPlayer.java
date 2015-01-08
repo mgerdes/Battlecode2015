@@ -24,6 +24,8 @@ public class RobotPlayer {
 			Drone.init();
 		} else if (type == RobotType.MINER) {
 			Miner.init();
+		} else if (type == RobotType.BASHER) {
+			Basher.init();
 		} else {
 			Spawner.init();
 		}

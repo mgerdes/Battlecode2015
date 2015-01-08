@@ -85,4 +85,19 @@ public class Navigation {
 				return -1;
 		}
 	}
+
+	private static boolean circleFirst = true;
+
+	public static void circleMap() throws GameActionException {
+		//--If not on edge, go until we hit a wall.
+		//--When we are on the edge, go around
+		MapLocation currentLocation = rc.getLocation();
+		if (circleFirst) {
+			Bug.init(new MapLocation(Integer.MAX_VALUE, currentLocation.y), rc);
+			circleFirst = false;
+		}
+
+        Direction moveDirection = Bug.getDirection(currentLocation);
+        rc.move(moveDirection);
+	}
 }
