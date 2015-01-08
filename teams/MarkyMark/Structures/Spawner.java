@@ -9,11 +9,6 @@ public class Spawner {
 
 	public static void init(RobotController rcin) {
 		rc = rcin;
-		try {
-			RobotCreationQueue.init(rc);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 		loop();
 	}
 
@@ -29,6 +24,7 @@ public class Spawner {
 	}
 
 	static void doYourThing() throws GameActionException {
+		Info.getRoundInfo();
 		tryToCreateRobot();
 	}
 

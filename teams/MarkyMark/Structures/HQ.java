@@ -10,12 +10,15 @@ public class HQ {
 	public static void init(RobotController rcin) {
 		rc = rcin;
 		try {
-			RobotCreationQueue.initFromHQ(rc);
+			RobotCreationQueue.reset();
 
 			RobotCreationQueue.addRobotToCreate(RobotType.BEAVER);
 			RobotCreationQueue.addRobotToCreate(RobotType.BARRACKS);
+			RobotCreationQueue.addRobotToCreate(RobotType.MINERFACTORY);
 			RobotCreationQueue.addRobotToCreate(RobotType.TANKFACTORY);
-			for (int i = 0; i < 8; i++) {
+			RobotCreationQueue.addRobotToCreate(RobotType.MINER);
+			RobotCreationQueue.addRobotToCreate(RobotType.MINER);
+			for (int i = 0; i < 100; i++) {
 				RobotCreationQueue.addRobotToCreate(RobotType.TANK);
 			}
 
@@ -37,6 +40,7 @@ public class HQ {
 	}
 
 	static void doYourThing() throws GameActionException {
+		Info.getRoundInfo();
 		tryToCreateRobot();
 	}
 

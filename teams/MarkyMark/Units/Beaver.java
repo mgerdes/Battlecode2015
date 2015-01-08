@@ -6,24 +6,9 @@ import MarkyMark.*;
 
 public class Beaver {
 	public static RobotController rc;
-	static RobotType type;
-	static int sensorRadiusSquared;
-	static int attackRadiusSquared;
-	static Team goodGuys;
-	static Team badGuys;
 
 	public static void init(RobotController rcin) {
 		rc = rcin;
-		type = rc.getType();
-		sensorRadiusSquared = type.sensorRadiusSquared;
-		attackRadiusSquared = type.attackRadiusSquared;
-		goodGuys = rc.getTeam();
-		badGuys = goodGuys.opponent();
-		try {
-			RobotCreationQueue.init(rc);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 		loop();
 	}
 
@@ -39,12 +24,8 @@ public class Beaver {
 	}
 
 	static void doYourThing() throws GameActionException {
-		if (rc.isWeaponReady()) {
-			RobotInfo[] enemies = rc.senseNearbyRobots(attackRadiusSquared, badGuys);
-			Attack.something(enemies);
-		}
-
-		RobotType robotToCreate = RobotCreationQueue.getNextRobotToCreate(); 
+		Info.getRoundInfo();
+		RobotType robotToCreate = RobotCreationQueue.getNextRobotToCreate();
 		if (robotToCreate != null) {
 			createRobot(robotToCreate);
 		}

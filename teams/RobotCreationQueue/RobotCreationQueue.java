@@ -1,6 +1,6 @@
 package RobotCreationQueue;
 
-    import battlecode.common.*;
+import battlecode.common.*;
 import java.util.*;
 
 // use slots 60000 - 65536

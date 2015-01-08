@@ -25,13 +25,14 @@ public class Miner {
 	}
 
 	static void doYourThing() throws GameActionException {
+		Info.getRoundInfo();
 		if(!tryToMine()) {
 			Navigation.moveRandomly();
 		}
 	}
 
 	static boolean tryToMine() throws GameActionException {
-		if (rc.senseOre(rc.getLocation()) > 0) {
+		if (rc.senseOre(rc.getLocation()) > 5) {
 			if (rc.isCoreReady()) {
 				rc.mine();
 				return true;

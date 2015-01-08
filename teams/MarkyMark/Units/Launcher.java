@@ -6,19 +6,9 @@ import MarkyMark.*;
 
 public class Launcher {
 	static RobotController rc;
-	static RobotType type;
-	static int sensorRadiusSquared;
-	static int attackRadiusSquared;
-	static Team goodGuys;
-	static Team badGuys;
 
 	public static void init(RobotController rcin) {
 		rc = rcin;
-		type = rc.getType();
-		sensorRadiusSquared = type.sensorRadiusSquared;
-		attackRadiusSquared = type.attackRadiusSquared;
-		goodGuys = rc.getTeam();
-		badGuys = goodGuys.opponent();
 		loop();
 	}
 
@@ -35,11 +25,8 @@ public class Launcher {
 	}
 
 	static void doYourThing() throws GameActionException {
-		if (rc.isWeaponReady()) {
-			RobotInfo[] enemies = rc.senseNearbyRobots(attackRadiusSquared, badGuys);
-			Attack.something(enemies);
-		}
-		Navigation.moveRandomly();
+		Info.getRoundInfo();
+		Micro.doWhatAttackingRobotShouldDo();
 	}
 }
 

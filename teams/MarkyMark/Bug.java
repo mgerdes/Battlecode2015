@@ -5,17 +5,27 @@ import battlecode.common.*;
 //--Version 1.0
 
 public class Bug {
-    private static final boolean DEFAULT_LEFT = true;
+    private static boolean DEFAULT_LEFT = true;
 
     private static MapLocation destination;
     private static RobotController rc;
     private static boolean followingWall;
     private static Direction previousDirection;
     private static int distanceStartBugging;
+    private static int turnsFollowingWall;
 
-    public static void init(MapLocation destinationC, RobotController rcC) {
-        destination = destinationC;
+    public static void init(RobotController rcC) {
         rc = rcC;
+        DEFAULT_LEFT = Info.rand.nextDouble() < .5;
+    }
+
+    public static void beginBugTowards(MapLocation destinationC) {
+        turnsFollowingWall = 0;
+        followingWall = false;
+        previousDirection = null;
+        distanceStartBugging = 0;
+        turnsFollowingWall = 0;
+        destination = destinationC;
     }
 
     //--Returns a navigable direction that
@@ -27,21 +37,42 @@ public class Bug {
 
     public static Direction getDirection(MapLocation currentLocation) {
         if (followingWall) {
+            //rc.setIndicatorString(0, "following wall");
             return getDirectionFollowingWall(currentLocation);
         }
 
+        //:w
+        // rc.setIndicatorString(0, "not following wall");
         return getDirectionNotFollowingWall(currentLocation);
     }
 
+    private static boolean obstaclesAroundMe() {
+        int[] xoffsets = {1,1,0,-1,-1,-1, 0, 1};
+        int[] yoffsets = {0,1,1, 1, 0,-1,-1,-1};
+        for (int i = 0; i < 8; i++) {
+            MapLocation currentLocation = rc.getLocation();
+            MapLocation loc = new MapLocation(currentLocation.x + xoffsets[i], currentLocation.y + yoffsets[i]);
+            TerrainTile tile = rc.senseTerrainTile(loc);
+            if (!tile.isTraversable()) {
+                //rc.setIndicatorString(0, "obstacles around me");
+                return true;
+            }
+        }
+        //rc.setIndicatorString(0, "no obstacles around me");
+        return false;
+    }
+
     private static Direction getDirectionFollowingWall(MapLocation currentLocation) {
-        if (currentLocation.distanceSquaredTo(destination) < distanceStartBugging) {
+        if (currentLocation.distanceSquaredTo(destination) < distanceStartBugging || !obstaclesAroundMe()) {
+            turnsFollowingWall = 0;
             followingWall = false;
             return getDirectionNotFollowingWall(currentLocation);
         }
 
+        turnsFollowingWall++;
         Direction followDirection = getFollowDirection(previousDirection);
         previousDirection = followDirection;
-        rc.setIndicatorString(0, previousDirection.toString());
+        //rc.setIndicatorString(0, previousDirection.toString());
         return followDirection;
     }
 
@@ -56,7 +87,7 @@ public class Bug {
 
         Direction turnDirection = getTurnDirection(direct);
         previousDirection = turnDirection;
-        rc.setIndicatorString(0, previousDirection.toString());
+        //rc.setIndicatorString(0, previousDirection.toString());
         return turnDirection;
     }
 

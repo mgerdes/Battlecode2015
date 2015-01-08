@@ -16,9 +16,7 @@ public class RobotCreationQueue {
 	static RobotController rc;
 	static RobotType[] robotTypes = RobotType.values();
 
-	public static void initFromHQ(RobotController rcin) throws GameActionException {
-		init(rcin);
-		robotTypes = RobotType.values();
+	public static void reset() throws GameActionException {
 		rc.broadcast(LENGTH_CHANNEL, 0);
 		rc.broadcast(HEAD_POS_CHANNEL, START_POS);
 		rc.broadcast(TAIL_POS_CHANNEL, START_POS);
@@ -26,6 +24,7 @@ public class RobotCreationQueue {
 
 	public static void init(RobotController rcin) throws GameActionException {
 		rc = rcin;
+		robotTypes = RobotType.values();
 	}
 
 	public static void addRobotToCreate(RobotType robotTypeToCreate) throws GameActionException {
