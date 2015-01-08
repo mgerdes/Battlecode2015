@@ -17,7 +17,7 @@ public class HQ {
 			JobsQueue.addJob(RobotType.MINER, 5);
 			JobsQueue.addJob(RobotType.BARRACKS);
 			JobsQueue.addJob(RobotType.MINER, 5);
-			JobsQueue.addJob(RobotType.BASHER, 50);
+			JobsQueue.addJob(RobotType.BASHER, 13);
 			rc.setIndicatorString(0, String.format("used %d bytecodes in init", Clock.getBytecodeNum()));
 
 		} catch (Exception e) {
@@ -43,8 +43,12 @@ public class HQ {
 			doJob();
 		}
 
-		if (Clock.getRoundNum() == 500) {
+		if (Clock.getRoundNum() == 10) {
 			Orders.sendBashersTo(new MapLocation(8158, 11992));
+		}
+
+		if (Clock.getRoundNum() == 900) {
+			Orders.sendBashersTo(new MapLocation(8173, 12006));
 		}
 
 		shareSupplyWithNearbyFriendlies();
