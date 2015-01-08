@@ -35,7 +35,16 @@ public class Soldier {
     static void doYourThing() throws GameActionException {
         RobotInfo[] enemies = rc.senseNearbyRobots(attackRadius, badGuys);
         if (enemies.length > 0 && rc.isWeaponReady()) {
-            rc.attackLocation(enemies[0].location);
+            double health = 10000;
+            int index = 0;
+            for (int i = 0; i < enemies.length; i++) {
+                if (enemies[i].health < health) {
+                    health = enemies[i].health;
+                    index = i;
+                }
+            }
+
+            rc.attackLocation(enemies[index].location);
             return;
         }
 
