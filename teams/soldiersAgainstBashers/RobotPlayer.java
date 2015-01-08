@@ -1,8 +1,8 @@
-package onTheMark;
+package soldiersAgainstBashers;
 
 import battlecode.common.*;
-import onTheMark.Structures.*;
-import onTheMark.Units.*;
+import soldiersAgainstBashers.Structures.*;
+import soldiersAgainstBashers.Units.*;
 
 public class RobotPlayer {
 	public static RobotController rc;
@@ -26,6 +26,8 @@ public class RobotPlayer {
 			Miner.init();
 		} else if (type == RobotType.BASHER) {
 			Basher.init();
+		} else if (type == RobotType.SOLDIER) {
+			Soldier.init();
 		} else {
 			Spawner.init();
 		}

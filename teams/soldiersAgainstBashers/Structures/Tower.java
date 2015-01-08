@@ -1,12 +1,10 @@
-package onTheMark.Units;
+package soldiersAgainstBashers.Structures;
 
 import battlecode.common.*;
-import onTheMark.Navigation;
-import onTheMark.RobotPlayer;
+import soldiersAgainstBashers.*;
 
-public class Drone {
-	static RobotController rc = RobotPlayer.rc;
-	static RobotType type;
+public class Tower {
+	static RobotController rc;
 	static int sensorRadiusSquared;
 	static int attackRadiusSquared;
 	static Team goodGuys;
@@ -14,9 +12,8 @@ public class Drone {
 
 	public static void init() {
 		rc = RobotPlayer.rc;
-		type = rc.getType();
-		sensorRadiusSquared = type.sensorRadiusSquared;
-		attackRadiusSquared = type.attackRadiusSquared;
+		sensorRadiusSquared = RobotType.TOWER.sensorRadiusSquared;
+		attackRadiusSquared = RobotType.TOWER.attackRadiusSquared;
 		goodGuys = rc.getTeam();
 		badGuys = goodGuys.opponent();
 		loop();
@@ -35,12 +32,9 @@ public class Drone {
 	}
 
 	static void doYourThing() throws GameActionException {
-		MapLocation current = rc.getLocation();
-		TerrainTile below = rc.senseTerrainTile(current.add(Direction.SOUTH));
-		rc.setIndicatorString(0, below.toString());
-
 		if (rc.isCoreReady()) {
-			Navigation.circleMap();
+			RobotInfo[] enemies = rc.senseNearbyRobots(attackRadiusSquared, badGuys);			
+			Attack.something(enemies);
 		}
 	}
 }

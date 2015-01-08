@@ -1,10 +1,11 @@
-package onTheMark.Units;
+package soldiersAgainstBashers.Units;
 
 import battlecode.common.*;
-import onTheMark.Navigation;
-import onTheMark.RobotPlayer;
+import soldiersAgainstBashers.Attack;
+import soldiersAgainstBashers.Navigation;
+import soldiersAgainstBashers.RobotPlayer;
 
-public class Drone {
+public class Tank {
 	static RobotController rc = RobotPlayer.rc;
 	static RobotType type;
 	static int sensorRadiusSquared;
@@ -35,12 +36,11 @@ public class Drone {
 	}
 
 	static void doYourThing() throws GameActionException {
-		MapLocation current = rc.getLocation();
-		TerrainTile below = rc.senseTerrainTile(current.add(Direction.SOUTH));
-		rc.setIndicatorString(0, below.toString());
-
-		if (rc.isCoreReady()) {
-			Navigation.circleMap();
+		if (rc.isWeaponReady()) {
+			RobotInfo[] enemies = rc.senseNearbyRobots(attackRadiusSquared, badGuys);
+			Attack.something(enemies);
 		}
+		Navigation.moveRandomly();
 	}
 }
+

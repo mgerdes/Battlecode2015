@@ -1,7 +1,9 @@
 Equivalencies
 -------------
 * 4 tanks === 1 tower
+* 1 tower === 12-13 bashers
 * 7 tanks === 1 hq (no upgrades)
+
 
 Managing Tech Tree
 ------------------
@@ -50,3 +52,12 @@ Using for spare bytecodes
 -------------------------
 * Broadcast bug paths (towers can potentially do this)
 * Optimize bug paths that have been broadcast
+
+## Bot Notes
+### soldiersAgainstBashers
+* Drone updates unit supply as needed
+* HQ gives extra supply to drone
+* HQ can direct unit movements with *Orders* class
+* Wrote a simple basher (bashers seems good at destroying tanks)
+
+

@@ -1,7 +1,7 @@
-package onTheMark.Units;
+package soldiersAgainstBashers.Units;
 
 import battlecode.common.*;
-import onTheMark.*;
+import soldiersAgainstBashers.*;
 
 public class Beaver {
 	public static RobotController rc;

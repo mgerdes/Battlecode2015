@@ -1,4 +1,4 @@
-package onTheMark;
+package soldiersAgainstBashers;
 
 import battlecode.common.*;
 
