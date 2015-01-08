@@ -1,8 +1,6 @@
 package MarkyMark;
 
 import battlecode.common.*;
-import java.util.*;
-import MarkyMark.*;
 import MarkyMark.Units.*;
 import MarkyMark.Structures.*;
 
@@ -15,27 +13,27 @@ public class RobotPlayer {
 		type = rc.getType();
 
 		if (type == RobotType.HQ) {
-			HQ.init();			
+			HQ.init(rc);
 		} else if (type == RobotType.TOWER) {
-			Tower.init();
+			Tower.init(rc);
 		} else if (type == RobotType.BEAVER) {
-			Beaver.init();	
+			Beaver.init(rc);
 		} else if (type == RobotType.SOLDIER) {
-			Soldier.init();
+			Soldier.init(rc);
 		} else if (type == RobotType.TANK) {
-			Tank.init();
+			Tank.init(rc);
 		} else if (type == RobotType.COMMANDER) {
-			Commander.init();
+			Commander.init(rc);
 		} else if (type == RobotType.DRONE) {
-			Drone.init();
+			Drone.init(rc);
 		} else if (type == RobotType.LAUNCHER) {
-			Launcher.init();
+			Launcher.init(rc);
 		} else if (type == RobotType.MISSILE) {
-			Missile.init();
+			Missile.init(rc);
 		} else if (type == RobotType.MINER) {
-			Miner.init();
+			Miner.init(rc);
 		} else if (type.canSpawn()) {
-			Spawner.init();
+			Spawner.init(rc);
 		}
 	}		
 }

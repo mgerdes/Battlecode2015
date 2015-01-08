@@ -4,12 +4,14 @@ import battlecode.common.*;
 import java.util.*;
 import MarkyMark.*;
 
+// TODO -- Clean this up.
 public class Navigation {
 	static RobotController rc = RobotPlayer.rc;
 	static Direction[] directions = Direction.values();
     static Random rand = new Random(rc.getID());
 	static MapLocation hqLocation = rc.senseHQLocation();
 	static MapLocation enemyHQLocation = rc.senseEnemyHQLocation();
+	static boolean inited = false;
 
 	public static void tryMoveTowards(MapLocation destination) throws GameActionException {
 		MapLocation currentLocation = rc.getLocation();
@@ -23,34 +25,25 @@ public class Navigation {
 	}
 
 	public static void move() throws GameActionException {
-		if (Clock.getRoundNum() < 1200) {
-			moveRandomly();				
-		} else {
-			MapLocation curLoc = rc.getLocation();
-			MapLocation[] towers = rc.senseEnemyTowerLocations();
-			int shortest = Integer.MAX_VALUE;
-			MapLocation shortestloc = curLoc;
-			for (MapLocation towerloc : towers) {
-				int distance = curLoc.distanceSquaredTo(towerloc);
-				if (distance < shortest) {
-					shortest = shortest;
-					shortestloc = towerloc;
-				}
-			}
-			tryMoveTowards(shortestloc);
+		if (Clock.getRoundNum() < 600) {
+			tryMoveTowards(new MapLocation(hqLocation.x + 2, hqLocation.y + 2));				
+		} else if (Clock.getRoundNum() < 700) {
+			int halfx, halfy;
+			halfx = (hqLocation.x + enemyHQLocation.x) / 2;
+			halfy = (hqLocation.y + enemyHQLocation.y) / 2;
+			MapLocation half = new MapLocation(halfx, halfy);
+			tryMoveTowards(half);
+		} else if (rc.getLocation().distanceSquaredTo(enemyHQLocation) > 10) {
+			tryMoveTowards(enemyHQLocation);
 		}
 	}
 
 	public static void moveRandomly() throws GameActionException {
 		if (rc.isCoreReady()) {
-			if (Clock.getRoundNum() < 1000) {
-				if (rc.getLocation().distanceSquaredTo(hqLocation) > 81) {
-					tryMoveTowards(hqLocation);
-				} else {
-					tryMoveInDirection(directions[rand.nextInt(8)]);			
-				}
+			if (rc.getLocation().distanceSquaredTo(hqLocation) > 81) {
+				tryMoveTowards(hqLocation);
 			} else {
-				tryMoveTowards(enemyHQLocation);
+				tryMoveInDirection(directions[rand.nextInt(8)]);			
 			}
 		}
 	}

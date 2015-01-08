@@ -12,13 +12,18 @@ public class Beaver {
 	static Team goodGuys;
 	static Team badGuys;
 
-	public static void init() {
-		rc = RobotPlayer.rc;
+	public static void init(RobotController rcin) {
+		rc = rcin;
 		type = rc.getType();
 		sensorRadiusSquared = type.sensorRadiusSquared;
 		attackRadiusSquared = type.attackRadiusSquared;
 		goodGuys = rc.getTeam();
 		badGuys = goodGuys.opponent();
+		try {
+			RobotCreationQueue.init(rc);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		loop();
 	}
 
@@ -38,33 +43,18 @@ public class Beaver {
 			RobotInfo[] enemies = rc.senseNearbyRobots(attackRadiusSquared, badGuys);
 			Attack.something(enemies);
 		}
-		if (JobsQueue.canDoCurrentJob()) {
-			int job = JobsQueue.getCurrentJob();			
-			doJob(job);
-		} else if (mine()) {
-			;	
-		} else {
-			Navigation.moveRandomly();
+
+		RobotType robotToCreate = RobotCreationQueue.getNextRobotToCreate(); 
+		if (robotToCreate != null) {
+			createRobot(robotToCreate);
 		}
 	}
 
-	static boolean mine() throws GameActionException {
-		if (rc.senseOre(rc.getLocation()) > 0) {
-			if (rc.isCoreReady()) {
-				rc.mine();
-				return true;
-			}
-		}
-		return false;
-	}
-
-	static void doJob(int job) throws GameActionException {
-		RobotType typeToCreate = JobsQueue.getRobotTypeToCreate(job);
-
+	static void createRobot(RobotType robotToCreate) throws GameActionException {
 		Direction randomDirection = Navigation.randomDirection();
-		if (rc.isCoreReady() && rc.canBuild(randomDirection, typeToCreate)) {
-			JobsQueue.currentJobCompleted();
-			rc.build(randomDirection, typeToCreate);
+		if (rc.isCoreReady() && rc.canBuild(randomDirection, robotToCreate)) {
+			RobotCreationQueue.completedCreatingRobot();
+			rc.build(randomDirection, robotToCreate);
 		}
 	}
 }
