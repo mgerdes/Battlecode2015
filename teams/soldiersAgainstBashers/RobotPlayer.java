@@ -26,6 +26,8 @@ public class RobotPlayer {
 			Miner.init();
 		} else if (type == RobotType.BASHER) {
 			Basher.init();
+		} else if (type == RobotType.SOLDIER) {
+			Soldier.init();
 		} else {
 			Spawner.init();
 		}

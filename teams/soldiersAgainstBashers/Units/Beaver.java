@@ -33,10 +33,6 @@ public class Beaver {
 	}
 
 	static void doYourThing() throws GameActionException {
-		if (rc.isWeaponReady()) {
-			RobotInfo[] enemies = rc.senseNearbyRobots(attackRadiusSquared, badGuys);
-			Attack.something(enemies);
-		}
 		if (JobsQueue.canDoCurrentJob()) {
 			int job = JobsQueue.getCurrentJob();			
 			doJob(job);
