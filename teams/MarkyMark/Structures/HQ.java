@@ -5,8 +5,6 @@ import MarkyMark.Navigation;
 import MarkyMark.RobotCreationQueue;
 import battlecode.common.*;
 
-import java.awt.*;
-
 public class HQ {
 	public static RobotController rc;
 
@@ -60,8 +58,8 @@ public class HQ {
 	static void provideSupplies() throws GameActionException {
 		RobotInfo[] robots = Info.goodGuysICanSee;
 		for (RobotInfo robot : robots) {
-			if (robot.supplyLevel < 5000 && robot.location.distanceSquaredTo(Info.currentLocation) <= 15) {
-				rc.transferSupplies(5000, robot.location);
+			if (robot.supplyLevel < 1000 && robot.location.distanceSquaredTo(Info.currentLocation) <= 15) {
+				rc.transferSupplies(100, robot.location);
 			}
 		}
 	}

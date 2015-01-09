@@ -2,6 +2,7 @@ package MarkyMark;
 
 import battlecode.common.*;
 
+// TODO -- add attacking towers and  HQ code.
 public class Micro {
     static RobotController rc;
 
