@@ -5,6 +5,8 @@ import MarkyMark.Navigation;
 import MarkyMark.RobotCreationQueue;
 import battlecode.common.*;
 
+import java.awt.*;
+
 public class HQ {
 	public static RobotController rc;
 

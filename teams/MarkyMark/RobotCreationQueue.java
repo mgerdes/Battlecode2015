@@ -29,6 +29,12 @@ public class RobotCreationQueue {
 		addRobotToCreate(robotTypeToCreate.ordinal());
 	}
 
+	public static void addRobotToCreate(RobotType robotTypeToCreate, int count) throws GameActionException {
+		for (int i = 0; i < count; i++) {
+			addRobotToCreate(robotTypeToCreate);
+		}
+	}
+
 	public static void addRobotToCreate(int robotTypeToCreate) throws GameActionException {
 		int headPos = getHeadPos();
 		rc.broadcast(headPos, robotTypeToCreate);
