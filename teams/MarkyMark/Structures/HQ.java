@@ -21,14 +21,14 @@ public class HQ {
 				if (i == 2) RobotCreationQueue.addRobotToCreate(RobotType.MINERFACTORY);
 				if (i == 4) RobotCreationQueue.addRobotToCreate(RobotType.TANKFACTORY);
 				if (i == 6) RobotCreationQueue.addRobotToCreate(RobotType.MINER);
-				if (i % 2 == 0) RobotCreationQueue.addRobotToCreate(RobotType.DRONE);
+				RobotCreationQueue.addRobotToCreate(RobotType.DRONE);
 				RobotCreationQueue.addRobotToCreate(RobotType.BASHER);
 				RobotCreationQueue.addRobotToCreate(RobotType.SOLDIER);
 			}
 			RobotCreationQueue.addRobotToCreate(RobotType.MINER);
 			for (int i = 0; i < 100; i++) {
-				if (i == 5) RobotCreationQueue.addRobotToCreate(RobotType.BARRACKS);
-				RobotCreationQueue.addRobotToCreate(RobotType.SOLDIER);
+				if (i == 5) RobotCreationQueue.addRobotToCreate(RobotType.TANKFACTORY);
+				RobotCreationQueue.addRobotToCreate(RobotType.BARRACKS);
 				RobotCreationQueue.addRobotToCreate(RobotType.TANK);
 			}
 

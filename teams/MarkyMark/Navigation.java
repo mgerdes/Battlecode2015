@@ -30,6 +30,11 @@ public class Navigation {
 		moveInDirection(Bug.getDirection());
 	}
 
+	public static void moveInFiringRangeOf(MapLocation destination) throws GameActionException {
+		if (Info.currentLocation.distanceSquaredTo(destination) > Info.type.attackRadiusSquared)
+			moveTo(destination);
+	}
+
 	public static void moveInDirection(Direction d) throws GameActionException {
         if (rc.isCoreReady() && rc.canMove(d)) {
             rc.move(d);
@@ -38,8 +43,8 @@ public class Navigation {
 
 	public static boolean isSafeToMoveInDirection(Direction direction) {
 		MapLocation nextLocation = Info.currentLocation.add(direction);
-		RobotInfo[] badGuysAround = rc.senseNearbyRobots(nextLocation, 20, Info.badGuys);
-		RobotInfo[] goodGuysAround = rc.senseNearbyRobots(nextLocation, 20, Info.goodGuys);
+		RobotInfo[] badGuysAround = rc.senseNearbyRobots(nextLocation, 15, Info.badGuys);
+		RobotInfo[] goodGuysAround = rc.senseNearbyRobots(nextLocation, 15, Info.goodGuys);
 		return Micro.canGoodGuysKillBadGuys(goodGuysAround, badGuysAround) && !isNearEnemyTowerOrHQ();
 	}
 
@@ -91,6 +96,23 @@ public class Navigation {
 		return (rc.canMove(dir)) &&
 				(Info.currentEngagementRules == Engagement.ENGAGE
 						|| (Info.currentEngagementRules == Engagement.AVOID && !Navigation.isNearEnemyTowerOrHQ(nextLocation)));
+	}
+
+	public static MapLocation closestTower() {
+		if (Info.enemyTowerLocations.length > 0) {
+			int shortestDistance = Info.currentLocation.distanceSquaredTo(Info.enemyTowerLocations[0]);
+			MapLocation closestTower = Info.enemyTowerLocations[0];
+			for (int i = 1; i < Info.enemyTowerLocations.length; i++) {
+				int currentDistance = Info.currentLocation.distanceSquaredTo(Info.enemyTowerLocations[i]);
+				if (currentDistance < shortestDistance) {
+					shortestDistance = currentDistance;
+					closestTower = Info.enemyTowerLocations[i];
+				}
+			}
+			return closestTower;
+		} else {
+			return Info.enemyHQLocation;
+		}
 	}
 
 }

@@ -29,13 +29,19 @@ public class Micro {
         if (Info.currentHealth < 20 && Info.type != RobotType.TANK) {
             giveAwaySupplies();
         }
-        if (canGoodGuysKillBadGuys(Info.goodGuysICanSee, Info.badGuysICanSee)) {
+        if (canGoodGuysKillBadGuys(Info.goodGuysICanAttack, Info.badGuysICanAttack)) {
             if (Info.type.canAttack()) {
                 Attack.attack();
             }
             Direction movingDirection = Navigation.directionToMoveTo(Info.enemyHQLocation);
             if (Navigation.isSafeToMoveInDirection(movingDirection)) {
                 Navigation.moveInDirection(movingDirection);
+            } else {
+                // Tower attack code.
+                if (canGoodGuysKillTower(Info.goodGuysICanAttack)) {
+                    Attack.attack(RobotType.TOWER);
+                    Navigation.moveInFiringRangeOf(Navigation.closestTower());
+                }
             }
         } else {
             Navigation.moveTo(Info.HQLocation);
@@ -57,6 +63,14 @@ public class Micro {
             giveAwaySupplies();
             Navigation.moveTo(Info.enemyHQLocation);
         }
+    }
+
+    public static boolean canGoodGuysKillTower(RobotInfo[] goodGuys) {
+        int rank = 0;
+        for (RobotInfo goodGuy : goodGuys) {
+            rank += goodGuy.health * goodGuy.type.attackPower + (goodGuy.supplyLevel > 0 ? 500 : 0);
+        }
+        return rank > 8000;
     }
 
     // TODO - base this more on who can actually shot who? i dont know if that makes sense.

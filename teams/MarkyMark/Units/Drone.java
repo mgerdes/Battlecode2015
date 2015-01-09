@@ -36,6 +36,8 @@ public class Drone {
 			Info.currentTactic = Tactic.PROVIDE_SUPPLIES;
 			Info.currentEngagementRules = Engagement.AVOID;
 		}
+		//Info.currentEngagementRules = Engagement.ENGAGE;
+		//Info.currentTactic = Tactic.NORMAL;
 		Info.getRoundInfo();
 		Micro.doWhatRobotShouldDo();
 	}
