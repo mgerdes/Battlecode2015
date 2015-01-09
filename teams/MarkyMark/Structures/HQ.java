@@ -28,7 +28,7 @@ public class HQ {
 			RobotCreationQueue.addRobotToCreate(RobotType.MINER);
 			for (int i = 0; i < 100; i++) {
 				if (i == 5) RobotCreationQueue.addRobotToCreate(RobotType.TANKFACTORY);
-				RobotCreationQueue.addRobotToCreate(RobotType.BARRACKS);
+				RobotCreationQueue.addRobotToCreate(RobotType.SOLDIER);
 				RobotCreationQueue.addRobotToCreate(RobotType.TANK);
 			}
 
