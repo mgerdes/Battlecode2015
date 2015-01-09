@@ -1,9 +1,7 @@
 package MarkyMark;
 
 import battlecode.common.*;
-import MarkyMark.*;
 
-// TODO -- Clean this up.
 public class Navigation {
 	static RobotController rc;
 	static MapLocation currentDestination;
@@ -13,11 +11,20 @@ public class Navigation {
 		rc = rcin;
 	}
 
+	public static Direction directionToMoveTo(MapLocation destination) throws GameActionException {
+		if (!destination.equals(currentDestination)) {
+			currentDestination = destination;
+			Bug.beginBugTowards(currentDestination);
+			//rc.setIndicatorString(0, "Changing on round: " + Clock.getRoundNum());
+		}
+		return Bug.getDirection();
+	}
+
 	public static void moveTo(MapLocation destination) throws GameActionException {
 		if (!destination.equals(currentDestination)) {
 			currentDestination = destination;
 			Bug.beginBugTowards(currentDestination);
-			//rc.setIndicatorString(0, "Changing Destination to " + destination.x + ", " + destination.y);
+			//rc.setIndicatorString(0, "Changing on round: " + Clock.getRoundNum());
 		}
 		moveInDirection(Bug.getDirection());
 	}

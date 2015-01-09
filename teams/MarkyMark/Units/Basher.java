@@ -1,10 +1,9 @@
 package MarkyMark.Units;
 
+import MarkyMark.Info;
+import MarkyMark.Micro;
 import battlecode.common.*;
-import java.util.*;
-import MarkyMark.*;
 
-// TODO -- Hardcode in type, and sensor radius to save bytecode.
 public class Basher {
 	static RobotController rc;
 

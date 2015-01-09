@@ -1,8 +1,8 @@
 package MarkyMark.Structures;
 
+import MarkyMark.Info;
+import MarkyMark.Micro;
 import battlecode.common.*;
-import java.util.*;
-import MarkyMark.*;
 
 public class Tower {
 	static RobotController rc;

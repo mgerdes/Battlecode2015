@@ -1,8 +1,9 @@
 package MarkyMark.Units;
 
+import MarkyMark.Info;
+import MarkyMark.Navigation;
+import MarkyMark.RobotCreationQueue;
 import battlecode.common.*;
-import java.util.*;
-import MarkyMark.*;
 
 public class Beaver {
 	public static RobotController rc;
@@ -29,6 +30,9 @@ public class Beaver {
 		if (robotToCreate != null) {
 			createRobot(robotToCreate);
 		}
+		if (!tryToMine()) {
+			Navigation.moveRandomly();
+		}
 	}
 
 	static void createRobot(RobotType robotToCreate) throws GameActionException {
@@ -37,5 +41,15 @@ public class Beaver {
 			RobotCreationQueue.completedCreatingRobot();
 			rc.build(randomDirection, robotToCreate);
 		}
+	}
+
+	static boolean tryToMine() throws GameActionException {
+		if (rc.senseOre(rc.getLocation()) > 5) {
+			if (rc.isCoreReady()) {
+				rc.mine();
+				return true;
+			}
+		}
+		return false;
 	}
 }

@@ -1,8 +1,8 @@
 package MarkyMark.Units;
 
+import MarkyMark.Info;
+import MarkyMark.Micro;
 import battlecode.common.*;
-import java.util.*;
-import MarkyMark.*;
 
 public class Launcher {
 	static RobotController rc;

@@ -1,8 +1,8 @@
 package MarkyMark.Units;
 
+import MarkyMark.Info;
+import MarkyMark.Navigation;
 import battlecode.common.*;
-import java.util.*;
-import MarkyMark.*;
 
 public class Miner {
 	static RobotController rc;
@@ -24,6 +24,7 @@ public class Miner {
 		}
 	}
 
+	// TODO -- make mining more intelligent
 	static void doYourThing() throws GameActionException {
 		Info.getRoundInfo();
 		if(!tryToMine()) {

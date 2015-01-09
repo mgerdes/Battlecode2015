@@ -3,9 +3,8 @@ package MarkyMark;
 import battlecode.common.*;
 import java.util.*;
 
-enum Tactic {
-    NOENGAGE, ENGAGE
-}
+// TODO -- this may have gotten to big.
+// But it is a nice way of making sure functions aren't called more than once in a round.
 
 public class Info {
     public static RobotController rc;
@@ -13,6 +12,8 @@ public class Info {
     public static Random rand;
     public static int sensorRadiusSquared;
     public static int attackRadiusSquared;
+    public static double currentHealth;
+    public static double supplyLevel;
     public static Team goodGuys;
     public static Team badGuys;
     public static MapLocation currentLocation;
@@ -26,7 +27,6 @@ public class Info {
     public static RobotInfo[] goodGuysICanSee;
     public static RobotInfo[] badGuysICanSee;
     public static Direction[] directions;
-    public static Tactic tactic;
 
     public static void init(RobotController rcin) {
         rc = rcin;
@@ -34,6 +34,8 @@ public class Info {
         rand = new Random(rc.getID());
         sensorRadiusSquared = type.sensorRadiusSquared;
         attackRadiusSquared = type.attackRadiusSquared;
+        currentHealth = rc.getHealth();
+        supplyLevel = rc.getSupplyLevel();
         goodGuys = rc.getTeam();
         badGuys = goodGuys.opponent();
         HQLocation = rc.senseHQLocation();
@@ -47,7 +49,6 @@ public class Info {
         numberOfEnemyTowers = enemyTowerLocations.length;
 
         directions = Direction.values();
-        tactic = Tactic.NOENGAGE;
     }
 
     public static void getRoundInfo() {
@@ -56,5 +57,7 @@ public class Info {
         badGuysICanSee = rc.senseNearbyRobots(sensorRadiusSquared, badGuys);
         goodGuysICanAttack = rc.senseNearbyRobots(attackRadiusSquared, goodGuys);
         badGuysICanAttack = rc.senseNearbyRobots(attackRadiusSquared, badGuys);
+        currentHealth = rc.getHealth();
+        supplyLevel = rc.getSupplyLevel();
     }
 }

@@ -1,8 +1,6 @@
 package MarkyMark;
 
 import battlecode.common.*;
-import java.util.*;
-import MarkyMark.*;
 
 // use slots 60000 - 65536
 

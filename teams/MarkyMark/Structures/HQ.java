@@ -1,8 +1,9 @@
 package MarkyMark.Structures;
 
+import MarkyMark.Info;
+import MarkyMark.Navigation;
+import MarkyMark.RobotCreationQueue;
 import battlecode.common.*;
-import java.util.*;
-import MarkyMark.*;
 
 public class HQ {
 	public static RobotController rc;
@@ -14,12 +15,21 @@ public class HQ {
 
 			RobotCreationQueue.addRobotToCreate(RobotType.BEAVER);
 			RobotCreationQueue.addRobotToCreate(RobotType.BARRACKS);
-			RobotCreationQueue.addRobotToCreate(RobotType.MINERFACTORY);
-			RobotCreationQueue.addRobotToCreate(RobotType.TANKFACTORY);
+			for (int i = 0; i < 10; i++) {
+				if (i == 2) RobotCreationQueue.addRobotToCreate(RobotType.MINERFACTORY);
+				if (i == 4) RobotCreationQueue.addRobotToCreate(RobotType.TANKFACTORY);
+				if (i == 6) RobotCreationQueue.addRobotToCreate(RobotType.MINER);
+				if (i == 8) RobotCreationQueue.addRobotToCreate(RobotType.MINER);
+				RobotCreationQueue.addRobotToCreate(RobotType.BASHER);
+				RobotCreationQueue.addRobotToCreate(RobotType.SOLDIER);
+			}
 			RobotCreationQueue.addRobotToCreate(RobotType.MINER);
-			RobotCreationQueue.addRobotToCreate(RobotType.MINER);
+			RobotCreationQueue.addRobotToCreate(RobotType.HELIPAD);
 			for (int i = 0; i < 100; i++) {
+				if (i == 5) RobotCreationQueue.addRobotToCreate(RobotType.BARRACKS);
+				RobotCreationQueue.addRobotToCreate(RobotType.SOLDIER);
 				RobotCreationQueue.addRobotToCreate(RobotType.TANK);
+				RobotCreationQueue.addRobotToCreate(RobotType.DRONE);
 			}
 
 		} catch (Exception e) {
@@ -41,7 +51,17 @@ public class HQ {
 
 	static void doYourThing() throws GameActionException {
 		Info.getRoundInfo();
+		provideSupplies();
 		tryToCreateRobot();
+	}
+
+	static void provideSupplies() throws GameActionException {
+		RobotInfo[] robots = Info.goodGuysICanSee;
+		for (RobotInfo robot : robots) {
+			if (robot.supplyLevel < 5000 && robot.location.distanceSquaredTo(Info.currentLocation) <= 15) {
+				rc.transferSupplies(5000, robot.location);
+			}
+		}
 	}
 
 	static void tryToCreateRobot() throws GameActionException {

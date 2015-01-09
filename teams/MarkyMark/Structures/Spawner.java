@@ -1,8 +1,9 @@
 package MarkyMark.Structures;
 
+import MarkyMark.Info;
+import MarkyMark.Navigation;
+import MarkyMark.RobotCreationQueue;
 import battlecode.common.*;
-import java.util.*;
-import MarkyMark.*;
 
 public class Spawner {
 	public static RobotController rc;
@@ -36,7 +37,7 @@ public class Spawner {
 	}
 
 	static void createRobot(RobotType type) throws GameActionException {
-		Direction d = Navigation.randomDirection();		
+		Direction d = Navigation.randomDirection();
 		if (rc.isCoreReady() && rc.canSpawn(d, type)) {
 			RobotCreationQueue.completedCreatingRobot();
 			rc.spawn(d, type);

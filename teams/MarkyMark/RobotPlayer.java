@@ -1,21 +1,9 @@
 package MarkyMark;
 
 import battlecode.common.*;
-import java.util.*;
 
-import MarkyMark.Units.Basher;
-import MarkyMark.Units.Beaver;
-import MarkyMark.Units.Commander;
-import MarkyMark.Units.Drone;
-import MarkyMark.Units.Launcher;
-import MarkyMark.Units.Miner;
-import MarkyMark.Units.Missile;
-import MarkyMark.Units.Soldier;
-import MarkyMark.Units.Tank;
-
-import MarkyMark.Structures.HQ;
-import MarkyMark.Structures.Spawner;
-import MarkyMark.Structures.Tower;
+import MarkyMark.Units.*;
+import MarkyMark.Structures.*;
 
 public class RobotPlayer {
 	public static RobotController rc;

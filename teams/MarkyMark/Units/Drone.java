@@ -1,9 +1,11 @@
 package MarkyMark.Units;
 
+import MarkyMark.Info;
+import MarkyMark.Micro;
 import battlecode.common.*;
-import java.util.*;
-import MarkyMark.*;
 
+// TODO -- have drones harass at beginning of game, have them transport supplies later in game.
+// Maybe only use them on larger maps.
 public class Drone {
 	static RobotController rc;
 

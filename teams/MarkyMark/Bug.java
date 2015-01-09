@@ -12,7 +12,6 @@ public class Bug {
     private static boolean followingWall;
     private static Direction previousDirection;
     private static int distanceStartBugging;
-    private static int turnsFollowingWall;
 
     public static void init(RobotController rcC) {
         rc = rcC;
@@ -20,11 +19,9 @@ public class Bug {
     }
 
     public static void beginBugTowards(MapLocation destinationC) {
-        turnsFollowingWall = 0;
         followingWall = false;
         previousDirection = null;
         distanceStartBugging = 0;
-        turnsFollowingWall = 0;
         destination = destinationC;
     }
 
@@ -64,12 +61,10 @@ public class Bug {
 
     private static Direction getDirectionFollowingWall(MapLocation currentLocation) {
         if (currentLocation.distanceSquaredTo(destination) < distanceStartBugging || !obstaclesAroundMe()) {
-            turnsFollowingWall = 0;
             followingWall = false;
             return getDirectionNotFollowingWall(currentLocation);
         }
 
-        turnsFollowingWall++;
         Direction followDirection = getFollowDirection(previousDirection);
         previousDirection = followDirection;
         //rc.setIndicatorString(0, previousDirection.toString());

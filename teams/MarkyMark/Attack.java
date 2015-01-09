@@ -1,10 +1,9 @@
 package MarkyMark;
 
 import battlecode.common.*;
-import java.util.*;
-import MarkyMark.*;
 
 // TODO -- Make attacking smarter.
+// Have towers target the most powerful enemies, maybe other robots go after weaker ones first.
 public class Attack {
 	static RobotController rc;
 
@@ -12,7 +11,7 @@ public class Attack {
 		rc = rcin;
 	}
 
-	public static void something() throws GameActionException {
+	public static void attack() throws GameActionException {
 		RobotInfo[] enemies = Info.badGuysICanAttack;
 		if (rc.isWeaponReady() && enemies.length > 0 && rc.canAttackLocation(enemies[0].location)) {
 			rc.attackLocation(enemies[0].location);
@@ -28,9 +27,5 @@ public class Attack {
 				}
 			}
 		}
-	}
-
-	public static void attackTowers() throws GameActionException {
-
 	}
 }
