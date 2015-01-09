@@ -57,11 +57,12 @@ public class HQ {
 		tryToCreateRobot();
 	}
 
+	// TODO -- Improve this.
 	static void provideSupplies() throws GameActionException {
 		RobotInfo[] robots = Info.goodGuysICanSee;
 		for (RobotInfo robot : robots) {
-			if (robot.supplyLevel < 1000 && robot.location.distanceSquaredTo(Info.currentLocation) <= 15) {
-				rc.transferSupplies(100, robot.location);
+			if (robot.supplyLevel < robot.type.supplyUpkeep * 500 && robot.location.distanceSquaredTo(Info.currentLocation) <= 15) {
+				rc.transferSupplies(robot.type.supplyUpkeep * 500, robot.location);
 			}
 		}
 	}
