@@ -38,14 +38,13 @@ public class Bug {
             return getDirectionFollowingWall(currentLocation);
         }
 
-        //:w
         // rc.setIndicatorString(0, "not following wall");
         return getDirectionNotFollowingWall(currentLocation);
     }
 
     private static boolean obstaclesAroundMe() {
-        int[] xoffsets = {1,1,0,-1,-1,-1, 0, 1};
-        int[] yoffsets = {0,1,1, 1, 0,-1,-1,-1};
+        int[] xoffsets = {1, 1, 0, -1, -1, -1, 0, 1};
+        int[] yoffsets = {0, 1, 1, 1, 0, -1, -1, -1};
         for (int i = 0; i < 8; i++) {
             MapLocation currentLocation = rc.getLocation();
             MapLocation loc = new MapLocation(currentLocation.x + xoffsets[i], currentLocation.y + yoffsets[i]);
@@ -60,7 +59,9 @@ public class Bug {
     }
 
     private static Direction getDirectionFollowingWall(MapLocation currentLocation) {
-        if (currentLocation.distanceSquaredTo(destination) < distanceStartBugging || !obstaclesAroundMe()) {
+        if (currentLocation.distanceSquaredTo(destination) < distanceStartBugging
+                || (Info.currentEngagementRules == Engagement.ENGAGE && !obstaclesAroundMe())
+                || (Info.currentEngagementRules == Engagement.AVOID && !Navigation.isNearEnemyTowerOrHQ(currentLocation))) {
             followingWall = false;
             return getDirectionNotFollowingWall(currentLocation);
         }
@@ -73,7 +74,7 @@ public class Bug {
 
     private static Direction getDirectionNotFollowingWall(MapLocation currentLocation) {
         Direction direct = currentLocation.directionTo(destination);
-        if (rc.canMove(direct)) {
+        if (Navigation.okToMove(direct)) {
             return direct;
         }
 
@@ -108,7 +109,7 @@ public class Bug {
     }
 
     private static Direction rotateLeftUntilCanMove(Direction direction) {
-        while (!rc.canMove(direction)) {
+        while (!Navigation.okToMove(direction)) {
             direction = direction.rotateLeft();
         }
 
@@ -116,7 +117,7 @@ public class Bug {
     }
 
     private static Direction rotateRightUntilCanMove(Direction direction) {
-        while (!rc.canMove(direction)) {
+        while (!Navigation.okToMove(direction)) {
             direction = direction.rotateRight();
         }
 

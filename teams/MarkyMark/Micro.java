@@ -10,6 +10,16 @@ public class Micro {
         rc = rcin;
     }
 
+    public static void doWhatRobotShouldDo() throws GameActionException {
+        if (Info.currentTactic == Tactic.NORMAL) {
+            doWhatAttackingRobotShouldDo();
+        } else if (Info.currentTactic == Tactic.HARASS) {
+            doWhatHarassingRobotShouldDo();
+        } else if (Info.currentTactic == Tactic.PROVIDE_SUPPLIES) {
+
+        }
+    }
+
     public static void doWhatAttackingRobotShouldDo() throws GameActionException {
         /*
             Go to enemy hq.
@@ -24,12 +34,18 @@ public class Micro {
                 Attack.attack();
             }
             Direction movingDirection = Navigation.directionToMoveTo(Info.enemyHQLocation);
-            if (isSafeToMoveInDirection(movingDirection)) {
+            if (Navigation.isSafeToMoveInDirection(movingDirection)) {
                 Navigation.moveInDirection(movingDirection);
             }
         } else {
             Navigation.moveTo(Info.HQLocation);
         }
+    }
+
+    public static void doWhatHarassingRobotShouldDo() throws GameActionException {
+        // Sneak over to enemy, destroy some shit.
+        Attack.attack();
+        Navigation.moveTo(Info.enemyHQLocation);
     }
 
     // TODO - base this more on who can actually shot who? i dont know if that makes sense.
@@ -50,33 +66,6 @@ public class Micro {
         return goodGuyStrength >= badGuyStrength;
     }
 
-    public static boolean isSafeToMoveInDirection(Direction direction) {
-        MapLocation nextLocation = Info.currentLocation.add(direction);
-        RobotInfo[] badGuysAround = rc.senseNearbyRobots(nextLocation, 20, Info.badGuys);
-        RobotInfo[] goodGuysAround = rc.senseNearbyRobots(nextLocation, 20, Info.goodGuys);
-        return canGoodGuysKillBadGuys(goodGuysAround, badGuysAround) && !isNearEnemyTower() && !isNearEnemyHQ();
-    }
-
-    public static boolean isNearEnemyTower() {
-        return isNearEnemyTower(Info.currentLocation);
-    }
-
-    public static boolean isNearEnemyTower(MapLocation location) {
-        for (MapLocation enemyTowerLocation : Info.enemyTowerLocations) {
-            if (location.distanceSquaredTo(enemyTowerLocation) < RobotType.TOWER.attackRadiusSquared + 15) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static boolean isNearEnemyHQ() {
-        return isNearEnemyHQ(Info.currentLocation);
-    }
-
-    public static boolean isNearEnemyHQ(MapLocation location) {
-        return location.distanceSquaredTo(Info.enemyHQLocation) < RobotType.HQ.attackRadiusSquared + 15;
-    }
 
     public static void giveAwaySupplies() throws GameActionException {
         if (Info.goodGuysICanSee.length > 0) {

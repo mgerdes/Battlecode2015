@@ -26,6 +26,6 @@ public class Commander {
 
 	static void doYourThing() throws GameActionException {
 		Info.getRoundInfo();
-		Micro.doWhatAttackingRobotShouldDo();
+		Micro.doWhatRobotShouldDo();
 	}
 }

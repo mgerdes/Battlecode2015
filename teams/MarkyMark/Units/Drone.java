@@ -1,7 +1,9 @@
 package MarkyMark.Units;
 
+import MarkyMark.Engagement;
 import MarkyMark.Info;
 import MarkyMark.Micro;
+import MarkyMark.Tactic;
 import battlecode.common.*;
 
 // TODO -- have drones harass at beginning of game, have them transport supplies later in game.
@@ -27,7 +29,14 @@ public class Drone {
 	}
 
 	static void doYourThing() throws GameActionException {
+		if (Clock.getRoundNum() < 1000) {
+			Info.currentTactic = Tactic.HARASS;
+			Info.currentEngagementRules = Engagement.AVOID;
+		} else {
+			Info.currentTactic = Tactic.PROVIDE_SUPPLIES;
+			Info.currentEngagementRules = Engagement.ENGAGE;
+		}
 		Info.getRoundInfo();
-		Micro.doWhatAttackingRobotShouldDo();
+		Micro.doWhatRobotShouldDo();
 	}
 }
