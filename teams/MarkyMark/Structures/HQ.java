@@ -51,8 +51,8 @@ public class HQ {
 	}
 
 	static void doYourThing() throws GameActionException {
-		Attack.attack();
 		Info.getRoundInfo();
+		Attack.attack();
 		provideSupplies();
 		tryToCreateRobot();
 	}

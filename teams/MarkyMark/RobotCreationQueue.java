@@ -15,6 +15,7 @@ public class RobotCreationQueue {
 	static RobotType[] robotTypes = RobotType.values();
 
 	public static void reset() throws GameActionException {
+		PriorityRobotCreationQueue.reset();
 		rc.broadcast(LENGTH_CHANNEL, 0);
 		rc.broadcast(HEAD_POS_CHANNEL, START_POS);
 		rc.broadcast(TAIL_POS_CHANNEL, START_POS);
@@ -23,6 +24,7 @@ public class RobotCreationQueue {
 	public static void init(RobotController rcin) throws GameActionException {
 		rc = rcin;
 		robotTypes = RobotType.values();
+		PriorityRobotCreationQueue.init(rc);
 	}
 
 	public static void addRobotToCreate(RobotType robotTypeToCreate) throws GameActionException {
@@ -44,15 +46,40 @@ public class RobotCreationQueue {
 
 	// This returns NULL if the caller of the method cannot create the robot.
 	public static RobotType getNextRobotToCreate() throws GameActionException {
-		if (length() > 0) {
-			RobotType typeToCreate = robotTypes[getGetItemInQueue()];
-			RobotType typeRequired = getTypeRequiredToCreate(typeToCreate);
+		if (PriorityRobotCreationQueue.length() == 0) {
+			if (length() > 0) {
+				RobotType typeToCreate = robotTypes[getGetItemInQueue()];
+				RobotType typeRequired = getTypeRequiredToCreate(typeToCreate);
 
-			if (rc.getType() == typeRequired && rc.getTeamOre() > typeToCreate.oreCost) {
-				return typeToCreate;
-			} 
-		} 
-		return null;
+				// Make sure dependencies are met, if not then add them to priority queue.
+				RobotType dependency1;
+				if (typeToCreate.isBuilding) {
+					dependency1 = typeToCreate.dependency;
+				} else {
+					dependency1 = typeToCreate.spawnSource;
+				}
+				if (rc.checkDependencyProgress(dependency1) == DependencyProgress.NONE) {
+					PriorityRobotCreationQueue.addRobotToCreate(RobotType.BEAVER);
+					RobotType dependency2;
+					if (dependency1.isBuilding) {
+						dependency2 = dependency1.dependency;
+					} else {
+						dependency2 = dependency1.spawnSource;
+					}
+					if (rc.checkDependencyProgress(dependency2) == DependencyProgress.NONE) {
+						PriorityRobotCreationQueue.addRobotToCreate(dependency2);
+					}
+					PriorityRobotCreationQueue.addRobotToCreate(dependency1);
+				}
+
+				if (rc.getType() == typeRequired && rc.getTeamOre() > typeToCreate.oreCost) {
+					return typeToCreate;
+				}
+			}
+			return null;
+		} else {
+			return PriorityRobotCreationQueue.getNextRobotToCreate();
+		}
 	}
 
 	// Returns the robot type that can create the type of robot we want to create.
@@ -65,9 +92,14 @@ public class RobotCreationQueue {
 	}
 
 	public static void completedCreatingRobot() throws GameActionException {
-		int tailPos = getTailPos();
-		updateTailPos(tailPos + 1);
-		decreaseLength();
+		int priorityCreationQueueLength = PriorityRobotCreationQueue.length();
+		if (priorityCreationQueueLength == 0) {
+			int tailPos = getTailPos();
+			updateTailPos(tailPos + 1);
+			decreaseLength();
+		} else {
+			PriorityRobotCreationQueue.completedCreatingRobot();
+		}
 	}
 
 	public static int getGetItemInQueue() throws GameActionException {
@@ -102,3 +134,4 @@ public class RobotCreationQueue {
 		rc.broadcast(LENGTH_CHANNEL, length() - 1);
 	}
 }
+
