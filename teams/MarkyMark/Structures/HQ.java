@@ -3,6 +3,7 @@ package MarkyMark.Structures;
 import MarkyMark.Info;
 import MarkyMark.Navigation;
 import MarkyMark.RobotCreationQueue;
+import MarkyMark.Attack;
 import battlecode.common.*;
 
 public class HQ {
@@ -50,6 +51,7 @@ public class HQ {
 	}
 
 	static void doYourThing() throws GameActionException {
+		Attack.attack();
 		Info.getRoundInfo();
 		provideSupplies();
 		tryToCreateRobot();
