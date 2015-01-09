@@ -21,7 +21,7 @@ public class HQ {
 				if (i == 2) RobotCreationQueue.addRobotToCreate(RobotType.MINERFACTORY);
 				if (i == 4) RobotCreationQueue.addRobotToCreate(RobotType.TANKFACTORY);
 				if (i == 6) RobotCreationQueue.addRobotToCreate(RobotType.MINER);
-				RobotCreationQueue.addRobotToCreate(RobotType.DRONE);
+				if (i % 2 == 0) RobotCreationQueue.addRobotToCreate(RobotType.DRONE);
 				RobotCreationQueue.addRobotToCreate(RobotType.BASHER);
 				RobotCreationQueue.addRobotToCreate(RobotType.SOLDIER);
 			}

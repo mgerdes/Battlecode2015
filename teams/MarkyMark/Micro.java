@@ -2,7 +2,6 @@ package MarkyMark;
 
 import battlecode.common.*;
 
-// TODO -- add attacking towers and  HQ code.
 public class Micro {
     static RobotController rc;
 
@@ -20,6 +19,7 @@ public class Micro {
         }
     }
 
+    // TODO -- add attacking towers and  HQ code.
     public static void doWhatAttackingRobotShouldDo() throws GameActionException {
         /*
             Go to enemy hq.
@@ -51,11 +51,10 @@ public class Micro {
 
     // TODO -- this is not great.
     public static void doWhatSupplyProvidersShouldDo() throws GameActionException {
-        if (rc.getSupplyLevel() < 500) {
+        if (rc.getSupplyLevel() < 1000) {
             Navigation.moveTo(Info.HQLocation);
         } else {
-            if (Info.goodGuysICanSee.length > 5)
-                giveAwaySupplies();
+            giveAwaySupplies();
             Navigation.moveTo(Info.enemyHQLocation);
         }
     }
@@ -85,12 +84,14 @@ public class Micro {
             MapLocation mostDeservingRobotLocation = null;
             for (RobotInfo robot : Info.goodGuysICanSee) {
                 MapLocation robotLocation = robot.location;
-                if (robotLocation.distanceSquaredTo(Info.currentLocation) <= GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED) {
+                if (!robot.type.isBuilding) {
+                    if (robotLocation.distanceSquaredTo(Info.currentLocation) <= GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED) {
                     int currentDeservingLevel = (int) (robot.health * robot.type.attackPower);
                     if (currentDeservingLevel > mostDeserving) {
                         mostDeserving = currentDeservingLevel;
                         mostDeservingRobotLocation = robot.location;
                     }
+                }
                 }
             }
             if (mostDeservingRobotLocation != null)

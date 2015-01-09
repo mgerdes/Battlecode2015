@@ -49,7 +49,6 @@ public class Info {
         startRallyPoint = new MapLocation(halfx, halfy);
 
         enemyTowerLocations = rc.senseEnemyTowerLocations();
-        numberOfEnemyTowers = enemyTowerLocations.length;
 
         directions = Direction.values();
 
