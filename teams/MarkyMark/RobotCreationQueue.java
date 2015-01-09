@@ -4,7 +4,6 @@ import battlecode.common.*;
 
 // use slots 60000 - 65536
 
-// TODO -- Deal with dependencies.
 public class RobotCreationQueue {
 	static final int LENGTH_CHANNEL = 60000;
 	static final int HEAD_POS_CHANNEL = 60001;

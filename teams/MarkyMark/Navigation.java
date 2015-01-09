@@ -2,6 +2,7 @@ package MarkyMark;
 
 import battlecode.common.*;
 
+// TODO -- unsure about a lot of stuff in here.
 public class Navigation {
 	static RobotController rc;
 	static MapLocation currentDestination;
@@ -30,9 +31,9 @@ public class Navigation {
 	}
 
 	public static void moveInDirection(Direction d) throws GameActionException {
-		if (rc.isCoreReady() && rc.canMove(d)) {
-			rc.move(d);
-		}
+        if (rc.isCoreReady() && rc.canMove(d)) {
+            rc.move(d);
+        }
 	}
 
 	public static boolean isSafeToMoveInDirection(Direction direction) {
@@ -40,6 +41,10 @@ public class Navigation {
 		RobotInfo[] badGuysAround = rc.senseNearbyRobots(nextLocation, 20, Info.badGuys);
 		RobotInfo[] goodGuysAround = rc.senseNearbyRobots(nextLocation, 20, Info.goodGuys);
 		return Micro.canGoodGuysKillBadGuys(goodGuysAround, badGuysAround) && !isNearEnemyTowerOrHQ();
+	}
+
+	public static boolean isNearEnemy(MapLocation location) {
+		return Info.badGuysICanSee.length > 0 || isNearEnemyHQ(location);
 	}
 
 	public static boolean isNearEnemyTowerOrHQ() {

@@ -15,6 +15,7 @@ public class Bug {
 
     public static void init(RobotController rcC) {
         rc = rcC;
+        // TODO -- not sure if i should keep this random.
         DEFAULT_LEFT = Info.rand.nextDouble() < .5;
     }
 
@@ -108,17 +109,26 @@ public class Bug {
         return rotateRightUntilCanMove(turn);
     }
 
+    // TODO - 2 below methods have ugly hacks.
     private static Direction rotateLeftUntilCanMove(Direction direction) {
+        int numOfTurns = 0;
         while (!Navigation.okToMove(direction)) {
             direction = direction.rotateLeft();
+            if (numOfTurns++ == 7) {
+                return Direction.OMNI;
+            }
         }
 
         return direction;
     }
 
     private static Direction rotateRightUntilCanMove(Direction direction) {
+        int numOfTurns = 0;
         while (!Navigation.okToMove(direction)) {
             direction = direction.rotateRight();
+            if (numOfTurns++ == 7) {
+                return Direction.OMNI;
+            }
         }
 
         return direction;

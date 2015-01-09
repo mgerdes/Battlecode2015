@@ -16,7 +16,7 @@ public class Micro {
         } else if (Info.currentTactic == Tactic.HARASS) {
             doWhatHarassingRobotShouldDo();
         } else if (Info.currentTactic == Tactic.PROVIDE_SUPPLIES) {
-
+            doWhatSupplyProvidersShouldDo();
         }
     }
 
@@ -42,10 +42,22 @@ public class Micro {
         }
     }
 
+    // TODO -- prioritize beavers, miners, and buildings when destroying shit.
     public static void doWhatHarassingRobotShouldDo() throws GameActionException {
         // Sneak over to enemy, destroy some shit.
         Attack.attack();
         Navigation.moveTo(Info.enemyHQLocation);
+    }
+
+    // TODO -- this is not great.
+    public static void doWhatSupplyProvidersShouldDo() throws GameActionException {
+        if (rc.getSupplyLevel() < 500) {
+            Navigation.moveTo(Info.HQLocation);
+        } else {
+            if (Info.goodGuysICanSee.length > 5)
+                giveAwaySupplies();
+            Navigation.moveTo(Info.enemyHQLocation);
+        }
     }
 
     // TODO - base this more on who can actually shot who? i dont know if that makes sense.
@@ -66,7 +78,7 @@ public class Micro {
         return goodGuyStrength >= badGuyStrength;
     }
 
-
+    // TODO -- maybe dont put all your eggs in one basket
     public static void giveAwaySupplies() throws GameActionException {
         if (Info.goodGuysICanSee.length > 0) {
             int mostDeserving = 0;
