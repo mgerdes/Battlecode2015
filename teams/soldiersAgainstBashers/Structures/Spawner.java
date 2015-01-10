@@ -40,6 +40,7 @@ public class Spawner {
 		if (rc.isCoreReady() && rc.canSpawn(d, type)) {
 			JobsQueue.currentJobCompleted();
 			rc.spawn(d, type);
+			rc.setIndicatorString(0, String.format("Round %d: Spawning a %s", Clock.getRoundNum(), type));
 		}
 	}
 }

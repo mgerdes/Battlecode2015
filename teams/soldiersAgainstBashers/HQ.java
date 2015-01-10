@@ -21,12 +21,11 @@ public class HQ {
 			JobsQueue.addJob(RobotType.SOLDIER, 2);
 			JobsQueue.addJob(RobotType.BEAVER, 2);
 			JobsQueue.addJob(RobotType.MINERFACTORY);
-			JobsQueue.addJob(RobotType.SOLDIER);
-			JobsQueue.addJob(RobotType.MINER);
-			JobsQueue.addJob(RobotType.SOLDIER);
-			JobsQueue.addJob(RobotType.MINER);
-			JobsQueue.addJob(RobotType.SOLDIER, 2);
+			JobsQueue.addJob(RobotType.BARRACKS);
+			JobsQueue.addJob(RobotType.SOLDIER, 5);
+			JobsQueue.addJob(RobotType.MINER, 3);
 			JobsQueue.addJob(RobotType.HELIPAD);
+			JobsQueue.addJob(RobotType.SOLDIER, 2);
 			JobsQueue.addJob(RobotType.DRONE);
 
 			rc.setIndicatorString(0, String.format("used %d bytecodes in init", Clock.getBytecodeNum()));
@@ -53,6 +52,10 @@ public class HQ {
 	static void doYourThing() throws GameActionException {
 		if (JobsQueue.canDoCurrentJob()) {
 			doJob();
+		}
+
+		if (Clock.getRoundNum() % 5 == 0) {
+			JobsQueue.addJob(RobotType.SOLDIER);
 		}
 
 		shareSupplyWithNearbyFriendlies();
