@@ -9,6 +9,7 @@ public class HQ {
 
 		rc = RobotPlayer.rc;
 		Orders.init();
+		Navigation.init(rc);
 
 		//--Starting units
 		try {
@@ -82,7 +83,7 @@ public class HQ {
 	}
 
 	static void spawn(RobotType type) throws GameActionException {
-		Direction d = Navigation.randomDirection();		
+		Direction d = Navigation.getRandomDirection();
 		if (rc.isCoreReady() && rc.canSpawn(d, type)) {
 			JobsQueue.currentJobCompleted();
 			rc.spawn(d, type);

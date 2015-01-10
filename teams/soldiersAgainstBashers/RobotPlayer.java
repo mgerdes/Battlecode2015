@@ -18,8 +18,6 @@ public class RobotPlayer {
 			Tower.init();
 		} else if (type == RobotType.BEAVER) {
 			Beaver.init();
-		} else if (type == RobotType.TANK) {
-			Tank.init();
 		} else if (type == RobotType.DRONE) {
 			Drone.init();
 		} else if (type == RobotType.MINER) {

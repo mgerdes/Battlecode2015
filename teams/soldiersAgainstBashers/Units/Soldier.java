@@ -59,7 +59,8 @@ public class Soldier {
 //        }
 
         if (rc.isCoreReady()) {
-            Move.awayFromTeam(myTeam);
+            MapLocation currentLocation = rc.getLocation();
+            Move.awayFromTeam(myTeam, currentLocation);
 //            MapLocation order = Orders.getSoldierDestination();
 //            if (order == null) {
 //                Navigation.moveRandomly();

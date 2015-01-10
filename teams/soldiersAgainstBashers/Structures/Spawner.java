@@ -8,6 +8,7 @@ public class Spawner {
 
 	public static void init() {
 		rc = RobotPlayer.rc;
+		Navigation.init(rc);
 		loop();
 	}
 
@@ -35,7 +36,7 @@ public class Spawner {
 	}
 
 	static void spawn(RobotType type) throws GameActionException {
-		Direction d = Navigation.randomDirection();		
+		Direction d = Navigation.getRandomDirection();
 		if (rc.isCoreReady() && rc.canSpawn(d, type)) {
 			JobsQueue.currentJobCompleted();
 			rc.spawn(d, type);

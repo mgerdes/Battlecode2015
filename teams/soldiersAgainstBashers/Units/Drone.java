@@ -2,6 +2,7 @@ package soldiersAgainstBashers.Units;
 
 import battlecode.common.*;
 import battlecode.world.Robot;
+import soldiersAgainstBashers.Move;
 import soldiersAgainstBashers.Navigation;
 import soldiersAgainstBashers.RobotPlayer;
 
@@ -16,6 +17,8 @@ public class Drone {
 
 	public static void init() {
 		rc = RobotPlayer.rc;
+		Move.init(rc);
+
 		goodGuys = rc.getTeam();
 		badGuys = goodGuys.opponent();
 		myHQ = rc.senseHQLocation();
@@ -36,8 +39,9 @@ public class Drone {
 
 	static void doYourThing() throws GameActionException {
 		double currentSupply = rc.getSupplyLevel();
+		MapLocation currentLocation = rc.getLocation();
 		if (currentSupply < DRONE_MIN_SUPPLY) {
-			Navigation.tryMoveTowards(myHQ);
+			Move.toward(myHQ, currentLocation);
 			return;
 		}
 
@@ -54,7 +58,7 @@ public class Drone {
 					rc.transferSupplies((int) currentSupply / 10, ri.location);
 				}
 				else if (rc.isCoreReady()) {
-					Navigation.tryMoveTowards(ri.location);
+					Move.toward(ri.location, currentLocation);
 					break;
 				}
 

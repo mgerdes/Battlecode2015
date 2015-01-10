@@ -14,6 +14,9 @@ public class Beaver {
 	public static void init() {
 		rc = RobotPlayer.rc;
 		type = rc.getType();
+		Move.init(rc);
+		Navigation.init(rc);
+
 		sensorRadiusSquared = type.sensorRadiusSquared;
 		attackRadiusSquared = type.attackRadiusSquared;
 		goodGuys = rc.getTeam();
@@ -33,30 +36,25 @@ public class Beaver {
 	}
 
 	static void doYourThing() throws GameActionException {
-		if (JobsQueue.canDoCurrentJob()) {
-			int job = JobsQueue.getCurrentJob();			
-			doJob(job);
-		} else if (mine()) {
-		} else {
-			Navigation.moveRandomly();
+		if (!rc.isCoreReady()) {
+			return;
 		}
-	}
 
-	static boolean mine() throws GameActionException {
-		if (rc.senseOre(rc.getLocation()) > 0) {
-			if (rc.isCoreReady()) {
-				rc.mine();
-				return true;
-			}
+		if (JobsQueue.canDoCurrentJob()) {
+			int job = JobsQueue.getCurrentJob();
+			doJob(job);
+		} else if (rc.senseOre(rc.getLocation()) > 0) {
+			rc.mine();
+		} else {
+			Move.inRandomDirection();
 		}
-		return false;
 	}
 
 	static void doJob(int job) throws GameActionException {
 		RobotType typeToCreate = JobsQueue.getRobotTypeToCreate(job);
 
-		Direction randomDirection = Navigation.randomDirection();
-		if (rc.isCoreReady() && rc.canBuild(randomDirection, typeToCreate)) {
+		Direction randomDirection = Navigation.getRandomDirection();
+		if (rc.canBuild(randomDirection, typeToCreate)) {
 			JobsQueue.currentJobCompleted();
 			rc.build(randomDirection, typeToCreate);
 		}
