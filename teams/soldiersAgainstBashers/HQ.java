@@ -6,26 +6,26 @@ public class HQ {
 	public static RobotController rc;
 
 	public static void init() {
+
 		rc = RobotPlayer.rc;
 		Orders.init();
 
+		//--Starting units
 		try {
 			JobsQueue.init();
 			JobsQueue.addJob(RobotType.BEAVER, 2);
-			JobsQueue.addJob(RobotType.MINERFACTORY);
-			JobsQueue.addJob(RobotType.BEAVER, 2);
-			JobsQueue.addJob(RobotType.MINER, 5);
-			JobsQueue.addJob(RobotType.HELIPAD);
 			JobsQueue.addJob(RobotType.BARRACKS);
-			JobsQueue.addJob(RobotType.DRONE);
+			JobsQueue.addJob(RobotType.BEAVER, 2);
+			JobsQueue.addJob(RobotType.SOLDIER, 2);
+			JobsQueue.addJob(RobotType.MINERFACTORY);
+			JobsQueue.addJob(RobotType.SOLDIER, 5);
 			JobsQueue.addJob(RobotType.MINER, 5);
-			JobsQueue.addJob(RobotType.SOLDIER, 5);
-			JobsQueue.addJob(RobotType.SOLDIER, 5);
 			rc.setIndicatorString(0, String.format("used %d bytecodes in init", Clock.getBytecodeNum()));
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
 		loop();
 	}
 
@@ -46,7 +46,14 @@ public class HQ {
 			doJob();
 		}
 
-		if (Clock.getRoundNum() == 10) {
+		int roundNumber = Clock.getRoundNum();
+
+		if (roundNumber % 8 == 0) {
+			JobsQueue.addJob(RobotType.SOLDIER);
+			JobsQueue.addJob(RobotType.BASHER);
+		}
+
+		if (roundNumber == 10) {
 			Orders.sendSoldiersTo(new MapLocation(8157, 11992));
 		}
 

@@ -1,22 +1,21 @@
 package soldiersAgainstBashers.Units;
 
 import battlecode.common.*;
-import soldiersAgainstBashers.Navigation;
-import soldiersAgainstBashers.Orders;
-import soldiersAgainstBashers.RobotPlayer;
+import soldiersAgainstBashers.*;
 
 public class Soldier {
     static RobotController rc = RobotPlayer.rc;
-    static Team goodGuys;
-    static Team badGuys;
+    static Team myTeam;
     static int attackRadius;
+    static int senseRadius;
 
     public static void init() {
         rc = RobotPlayer.rc;
         Orders.init();
+        Move.init(rc);
+        senseRadius = RobotType.SOLDIER.sensorRadiusSquared;
         attackRadius = RobotType.SOLDIER.attackRadiusSquared;
-        goodGuys = rc.getTeam();
-        badGuys = goodGuys.opponent();
+        myTeam = rc.getTeam();
         loop();
     }
 
@@ -33,37 +32,43 @@ public class Soldier {
     }
 
     static void doYourThing() throws GameActionException {
-        RobotInfo[] enemies = rc.senseNearbyRobots(attackRadius, badGuys);
-        if (enemies.length > 0 && rc.isWeaponReady()) {
-            MapLocation currentLocation = rc.getLocation();
-            double health = 10000;
-            int index = 0;
-            for (int i = 0; i < enemies.length; i++) {
-                if (enemies[i].health < health) {
-                    health = enemies[i].health;
-                    index = i;
-                }
-
-                if (enemies[i].location.distanceSquaredTo(currentLocation) < 4) {
-                    index = i;
-                    break;
-                }
-            }
-
-            rc.attackLocation(enemies[index].location);
-            return;
-        }
+//        RobotInfo[] enemies = rc.senseNearbyRobots(attackRadius, badGuys);
+//        if (enemies.length > 0 && rc.isWeaponReady()) {
+//            MapLocation currentLocation = rc.getLocation();
+//            double health = 10000;
+//            int index = 0;
+//            for (int i = 0; i < enemies.length; i++) {
+//                if (enemies[i].health < health) {
+//                    health = enemies[i].health;
+//                    index = i;
+//                }
+//
+//                if (enemies[i].location.distanceSquaredTo(currentLocation) < 4) {
+//                    index = i;
+//                    break;
+//                }
+//            }
+//
+//            rc.attackLocation(enemies[index].location);
+//            return;
+//        }
+//
+//        RobotInfo[] enemiesSensed = rc.senseNearbyRobots(senseRadius, badGuys);
+//        if (enemiesSensed.length > 0) {
+//            return;
+//        }
 
         if (rc.isCoreReady()) {
-            MapLocation order = Orders.getSoldierDestination();
-            if (order == null) {
-                Navigation.moveRandomly();
-            } else {
-                MapLocation current = rc.getLocation();
-                if (current.distanceSquaredTo(order) > 9) {
-                    Navigation.tryMoveTowards(order);
-                }
-            }
+            Move.awayFromTeam(myTeam);
+//            MapLocation order = Orders.getSoldierDestination();
+//            if (order == null) {
+//                Navigation.moveRandomly();
+//            } else {
+//                MapLocation current = rc.getLocation();
+//                if (current.distanceSquaredTo(order) > 9) {
+//                    Navigation.tryMoveTowards(order);
+//                }
+//            }
         }
     }
 }
