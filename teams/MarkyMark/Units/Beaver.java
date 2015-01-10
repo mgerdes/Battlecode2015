@@ -31,7 +31,7 @@ public class Beaver {
 			createRobot(robotToCreate);
 		}
 		if (!tryToMine()) {
-			Navigation.moveRandomly();
+			//Navigation.moveRandomly();
 		}
 	}
 

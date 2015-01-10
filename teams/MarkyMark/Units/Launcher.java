@@ -26,7 +26,7 @@ public class Launcher {
 
 	static void doYourThing() throws GameActionException {
 		Info.getRoundInfo();
-		Micro.doWhatAttackingRobotShouldDo();
+		Micro.doWhatRobotShouldDo();
 	}
 }
 

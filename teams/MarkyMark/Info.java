@@ -6,6 +6,7 @@ import java.util.*;
 // TODO -- this may have gotten to big.
 // But it is a nice way of making sure functions aren't called more than once in a round.
 
+
 public class Info {
     public static RobotController rc;
     public static RobotType type;
@@ -27,6 +28,8 @@ public class Info {
     public static RobotInfo[] goodGuysICanSee;
     public static RobotInfo[] badGuysICanSee;
     public static Direction[] directions;
+    public static Tactic currentTactic;
+    public static Engagement currentEngagementRules;
 
     public static void init(RobotController rcin) {
         rc = rcin;
@@ -46,9 +49,11 @@ public class Info {
         startRallyPoint = new MapLocation(halfx, halfy);
 
         enemyTowerLocations = rc.senseEnemyTowerLocations();
-        numberOfEnemyTowers = enemyTowerLocations.length;
 
         directions = Direction.values();
+
+        currentTactic = Tactic.NORMAL;
+        currentEngagementRules = Engagement.ENGAGE;
     }
 
     public static void getRoundInfo() {

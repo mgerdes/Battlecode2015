@@ -2,6 +2,7 @@ package MarkyMark;
 
 import battlecode.common.*;
 
+// TODO -- unsure about a lot of stuff in here.
 public class Navigation {
 	static RobotController rc;
 	static MapLocation currentDestination;
@@ -29,10 +30,55 @@ public class Navigation {
 		moveInDirection(Bug.getDirection());
 	}
 
+	public static void moveInFiringRangeOf(MapLocation destination) throws GameActionException {
+		if (Info.currentLocation.distanceSquaredTo(destination) > Info.type.attackRadiusSquared)
+			moveTo(destination);
+	}
+
 	public static void moveInDirection(Direction d) throws GameActionException {
-		if (rc.isCoreReady() && rc.canMove(d)) {
-			rc.move(d);
+        if (rc.isCoreReady() && rc.canMove(d)) {
+            rc.move(d);
+        }
+	}
+
+	public static boolean isSafeToMoveInDirection(Direction direction) {
+		MapLocation nextLocation = Info.currentLocation.add(direction);
+		RobotInfo[] badGuysAround = rc.senseNearbyRobots(nextLocation, 15, Info.badGuys);
+		RobotInfo[] goodGuysAround = rc.senseNearbyRobots(nextLocation, 15, Info.goodGuys);
+		return Micro.canGoodGuysKillBadGuys(goodGuysAround, badGuysAround) && !isNearEnemyTowerOrHQ();
+	}
+
+	public static boolean isNearEnemy(MapLocation location) {
+		return Info.badGuysICanSee.length > 0 || isNearEnemyHQ(location);
+	}
+
+	public static boolean isNearEnemyTowerOrHQ() {
+		return isNearEnemyTowerOrHQ(Info.currentLocation);
+	}
+
+	public static boolean isNearEnemyTowerOrHQ(MapLocation location) {
+		return isNearEnemyTower(location) || isNearEnemyHQ(location);
+	}
+
+	public static boolean isNearEnemyTower() {
+		return isNearEnemyTower(Info.currentLocation);
+	}
+
+	public static boolean isNearEnemyTower(MapLocation location) {
+		for (MapLocation enemyTowerLocation : Info.enemyTowerLocations) {
+			if (location.distanceSquaredTo(enemyTowerLocation) < RobotType.TOWER.attackRadiusSquared + 15) {
+				return true;
+			}
 		}
+		return false;
+	}
+
+	public static boolean isNearEnemyHQ() {
+		return isNearEnemyHQ(Info.currentLocation);
+	}
+
+	public static boolean isNearEnemyHQ(MapLocation location) {
+		return location.distanceSquaredTo(Info.enemyHQLocation) < RobotType.HQ.attackRadiusSquared + 15;
 	}
 
 	public static void moveRandomly() throws GameActionException {
@@ -43,6 +89,30 @@ public class Navigation {
 
 	public static Direction randomDirection() throws GameActionException {
 		return Info.directions[Info.rand.nextInt(8)];
+	}
+
+	public static boolean okToMove(Direction dir) {
+		MapLocation nextLocation = Info.currentLocation.add(dir);
+		return (rc.canMove(dir)) &&
+				(Info.currentEngagementRules == Engagement.ENGAGE
+						|| (Info.currentEngagementRules == Engagement.AVOID && !Navigation.isNearEnemyTowerOrHQ(nextLocation)));
+	}
+
+	public static MapLocation closestTower() {
+		if (Info.enemyTowerLocations.length > 0) {
+			int shortestDistance = Info.currentLocation.distanceSquaredTo(Info.enemyTowerLocations[0]);
+			MapLocation closestTower = Info.enemyTowerLocations[0];
+			for (int i = 1; i < Info.enemyTowerLocations.length; i++) {
+				int currentDistance = Info.currentLocation.distanceSquaredTo(Info.enemyTowerLocations[i]);
+				if (currentDistance < shortestDistance) {
+					shortestDistance = currentDistance;
+					closestTower = Info.enemyTowerLocations[i];
+				}
+			}
+			return closestTower;
+		} else {
+			return Info.enemyHQLocation;
+		}
 	}
 
 }

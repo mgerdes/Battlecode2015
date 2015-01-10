@@ -2,7 +2,7 @@ package MarkyMark;
 
 import battlecode.common.*;
 
-// If this has dependency issues then we fucked :\.
+// TODO -- handle when there are dependency issues here.
 public class PriorityRobotCreationQueue {
     static final int LENGTH_CHANNEL = 64000;
     static final int HEAD_POS_CHANNEL = 64001;

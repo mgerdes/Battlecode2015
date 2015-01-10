@@ -16,21 +16,20 @@ public class HQ {
 
 			RobotCreationQueue.addRobotToCreate(RobotType.BEAVER);
 			RobotCreationQueue.addRobotToCreate(RobotType.BARRACKS);
+			RobotCreationQueue.addRobotToCreate(RobotType.HELIPAD);
 			for (int i = 0; i < 10; i++) {
 				if (i == 2) RobotCreationQueue.addRobotToCreate(RobotType.MINERFACTORY);
 				if (i == 4) RobotCreationQueue.addRobotToCreate(RobotType.TANKFACTORY);
 				if (i == 6) RobotCreationQueue.addRobotToCreate(RobotType.MINER);
-				if (i == 8) RobotCreationQueue.addRobotToCreate(RobotType.MINER);
+				RobotCreationQueue.addRobotToCreate(RobotType.DRONE);
 				RobotCreationQueue.addRobotToCreate(RobotType.BASHER);
 				RobotCreationQueue.addRobotToCreate(RobotType.SOLDIER);
 			}
 			RobotCreationQueue.addRobotToCreate(RobotType.MINER);
-			RobotCreationQueue.addRobotToCreate(RobotType.HELIPAD);
 			for (int i = 0; i < 100; i++) {
-				if (i == 5) RobotCreationQueue.addRobotToCreate(RobotType.BARRACKS);
+				if (i == 5) RobotCreationQueue.addRobotToCreate(RobotType.TANKFACTORY);
 				RobotCreationQueue.addRobotToCreate(RobotType.SOLDIER);
 				RobotCreationQueue.addRobotToCreate(RobotType.TANK);
-				RobotCreationQueue.addRobotToCreate(RobotType.DRONE);
 			}
 
 		} catch (Exception e) {

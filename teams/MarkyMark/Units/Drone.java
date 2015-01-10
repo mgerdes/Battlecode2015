@@ -1,11 +1,12 @@
 package MarkyMark.Units;
 
+import MarkyMark.Engagement;
 import MarkyMark.Info;
 import MarkyMark.Micro;
+import MarkyMark.Tactic;
 import battlecode.common.*;
 
-// TODO -- have drones harass at beginning of game, have them transport supplies later in game.
-// Maybe only use them on larger maps.
+// TODO -- Maybe only drones on larger maps.
 public class Drone {
 	static RobotController rc;
 
@@ -26,8 +27,18 @@ public class Drone {
 		}
 	}
 
+	// TODO -- make this more dynamic? maybe?
 	static void doYourThing() throws GameActionException {
+		if (Clock.getRoundNum() < 500) {
+			Info.currentTactic = Tactic.HARASS;
+			Info.currentEngagementRules = Engagement.AVOID;
+		} else {
+			Info.currentTactic = Tactic.PROVIDE_SUPPLIES;
+			Info.currentEngagementRules = Engagement.AVOID;
+		}
+		//Info.currentEngagementRules = Engagement.ENGAGE;
+		//Info.currentTactic = Tactic.NORMAL;
 		Info.getRoundInfo();
-		Micro.doWhatAttackingRobotShouldDo();
+		Micro.doWhatRobotShouldDo();
 	}
 }

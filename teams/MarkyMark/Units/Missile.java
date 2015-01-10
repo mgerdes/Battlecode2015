@@ -26,7 +26,7 @@ public class Missile {
 
 	static void doYourThing() throws GameActionException {
 		Info.getRoundInfo();
-		Micro.doWhatAttackingRobotShouldDo();
+		Micro.doWhatRobotShouldDo();
 	}
 }
 

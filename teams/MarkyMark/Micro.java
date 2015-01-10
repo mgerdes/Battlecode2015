@@ -2,7 +2,6 @@ package MarkyMark;
 
 import battlecode.common.*;
 
-// TODO -- add attacking towers and  HQ code.
 public class Micro {
     static RobotController rc;
 
@@ -10,6 +9,17 @@ public class Micro {
         rc = rcin;
     }
 
+    public static void doWhatRobotShouldDo() throws GameActionException {
+        if (Info.currentTactic == Tactic.NORMAL) {
+            doWhatAttackingRobotShouldDo();
+        } else if (Info.currentTactic == Tactic.HARASS) {
+            doWhatHarassingRobotShouldDo();
+        } else if (Info.currentTactic == Tactic.PROVIDE_SUPPLIES) {
+            doWhatSupplyProvidersShouldDo();
+        }
+    }
+
+    // TODO -- add attacking towers and  HQ code.
     public static void doWhatAttackingRobotShouldDo() throws GameActionException {
         /*
             Go to enemy hq.
@@ -19,17 +29,48 @@ public class Micro {
         if (Info.currentHealth < 20 && Info.type != RobotType.TANK) {
             giveAwaySupplies();
         }
-        if (canGoodGuysKillBadGuys(Info.goodGuysICanSee, Info.badGuysICanSee)) {
+        if (canGoodGuysKillBadGuys(Info.goodGuysICanAttack, Info.badGuysICanAttack)) {
             if (Info.type.canAttack()) {
                 Attack.attack();
             }
             Direction movingDirection = Navigation.directionToMoveTo(Info.enemyHQLocation);
-            if (isSafeToMoveInDirection(movingDirection)) {
+            if (Navigation.isSafeToMoveInDirection(movingDirection)) {
                 Navigation.moveInDirection(movingDirection);
+            } else {
+                // Tower attack code.
+                if (canGoodGuysKillTower(Info.goodGuysICanAttack)) {
+                    Attack.attack(RobotType.TOWER);
+                    Navigation.moveInFiringRangeOf(Navigation.closestTower());
+                }
             }
         } else {
             Navigation.moveTo(Info.HQLocation);
         }
+    }
+
+    // TODO -- prioritize beavers, miners, and buildings when destroying shit.
+    public static void doWhatHarassingRobotShouldDo() throws GameActionException {
+        // Sneak over to enemy, destroy some shit.
+        Attack.attack();
+        Navigation.moveTo(Info.enemyHQLocation);
+    }
+
+    // TODO -- this is not great.
+    public static void doWhatSupplyProvidersShouldDo() throws GameActionException {
+        if (rc.getSupplyLevel() < 1000) {
+            Navigation.moveTo(Info.HQLocation);
+        } else {
+            giveAwaySupplies();
+            Navigation.moveTo(Info.enemyHQLocation);
+        }
+    }
+
+    public static boolean canGoodGuysKillTower(RobotInfo[] goodGuys) {
+        int rank = 0;
+        for (RobotInfo goodGuy : goodGuys) {
+            rank += goodGuy.health * goodGuy.type.attackPower + (goodGuy.supplyLevel > 0 ? 500 : 0);
+        }
+        return rank > 8000;
     }
 
     // TODO - base this more on who can actually shot who? i dont know if that makes sense.
@@ -50,46 +91,21 @@ public class Micro {
         return goodGuyStrength >= badGuyStrength;
     }
 
-    public static boolean isSafeToMoveInDirection(Direction direction) {
-        MapLocation nextLocation = Info.currentLocation.add(direction);
-        RobotInfo[] badGuysAround = rc.senseNearbyRobots(nextLocation, 20, Info.badGuys);
-        RobotInfo[] goodGuysAround = rc.senseNearbyRobots(nextLocation, 20, Info.goodGuys);
-        return canGoodGuysKillBadGuys(goodGuysAround, badGuysAround) && !isNearEnemyTower() && !isNearEnemyHQ();
-    }
-
-    public static boolean isNearEnemyTower() {
-        return isNearEnemyTower(Info.currentLocation);
-    }
-
-    public static boolean isNearEnemyTower(MapLocation location) {
-        for (MapLocation enemyTowerLocation : Info.enemyTowerLocations) {
-            if (location.distanceSquaredTo(enemyTowerLocation) < RobotType.TOWER.attackRadiusSquared + 15) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static boolean isNearEnemyHQ() {
-        return isNearEnemyHQ(Info.currentLocation);
-    }
-
-    public static boolean isNearEnemyHQ(MapLocation location) {
-        return location.distanceSquaredTo(Info.enemyHQLocation) < RobotType.HQ.attackRadiusSquared + 15;
-    }
-
+    // TODO -- maybe dont put all your eggs in one basket
     public static void giveAwaySupplies() throws GameActionException {
         if (Info.goodGuysICanSee.length > 0) {
             int mostDeserving = 0;
             MapLocation mostDeservingRobotLocation = null;
             for (RobotInfo robot : Info.goodGuysICanSee) {
                 MapLocation robotLocation = robot.location;
-                if (robotLocation.distanceSquaredTo(Info.currentLocation) <= GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED) {
+                if (!robot.type.isBuilding) {
+                    if (robotLocation.distanceSquaredTo(Info.currentLocation) <= GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED) {
                     int currentDeservingLevel = (int) (robot.health * robot.type.attackPower);
                     if (currentDeservingLevel > mostDeserving) {
                         mostDeserving = currentDeservingLevel;
                         mostDeservingRobotLocation = robot.location;
                     }
+                }
                 }
             }
             if (mostDeservingRobotLocation != null)

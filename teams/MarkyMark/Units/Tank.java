@@ -27,7 +27,7 @@ public class Tank {
 
 	static void doYourThing() throws GameActionException {
 		Info.getRoundInfo();
-		Micro.doWhatAttackingRobotShouldDo();
+		Micro.doWhatRobotShouldDo();
 	}
 }
 
