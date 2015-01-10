@@ -1,5 +1,5 @@
 package soldiersAgainstBashers;
 
 public enum StrategyEnum {
-    Circle, Expand, Destroy
+    Circle, Expand, AttackUnits
 }

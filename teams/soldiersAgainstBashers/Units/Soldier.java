@@ -49,6 +49,8 @@ public class Soldier {
             }
         } else if (strategy == StrategyEnum.Expand) {
             Move.awayFromTeam(myTeam, currentLocation);
+        } else if (strategy == StrategyEnum.AttackUnits) {
+            rc.setIndicatorString(0, "!");
         }
     }
 }

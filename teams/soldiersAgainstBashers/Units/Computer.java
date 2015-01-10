@@ -33,19 +33,37 @@ public class Computer {
     static void doYourThing() throws GameActionException {
         RobotInfo[] friendlies = rc.senseNearbyRobots(Integer.MAX_VALUE, myTeam);
         boolean oneIsADrone = false;
+        int fighterCount = 0;
         for (RobotInfo friend : friendlies) {
             if (friend.type == RobotType.DRONE) {
                 oneIsADrone = true;
-                break;
+            }
+
+            if (friend.type == RobotType.SOLDIER
+                    || friend.type == RobotType.BASHER) {
+                fighterCount++;
             }
         }
 
-        if (oneIsADrone) {
-            Strategy.set(StrategyEnum.Expand);
-        } else {
-            Strategy.set(StrategyEnum.Circle);
+        RobotInfo[] enemies = rc.senseNearbyRobots(Integer.MAX_VALUE, enemyTeam);
+        int enemyWithoutSupply = 0;
+        for (RobotInfo enemy : enemies) {
+            if (enemy.supplyLevel == 0) {
+                enemyWithoutSupply++;
+            }
         }
 
-        RobotInfo[] enemies = rc.senseNearbyRobots(Integer.MAX_VALUE, enemyTeam);
+        if (!oneIsADrone) {
+            Strategy.set(StrategyEnum.Circle);
+            return;
+        }
+
+        if (fighterCount > 20
+                && enemyWithoutSupply > 5) {
+            Strategy.set(StrategyEnum.AttackUnits);
+        }
+        else {
+            Strategy.set(StrategyEnum.Expand);
+        }
     }
 }
