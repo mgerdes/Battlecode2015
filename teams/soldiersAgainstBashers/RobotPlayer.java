@@ -18,14 +18,16 @@ public class RobotPlayer {
 			Tower.init();
 		} else if (type == RobotType.BEAVER) {
 			Beaver.init();
-		} else if (type == RobotType.DRONE) {
-			Drone.init();
+		} else if (type == RobotType.SOLDIER) {
+			Soldier.init();
 		} else if (type == RobotType.MINER) {
 			Miner.init();
 		} else if (type == RobotType.BASHER) {
 			Basher.init();
-		} else if (type == RobotType.SOLDIER) {
-			Soldier.init();
+		} else if (type == RobotType.DRONE) {
+			Drone.init();
+		} else if (type == RobotType.COMPUTER) {
+			Computer.init(rcin);
 		} else {
 			Spawner.init();
 		}

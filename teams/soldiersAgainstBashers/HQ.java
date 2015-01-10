@@ -8,24 +8,27 @@ public class HQ {
 	public static void init() {
 
 		rc = RobotPlayer.rc;
-		Orders.init();
 		Navigation.init(rc);
 
 		//--Starting units
 		try {
 			JobsQueue.init();
-			JobsQueue.addJob(RobotType.BEAVER, 1);
+			JobsQueue.addJob(RobotType.BEAVER);
+			JobsQueue.addJob(RobotType.TECHNOLOGYINSTITUTE);
+			JobsQueue.addJob(RobotType.COMPUTER);
+			JobsQueue.addJob(RobotType.BEAVER);
 			JobsQueue.addJob(RobotType.BARRACKS);
 			JobsQueue.addJob(RobotType.SOLDIER, 2);
 			JobsQueue.addJob(RobotType.BEAVER, 2);
 			JobsQueue.addJob(RobotType.MINERFACTORY);
-			JobsQueue.addJob(RobotType.SOLDIER, 1);
-			JobsQueue.addJob(RobotType.MINER, 1);
-			JobsQueue.addJob(RobotType.SOLDIER, 1);
-			JobsQueue.addJob(RobotType.MINER, 1);
+			JobsQueue.addJob(RobotType.SOLDIER);
+			JobsQueue.addJob(RobotType.MINER);
+			JobsQueue.addJob(RobotType.SOLDIER);
+			JobsQueue.addJob(RobotType.MINER);
 			JobsQueue.addJob(RobotType.SOLDIER, 2);
 			JobsQueue.addJob(RobotType.HELIPAD);
 			JobsQueue.addJob(RobotType.DRONE);
+
 			rc.setIndicatorString(0, String.format("used %d bytecodes in init", Clock.getBytecodeNum()));
 
 		} catch (Exception e) {
@@ -50,17 +53,6 @@ public class HQ {
 	static void doYourThing() throws GameActionException {
 		if (JobsQueue.canDoCurrentJob()) {
 			doJob();
-		}
-
-		int roundNumber = Clock.getRoundNum();
-
-		if (roundNumber % 8 == 0) {
-			JobsQueue.addJob(RobotType.SOLDIER);
-			JobsQueue.addJob(RobotType.BASHER);
-		}
-
-		if (roundNumber == 10) {
-			Orders.sendSoldiersTo(new MapLocation(8157, 11992));
 		}
 
 		shareSupplyWithNearbyFriendlies();

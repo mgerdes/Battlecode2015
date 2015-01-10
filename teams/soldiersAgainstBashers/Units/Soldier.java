@@ -13,7 +13,6 @@ public class Soldier {
 
     public static void init() {
         rc = RobotPlayer.rc;
-        Orders.init();
         Move.init(rc);
         Strategy.init(rc);
         senseRadius = RobotType.SOLDIER.sensorRadiusSquared;
