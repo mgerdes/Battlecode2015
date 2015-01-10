@@ -3,31 +3,38 @@ package soldiersAgainstBashers;
 import battlecode.common.Direction;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
+import battlecode.common.RobotInfo;
 
-//--Version 1.0
+//--Version 1.0.1
 
 public class Bug {
+    private static RobotController rc;
+
     private static final boolean DEFAULT_LEFT = true;
 
     private static MapLocation destination;
-    private static RobotController rc;
     private static boolean followingWall;
     private static Direction previousDirection;
     private static int distanceStartBugging;
 
-    public static void init(MapLocation destinationC, RobotController rcC) {
-        destination = destinationC;
+    public static void init(RobotController rcC) {
         rc = rcC;
+    }
+
+    public static void setNewDestination(MapLocation destinationC) {
+        destination = destinationC;
+        followingWall = false;
+        previousDirection = null;
+        distanceStartBugging = 0;
     }
 
     //--Returns a navigable direction that
     //- leads (eventually) to the destination
-    public static Direction getDirection() {
-        MapLocation currentLocation = rc.getLocation();
-        return getDirection(currentLocation);
-    }
-
     public static Direction getDirection(MapLocation currentLocation) {
+        if (previousDirection == null) {
+            previousDirection = currentLocation.directionTo(destination);
+        }
+
         if (followingWall) {
             return getDirectionFollowingWall(currentLocation);
         }
