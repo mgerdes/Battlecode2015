@@ -8,14 +8,19 @@ public class Soldier {
     static Team myTeam;
     static int attackRadius;
     static int senseRadius;
+    static MapLocation myHQ;
+    static MapLocation enemyHQ;
 
     public static void init() {
         rc = RobotPlayer.rc;
         Orders.init();
         Move.init(rc);
+        Strategy.init(rc);
         senseRadius = RobotType.SOLDIER.sensorRadiusSquared;
         attackRadius = RobotType.SOLDIER.attackRadiusSquared;
         myTeam = rc.getTeam();
+        myHQ = rc.senseHQLocation();
+        enemyHQ = rc.senseEnemyHQLocation();
         loop();
     }
 
@@ -32,44 +37,19 @@ public class Soldier {
     }
 
     static void doYourThing() throws GameActionException {
-//        RobotInfo[] enemies = rc.senseNearbyRobots(attackRadius, badGuys);
-//        if (enemies.length > 0 && rc.isWeaponReady()) {
-//            MapLocation currentLocation = rc.getLocation();
-//            double health = 10000;
-//            int index = 0;
-//            for (int i = 0; i < enemies.length; i++) {
-//                if (enemies[i].health < health) {
-//                    health = enemies[i].health;
-//                    index = i;
-//                }
-//
-//                if (enemies[i].location.distanceSquaredTo(currentLocation) < 4) {
-//                    index = i;
-//                    break;
-//                }
-//            }
-//
-//            rc.attackLocation(enemies[index].location);
-//            return;
-//        }
-//
-//        RobotInfo[] enemiesSensed = rc.senseNearbyRobots(senseRadius, badGuys);
-//        if (enemiesSensed.length > 0) {
-//            return;
-//        }
+        if (!rc.isCoreReady()) {
+            return;
+        }
 
-        if (rc.isCoreReady()) {
-            MapLocation currentLocation = rc.getLocation();
+        MapLocation currentLocation = rc.getLocation();
+        StrategyEnum strategy = Strategy.get();
+        if (strategy == StrategyEnum.Circle) {
+            //--Move away from HQ, but stay within HQ transfer radius
+            if (currentLocation.distanceSquaredTo(myHQ) < GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED) {
+                Move.toward(enemyHQ, currentLocation);
+            }
+        } else if (strategy == StrategyEnum.Expand) {
             Move.awayFromTeam(myTeam, currentLocation);
-//            MapLocation order = Orders.getSoldierDestination();
-//            if (order == null) {
-//                Navigation.moveRandomly();
-//            } else {
-//                MapLocation current = rc.getLocation();
-//                if (current.distanceSquaredTo(order) > 9) {
-//                    Navigation.tryMoveTowards(order);
-//                }
-//            }
         }
     }
 }

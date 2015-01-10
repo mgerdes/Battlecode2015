@@ -14,13 +14,18 @@ public class HQ {
 		//--Starting units
 		try {
 			JobsQueue.init();
-			JobsQueue.addJob(RobotType.BEAVER, 2);
+			JobsQueue.addJob(RobotType.BEAVER, 1);
 			JobsQueue.addJob(RobotType.BARRACKS);
-			JobsQueue.addJob(RobotType.BEAVER, 2);
 			JobsQueue.addJob(RobotType.SOLDIER, 2);
+			JobsQueue.addJob(RobotType.BEAVER, 2);
 			JobsQueue.addJob(RobotType.MINERFACTORY);
-			JobsQueue.addJob(RobotType.SOLDIER, 5);
-			JobsQueue.addJob(RobotType.MINER, 5);
+			JobsQueue.addJob(RobotType.SOLDIER, 1);
+			JobsQueue.addJob(RobotType.MINER, 1);
+			JobsQueue.addJob(RobotType.SOLDIER, 1);
+			JobsQueue.addJob(RobotType.MINER, 1);
+			JobsQueue.addJob(RobotType.SOLDIER, 2);
+			JobsQueue.addJob(RobotType.HELIPAD);
+			JobsQueue.addJob(RobotType.DRONE);
 			rc.setIndicatorString(0, String.format("used %d bytecodes in init", Clock.getBytecodeNum()));
 
 		} catch (Exception e) {

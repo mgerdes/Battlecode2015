@@ -5,6 +5,9 @@ import soldiersAgainstBashers.*;
 
 public class Beaver {
 	public static RobotController rc;
+
+	static final int BEAVER_MIN_ORE = 40;
+
 	static RobotType type;
 	static int sensorRadiusSquared;
 	static int attackRadiusSquared;
@@ -43,7 +46,7 @@ public class Beaver {
 		if (JobsQueue.canDoCurrentJob()) {
 			int job = JobsQueue.getCurrentJob();
 			doJob(job);
-		} else if (rc.senseOre(rc.getLocation()) > 0) {
+		} else if (rc.senseOre(rc.getLocation()) > BEAVER_MIN_ORE) {
 			rc.mine();
 		} else {
 			Move.inRandomDirection();

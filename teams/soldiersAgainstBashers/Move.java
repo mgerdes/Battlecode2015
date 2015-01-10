@@ -45,4 +45,14 @@ public class Move {
             rc.move(direction);
         }
     }
+
+    public static void awayFrom(MapLocation myHQ, MapLocation currentLocation) throws GameActionException {
+        Direction direction = currentLocation.directionTo(myHQ).opposite();
+
+        if (rc.canMove(direction)) {
+            rc.move(direction);
+        } else {
+            inRandomDirection();
+        }
+    }
 }
