@@ -5,22 +5,31 @@ import battlecode.common.*;
 //--Version 1.0.2
 
 public class Bug {
+    //--Global
     private static RobotController rc;
+    private static boolean defaultLeft;
 
-    private static boolean DEFAULT_LEFT = true;
-
-    private static MapLocation destination;
-    private static MapLocation currentLocation;
-    private static boolean followingWall;
-    private static Direction previousDirection;
-    private static int previousDistance = Integer.MAX_VALUE;
-    private static int distanceStartBugging;
+    //--Map info
     private static MapLocation enemyHQLocation;
     private static MapLocation[] enemyTowerLocations;
+
+    //--Per navigation path
+    private static MapLocation destination;
     private static MapLocation ignoreLocation;
+
+    //--Per round
+    private static MapLocation currentLocation;
+    private static Direction previousDirection;
+    private static int previousDistance = Integer.MAX_VALUE;
+
+    //--Bug path info
+    private static boolean followingWall;
+    private static int distanceStartBugging;
+    private static MapLocation loopCheck;
 
     public static void init(RobotController rcC) {
         rc = rcC;
+        defaultLeft = rcC.getID() % 2 == 0;
     }
 
     public static void setDestination(MapLocation destinationC) {
@@ -65,9 +74,19 @@ public class Bug {
             return getDirectionNotFollowingWall();
         }
 
+        //--Hack to stop robots from going in circles!
+        if (Clock.getRoundNum() % 4 == 0) {
+            if (currentLocation.equals(loopCheck)) {
+                followingWall = false;
+                return getDirectionNotFollowingWall();
+            }
+
+            loopCheck = currentLocation;
+        }
+
         if (currentDistance > previousDistance
                 && onMapEdge()) {
-            DEFAULT_LEFT = !DEFAULT_LEFT;
+            defaultLeft = !defaultLeft;
         }
 
         previousDistance = currentDistance;
@@ -78,7 +97,7 @@ public class Bug {
     }
 
     private static boolean onMapEdge() {
-        Direction wallDirection = DEFAULT_LEFT
+        Direction wallDirection = defaultLeft
                 ? previousDirection.rotateRight().rotateRight()
                 : previousDirection.rotateLeft().rotateLeft();
         return rc.senseTerrainTile(currentLocation.add(wallDirection)) == TerrainTile.OFF_MAP;
@@ -102,7 +121,7 @@ public class Bug {
     //- to round the corner
     private static Direction getFollowDirection(Direction initial) {
         //--TODO: optimize the double turn
-        if (DEFAULT_LEFT) {
+        if (defaultLeft) {
             return rotateLeftUntilCanMove(initial.rotateRight().rotateRight());
         }
 
@@ -110,7 +129,7 @@ public class Bug {
     }
 
     private static Direction getTurnDirection(Direction initial) {
-        if (DEFAULT_LEFT) {
+        if (defaultLeft) {
             Direction turn = initial.rotateLeft();
             return rotateLeftUntilCanMove(turn);
         }
