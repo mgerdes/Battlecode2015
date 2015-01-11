@@ -16,16 +16,14 @@ public class RobotPlayer {
         else if (type == RobotType.BEAVER) {
             Beaver.run(rc);
         }
-        else if (type == RobotType.TANKFACTORY) {
-            TankFactory.run(rc);
+        else if (type == RobotType.MINER) {
+            Miner.run(rc);
         }
-        else if (type == RobotType.TANK) {
-            Tank.run(rc);
+        else if (type == RobotType.DRONE) {
+            Drone.run(rc);
         }
-        else {
-            while (true) {
-                int meaningOfLife = 42;
-            }
+        else  {
+            Building.run(rc);
         }
     }
 }

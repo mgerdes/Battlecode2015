@@ -9,6 +9,7 @@ public class Beaver {
     private static Team myTeam;
     private static Direction[] directions = Direction.values();
     private static Random random;
+    private static final int MINER_FACTORY_COUNT = 1;
 
     public static void run(RobotController rcC) {
         rc = rcC;
@@ -34,13 +35,14 @@ public class Beaver {
         }
 
         RobotInfo[] allFriendlies = rc.senseNearbyRobots(Integer.MAX_VALUE, myTeam);
-        if (shouldBuildBarracks(allFriendlies)) {
-            build(RobotType.BARRACKS);
+
+        if (shouldBuildMinerFactory(allFriendlies)) {
+            build(RobotType.MINERFACTORY);
             return;
         }
 
-        if (shouldBuildTankFactory(allFriendlies)) {
-            build(RobotType.TANKFACTORY);
+        if (shouldBuildHelipad(allFriendlies)) {
+            build(RobotType.HELIPAD);
             return;
         }
 
@@ -52,45 +54,40 @@ public class Beaver {
         }
     }
 
-    private static boolean shouldBuildBarracks(RobotInfo[] allFriendlies) {
-        if (rc.getTeamOre() < RobotType.BARRACKS.oreCost) {
+    private static boolean shouldBuildMinerFactory(RobotInfo[] friendlyRobots) {
+        if (rc.getTeamOre() < RobotType.MINERFACTORY.oreCost) {
             return false;
         }
 
-        int barracksCount = getRobotsOfType(allFriendlies, RobotType.BARRACKS);
-        return barracksCount < 1;
+        int minerFactoryCount = Helper.getRobotsOfType(friendlyRobots, RobotType.MINERFACTORY);
+        return minerFactoryCount < MINER_FACTORY_COUNT;
     }
 
-    private static boolean shouldBuildTankFactory(RobotInfo[] allFriendlies) {
-        if (rc.getTeamOre() < RobotType.TANKFACTORY.oreCost) {
+    private static boolean shouldBuildHelipad(RobotInfo[] friendlyRobots) {
+        if (rc.getTeamOre() < RobotType.HELIPAD.oreCost) {
             return false;
         }
 
-        int tankFactoryCount = getRobotsOfType(allFriendlies, RobotType.TANKFACTORY);
-        return tankFactoryCount < 1;
+        int helipadCount = Helper.getRobotsOfType(friendlyRobots, RobotType.HELIPAD);
+        if (helipadCount > 1) {
+            return false;
+        }
+
+        int minerFactoryCount = Helper.getRobotsOfType(friendlyRobots, RobotType.MINERFACTORY);
+        return helipadCount < 1
+                || (helipadCount < 2 && minerFactoryCount > 0);
     }
 
-    private static void build(RobotType building) throws GameActionException {
+    private static void build(RobotType type) throws GameActionException {
         int direction = 0;
-        while (!rc.canBuild(directions[direction], building)) {
+        while (!rc.canBuild(directions[direction], type)) {
             direction++;
             if (direction > 7) {
                 return;
             }
         }
 
-        rc.build(directions[direction], building);
-    }
-
-    private static int getRobotsOfType(RobotInfo[] robots, RobotType type) {
-        int count = 0;
-        for (RobotInfo robot : robots) {
-            if (robot.type == type) {
-                count++;
-            }
-        }
-
-        return count;
+        rc.build(directions[direction], type);
     }
 
     private static void moveInRandomDirection() throws GameActionException {

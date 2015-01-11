@@ -4,12 +4,13 @@ import battlecode.common.*;
 
 public class HQ {
     private static RobotController rc;
-    private static int beaverSpawnCount;
     private static Direction[] directions = Direction.values();
     private static Team enemyTeam;
     private static Team myTeam;
     private static MapLocation myHqLocation;
     private static MapLocation enemyHqLocation;
+
+    private static final int BEAVER_COUNT = 3;
 
     public static void run(RobotController rcC) {
         rc = rcC;
@@ -37,7 +38,9 @@ public class HQ {
     private static void doYourThing() throws GameActionException {
         SupplySharing.shareMore();
 
-        setTactic();
+        RobotInfo[] friendlyRobots = rc.senseNearbyRobots(1000000, myTeam);
+        setTactic(friendlyRobots);
+        broadcastFortifyPoints(friendlyRobots);
 
         if (rc.isWeaponReady()) {
             RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.HQ.attackRadiusSquared, enemyTeam);
@@ -47,29 +50,58 @@ public class HQ {
         }
 
         if (rc.isCoreReady()) {
-            spawnBeaver();
+            if (shouldSpawnBeaver(friendlyRobots)) {
+                spawn(RobotType.BEAVER);
+            }
         }
     }
 
-    private static void setTactic() throws GameActionException {
-        if (Clock.getRoundNum() < 500) {
+    private static void broadcastFortifyPoints(RobotInfo[] friendlyRobots) throws GameActionException {
+        int droneCount = Helper.getRobotsOfType(friendlyRobots,RobotType.DRONE);
+        int count = 0;
+        int distanceAwayFromHq = Math.max(6, droneCount / 2);
+        for (Direction d : directions) {
+            if (d == Direction.NONE
+                    || d == Direction.OMNI) {
+                continue;
+            }
+
+            MapLocation point = myHqLocation.add(d, distanceAwayFromHq);
+            if (rc.senseTerrainTile(point) == TerrainTile.OFF_MAP) {
+                continue;
+            }
+
+            rc.broadcast(ChannelList.FORTIFY_POINT_START + 2 * count, point.x);
+            rc.broadcast(ChannelList.FORTIFY_POINT_START + 2 * count + 1, point.y);
+            count++;
+        }
+
+        rc.broadcast(ChannelList.FORTIFY_POINT_COUNT, count);
+    }
+
+    private static boolean shouldSpawnBeaver(RobotInfo[] friendlyRobots) {
+        if (rc.getTeamOre() < RobotType.BEAVER.oreCost) {
+            return false;
+        }
+
+        int beaverCount = Helper.getRobotsOfType(friendlyRobots, RobotType.BEAVER);
+        return beaverCount < BEAVER_COUNT;
+    }
+
+    private static void setTactic(RobotInfo[] friendlyRobots) throws GameActionException {
+        if (Clock.getRoundNum() < 600) {
+            rc.broadcast(ChannelList.TACTIC, Tactic.FORTIFY);
             return;
         }
 
-        int tankCount = 0;
-        RobotInfo[] friendlyRobots = rc.senseNearbyRobots(1000000, myTeam);
-        for (RobotInfo robot : friendlyRobots) {
-            if (robot.type == RobotType.TANK) {
-                tankCount++;
-            }
-        }
+        int droneCount = Helper.getRobotsOfType(friendlyRobots, RobotType.DRONE);
 
-        if (tankCount < 18) {
+        if (droneCount < 25) {
             rc.broadcast(ChannelList.TACTIC, Tactic.SWARM);
             return;
         }
 
-        if (tankCount > 25) {
+        if (droneCount > 35) {
             rc.broadcast(ChannelList.TACTIC, Tactic.ATTACK_ENEMY_STRUCTURE);
             MapLocation enemyStructure = getStructureToAttack();
             rc.broadcast(ChannelList.STRUCTURE_TO_ATTACK_X, enemyStructure.x);
@@ -100,21 +132,15 @@ public class HQ {
         return enemyTowerLocations[index];
     }
 
-    private static void spawnBeaver() throws GameActionException {
-        if (beaverSpawnCount > 1
-            || rc.getTeamOre() < RobotType.BEAVER.oreCost) {
-            return;
-        }
-
+    private static void spawn(RobotType type) throws GameActionException {
         int direction = 0;
-        while (!rc.canSpawn(directions[direction], RobotType.BEAVER)) {
+        while (!rc.canSpawn(directions[direction], type)) {
             direction++;
             if (direction > 7) {
                 return;
             }
         }
 
-        rc.spawn(directions[direction], RobotType.BEAVER);
-        beaverSpawnCount++;
+        rc.spawn(directions[direction], type);
     }
 }
