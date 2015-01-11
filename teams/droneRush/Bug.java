@@ -64,7 +64,6 @@ public class Bug {
 
         Direction followDirection = getFollowDirection(previousDirection);
         previousDirection = followDirection;
-        rc.setIndicatorString(0, previousDirection.toString());
         return followDirection;
     }
 
@@ -86,7 +85,6 @@ public class Bug {
 
         Direction turnDirection = getTurnDirection(direct);
         previousDirection = turnDirection;
-        rc.setIndicatorString(0, previousDirection.toString());
         return turnDirection;
     }
 

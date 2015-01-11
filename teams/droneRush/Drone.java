@@ -4,12 +4,15 @@ import battlecode.common.*;
 
 public class Drone {
     private static RobotController rc;
+
     private static Team enemyTeam;
 
     public static void run(RobotController rcC) {
         rc = rcC;
         Bug.init(rcC);
         Bug.setNewDestination(rcC.senseEnemyHQLocation());
+
+        SupplySharing.init(rcC);
 
         enemyTeam = rc.getTeam().opponent();
         loop();
@@ -27,6 +30,8 @@ public class Drone {
     }
 
     private static void doYourThing() throws GameActionException {
+        SupplySharing.share();
+
         RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
         if (enemiesInAttackRange.length == 0) {
             if (rc.isCoreReady()) {

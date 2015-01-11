@@ -11,6 +11,8 @@ public class HQ {
 
     public static void run(RobotController rcC) {
         rc = rcC;
+        SupplySharing.init(rcC);
+
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
         loop();
@@ -29,6 +31,8 @@ public class HQ {
     }
 
     private static void doYourThing() throws GameActionException {
+        SupplySharing.shareMore();
+
         if (rc.isWeaponReady()) {
             RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.HQ.attackRadiusSquared, enemyTeam);
             if (enemiesInAttackRange.length > 0) {
@@ -39,8 +43,6 @@ public class HQ {
         if (rc.isCoreReady()) {
             spawnBeaver();
         }
-
-        shareSupplyWithNearbyFriendlies();
     }
 
     private static void spawnBeaver() throws GameActionException {
@@ -59,15 +61,5 @@ public class HQ {
 
         rc.spawn(directions[direction], RobotType.BEAVER);
         beaverSpawnCount++;
-    }
-
-    private static void shareSupplyWithNearbyFriendlies() throws GameActionException {
-        RobotInfo[] friendlies = rc.senseNearbyRobots(GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, rc.getTeam());
-        double mySupply = rc.getSupplyLevel();
-        for (RobotInfo ri : friendlies) {
-            if (ri.supplyLevel < 200) {
-                rc.transferSupplies((int) mySupply / 8, ri.location);
-            }
-        }
     }
 }
