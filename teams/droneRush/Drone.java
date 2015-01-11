@@ -6,16 +6,20 @@ public class Drone {
     private static RobotController rc;
 
     private static Team enemyTeam;
+    private static MapLocation enemyHqLocation;
+    private static MapLocation myHqLocation;
 
     public static void run(RobotController rcC) {
         rc = rcC;
-        Bug.init(rcC);
-        Bug.setDestination(rcC.senseEnemyHQLocation());
 
+        Bug.init(rcC);
         SupplySharing.init(rcC);
         Communication.init(rcC);
 
+        myHqLocation = rc.senseHQLocation();
+        enemyHqLocation = rc.senseEnemyHQLocation();
         enemyTeam = rc.getTeam().opponent();
+
         loop();
     }
 
@@ -62,6 +66,13 @@ public class Drone {
     }
 
     private static void swarm() throws GameActionException {
+        if (rc.getSupplyLevel() == 0) {
+            Bug.setDestination(myHqLocation);
+        }
+        else {
+            Bug.setDestination(enemyHqLocation);
+        }
+
         RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
         if (enemiesInAttackRange.length == 0) {
            if (rc.isCoreReady()) {

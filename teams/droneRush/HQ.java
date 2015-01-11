@@ -52,6 +52,10 @@ public class HQ {
     }
 
     private static void setTactic() throws GameActionException {
+        if (Clock.getRoundNum() < 500) {
+            return;
+        }
+
         int droneCount = 0;
         RobotInfo[] friendlyRobots = rc.senseNearbyRobots(1000000, myTeam);
         for (RobotInfo robot : friendlyRobots) {
