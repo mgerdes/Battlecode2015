@@ -1,6 +1,7 @@
 .idea*
 .DS_STORE
 *.iml
+*.jar
 .installationinformation
 AllowedPackages.txt
 DisallowedClasses.txt
