@@ -7,7 +7,6 @@ import java.util.Random;
 public class Beaver {
     private static RobotController rc;
     private static Team myTeam;
-    private static Direction[] directions = Direction.values();
     private static Random random;
     private static final int MINER_FACTORY_COUNT = 1;
 
@@ -80,26 +79,26 @@ public class Beaver {
 
     private static void build(RobotType type) throws GameActionException {
         int direction = 0;
-        while (!rc.canBuild(directions[direction], type)) {
+        while (!rc.canBuild(Helper.getDirection(direction), type)) {
             direction++;
             if (direction > 7) {
                 return;
             }
         }
 
-        rc.build(directions[direction], type);
+        rc.build(Helper.getDirection(direction), type);
     }
 
     private static void moveInRandomDirection() throws GameActionException {
-        int firstDirection = random.nextInt(8);
-        int direction = firstDirection;
-        while (!rc.canMove(directions[direction])) {
-            direction = (direction + 1) % 8;
-            if (direction == firstDirection) {
+        int direction = random.nextInt(8);
+        int endDirection = direction + 8;
+        while (!rc.canMove(Helper.getDirection(direction))) {
+            direction++;
+            if (direction == endDirection) {
                 return;
             }
         }
 
-        rc.move(directions[direction]);
+        rc.move(Helper.getDirection(direction));
     }
 }

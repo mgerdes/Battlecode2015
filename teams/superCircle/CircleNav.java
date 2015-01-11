@@ -8,7 +8,6 @@ import battlecode.common.TerrainTile;
 public class CircleNav {
     private static RobotController rc;
     private static MapLocation center;
-    private static Direction[] directions;
 
     //--Current rotation is a number that represents
     //  what point in the circle we are going to.
@@ -24,15 +23,6 @@ public class CircleNav {
     public static void init(RobotController rcC, MapLocation centerC) {
         rc = rcC;
         center = centerC;
-
-        directions = new Direction[]{Direction.NORTH,
-                                     Direction.NORTH_EAST,
-                                     Direction.EAST,
-                                     Direction.SOUTH_EAST,
-                                     Direction.SOUTH,
-                                     Direction.SOUTH_WEST,
-                                     Direction.WEST,
-                                     Direction.NORTH_WEST};
     }
 
     //--Depending on the robot's position, this will return the next position
@@ -58,7 +48,7 @@ public class CircleNav {
     }
 
     private static MapLocation getLocationForRotation(int rotation) {
-        Direction d = directions[rotation];
+        Direction d = Helper.getDirection(rotation);
         return d.isDiagonal() ?
                 center.add(d, (int) (radius * 1.414))
                 : center.add(d, radius);
@@ -81,11 +71,9 @@ public class CircleNav {
     private static Direction getMovementDirection() {
         //--We are moving orthogonal to our current rotation
         if (goingClockwise) {
-            return directions[currentRotation].rotateRight().rotateRight();
+            return Helper.getDirection(currentRotation).rotateRight().rotateRight();
         }
 
-        return directions[currentRotation].rotateLeft().rotateLeft();
+        return Helper.getDirection(currentRotation).rotateLeft().rotateLeft();
     }
-
-
 }
