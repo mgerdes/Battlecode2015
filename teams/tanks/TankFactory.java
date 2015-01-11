@@ -2,7 +2,7 @@ package tanks;
 
 import battlecode.common.*;
 
-public class Helipad {
+public class TankFactory {
     private static RobotController rc;
     private static Direction[] directions = Direction.values();
 
@@ -25,23 +25,23 @@ public class Helipad {
 
     private static void doYourThing() throws GameActionException {
         if (rc.isCoreReady()) {
-            spawnDrone();
+            spawn(RobotType.TANK);
         }
     }
 
-    private static void spawnDrone() throws GameActionException {
-        if (rc.getTeamOre() < RobotType.DRONE.oreCost) {
+    private static void spawn(RobotType type) throws GameActionException {
+        if (rc.getTeamOre() < type.oreCost) {
             return;
         }
 
         int direction = 0;
-        while (!rc.canSpawn(directions[direction], RobotType.DRONE)) {
+        while (!rc.canSpawn(directions[direction], type)) {
             direction++;
             if (direction > 7) {
                 return;
             }
         }
 
-        rc.spawn(directions[direction], RobotType.DRONE);
+        rc.spawn(directions[direction], type);
     }
 }

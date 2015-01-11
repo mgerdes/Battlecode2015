@@ -56,20 +56,20 @@ public class HQ {
             return;
         }
 
-        int droneCount = 0;
+        int tankCount = 0;
         RobotInfo[] friendlyRobots = rc.senseNearbyRobots(1000000, myTeam);
         for (RobotInfo robot : friendlyRobots) {
-            if (robot.type == RobotType.DRONE) {
-                droneCount++;
+            if (robot.type == RobotType.TANK) {
+                tankCount++;
             }
         }
 
-        if (droneCount < 25) {
+        if (tankCount < 18) {
             rc.broadcast(ChannelList.TACTIC, Tactic.SWARM);
             return;
         }
 
-        if (droneCount > 35) {
+        if (tankCount > 25) {
             rc.broadcast(ChannelList.TACTIC, Tactic.ATTACK_ENEMY_STRUCTURE);
             MapLocation enemyStructure = getStructureToAttack();
             rc.broadcast(ChannelList.STRUCTURE_TO_ATTACK_X, enemyStructure.x);

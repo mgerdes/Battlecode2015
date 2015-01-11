@@ -2,7 +2,7 @@ package tanks;
 
 import battlecode.common.*;
 
-public class Drone {
+public class Tank {
     private static RobotController rc;
 
     private static Team enemyTeam;
@@ -52,7 +52,7 @@ public class Drone {
         MapLocation attackLocation = Communication.getAttackLocation();
         Bug.setDestination(attackLocation);
 
-        RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
+        RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.TANK.attackRadiusSquared, enemyTeam);
         if (enemiesInAttackRange.length == 0) {
             if (rc.isCoreReady()) {
                 MapLocation currentLocation = rc.getLocation();
@@ -73,7 +73,7 @@ public class Drone {
             Bug.setDestination(enemyHqLocation);
         }
 
-        RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
+        RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.TANK.attackRadiusSquared, enemyTeam);
         if (enemiesInAttackRange.length == 0) {
            if (rc.isCoreReady()) {
                MapLocation currentLocation = rc.getLocation();
