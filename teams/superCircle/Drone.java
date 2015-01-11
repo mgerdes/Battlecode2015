@@ -60,7 +60,7 @@ public class Drone {
             Bug.setDestination(myHqLocation);
         }
         else {
-            MapLocation circleLocation = CircleNav.getDestination(minerRadius + 2, currentLocation);
+            MapLocation circleLocation = CircleNav.getDestination(minerRadius + 3, currentLocation);
             Bug.setDestination(circleLocation);
         }
 
