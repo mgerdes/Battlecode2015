@@ -16,18 +16,18 @@ public class Drone {
     public static void run(RobotController rcC) {
         rc = rcC;
 
-        Bug.init(rcC);
-        SupplySharing.init(rcC);
-        Communication.init(rcC);
-
         myHqLocation = rc.senseHQLocation();
         enemyHqLocation = rc.senseEnemyHQLocation();
         enemyTeam = rc.getTeam().opponent();
-
         MapLocation[] towerLocations = rc.senseTowerLocations();
         if (towerLocations.length > 0) {
             myFirstTowerLocation = towerLocations[0];
         }
+
+        Bug.init(rcC);
+        CircleNav.init(rcC, myHqLocation);
+        SupplySharing.init(rcC);
+        Communication.init(rcC);
 
         loop();
     }
@@ -67,15 +67,9 @@ public class Drone {
             Bug.setDestination(myHqLocation);
         }
         else {
-            int numberOfPoints = rc.readBroadcast(ChannelList.FORTIFY_POINT_COUNT);
-            if (fortifyLocation == null
-                    || currentLocation.distanceSquaredTo(fortifyLocation) <= 9
-                    || rc.senseTerrainTile(fortifyLocation) == TerrainTile.OFF_MAP) {
-                fortifyLocation = Communication.getFortifyPoint(fortifyPointNumber % numberOfPoints);
-                rc.setIndicatorString(1, String.format("going to %s", fortifyLocation.toString()));
-                Bug.setDestination(fortifyLocation);
-                fortifyPointNumber++;
-            }
+            MapLocation circleLocation = CircleNav.getDestination(4, currentLocation);
+            rc.setIndicatorString(1, String.format("going to %s", circleLocation.toString()));
+            Bug.setDestination(circleLocation);
         }
 
         RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
