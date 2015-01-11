@@ -9,6 +9,7 @@ public class Beaver {
     private static Team myTeam;
     private static Direction[] directions = Direction.values();
     private static Random random;
+    private static final int MINER_FACTORY_COUNT = 1;
 
     public static void run(RobotController rcC) {
         rc = rcC;
@@ -33,8 +34,15 @@ public class Beaver {
             return;
         }
 
-        if (shouldBuildHelipad()) {
-            buildHelipad();
+        RobotInfo[] allFriendlies = rc.senseNearbyRobots(Integer.MAX_VALUE, myTeam);
+
+        if (shouldBuildMinerFactory(allFriendlies)) {
+            build(RobotType.MINERFACTORY);
+            return;
+        }
+
+        if (shouldBuildHelipad(allFriendlies)) {
+            build(RobotType.HELIPAD);
             return;
         }
 
@@ -46,39 +54,40 @@ public class Beaver {
         }
     }
 
-    private static boolean shouldBuildHelipad() {
+    private static boolean shouldBuildMinerFactory(RobotInfo[] friendlyRobots) {
+        if (rc.getTeamOre() < RobotType.MINERFACTORY.oreCost) {
+            return false;
+        }
+
+        int minerFactoryCount = Helper.getRobotsOfType(friendlyRobots, RobotType.MINERFACTORY);
+        return minerFactoryCount < MINER_FACTORY_COUNT;
+    }
+
+    private static boolean shouldBuildHelipad(RobotInfo[] friendlyRobots) {
         if (rc.getTeamOre() < RobotType.HELIPAD.oreCost) {
             return false;
         }
 
-        RobotInfo[] allFriendlies = rc.senseNearbyRobots(Integer.MAX_VALUE, myTeam);
-        int helipadCount = getHelipadStationCount(allFriendlies);
-        int roundNumber = Clock.getRoundNum();
+        int helipadCount = Helper.getRobotsOfType(friendlyRobots, RobotType.HELIPAD);
+        if (helipadCount > 1) {
+            return false;
+        }
+
+        int minerFactoryCount = Helper.getRobotsOfType(friendlyRobots, RobotType.MINERFACTORY);
         return helipadCount < 1
-                || (helipadCount < 2 && roundNumber > 150);
+                || (helipadCount < 2 && minerFactoryCount > 0);
     }
 
-    private static void buildHelipad() throws GameActionException {
+    private static void build(RobotType type) throws GameActionException {
         int direction = 0;
-        while (!rc.canBuild(directions[direction], RobotType.HELIPAD)) {
+        while (!rc.canBuild(directions[direction], type)) {
             direction++;
             if (direction > 7) {
                 return;
             }
         }
 
-        rc.build(directions[direction], RobotType.HELIPAD);
-    }
-
-    private static int getHelipadStationCount(RobotInfo[] robots) {
-        int count = 0;
-        for (RobotInfo robot : robots) {
-            if (robot.type == RobotType.HELIPAD) {
-                count++;
-            }
-        }
-
-        return count;
+        rc.build(directions[direction], type);
     }
 
     private static void moveInRandomDirection() throws GameActionException {

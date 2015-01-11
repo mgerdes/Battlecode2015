@@ -8,6 +8,7 @@ public class Drone {
     private static Team enemyTeam;
     private static MapLocation enemyHqLocation;
     private static MapLocation myHqLocation;
+    private static MapLocation myFirstTowerLocation;
 
     public static void run(RobotController rcC) {
         rc = rcC;
@@ -19,6 +20,11 @@ public class Drone {
         myHqLocation = rc.senseHQLocation();
         enemyHqLocation = rc.senseEnemyHQLocation();
         enemyTeam = rc.getTeam().opponent();
+
+        MapLocation[] towerLocations = rc.senseTowerLocations();
+        if (towerLocations.length > 0) {
+            myFirstTowerLocation = towerLocations[0];
+        }
 
         loop();
     }
@@ -39,12 +45,42 @@ public class Drone {
 
         int tactic = rc.readBroadcast(ChannelList.TACTIC);
         switch (tactic) {
+            case Tactic.FORTIFY:
+                fortify();
+                break;
             case Tactic.SWARM:
                 swarm();
                 break;
             case Tactic.ATTACK_ENEMY_STRUCTURE:
                 attackEnemyStructure();
                 break;
+        }
+    }
+
+    private static void fortify() throws GameActionException {
+        if (rc.getSupplyLevel() == 0) {
+            Bug.setDestination(myHqLocation);
+        }
+        else {
+            if (myFirstTowerLocation != null) {
+                Bug.setDestination(myFirstTowerLocation);
+            }
+            else {
+                MapLocation rally = myHqLocation.add(myHqLocation.directionTo(enemyHqLocation), 8);
+                Bug.setDestination(rally);
+            }
+        }
+
+        RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
+        if (enemiesInAttackRange.length == 0) {
+            if (rc.isCoreReady()) {
+                MapLocation currentLocation = rc.getLocation();
+                Direction direction = Bug.getSafeDirection(currentLocation);
+                rc.move(direction);
+            }
+        }
+        else if (rc.isWeaponReady()) {
+            rc.attackLocation(enemiesInAttackRange[0].location);
         }
     }
 
