@@ -67,15 +67,8 @@ public class Drone {
             Bug.setDestination(myHqLocation);
         }
         else {
-            int numberOfPoints = rc.readBroadcast(ChannelList.FORTIFY_POINT_COUNT);
-            if (fortifyLocation == null
-                    || currentLocation.distanceSquaredTo(fortifyLocation) <= 9
-                    || rc.senseTerrainTile(fortifyLocation) == TerrainTile.OFF_MAP) {
-                fortifyLocation = Communication.getFortifyPoint(fortifyPointNumber % numberOfPoints);
-                rc.setIndicatorString(1, String.format("going to %s", fortifyLocation.toString()));
-                Bug.setDestination(fortifyLocation);
-                fortifyPointNumber++;
-            }
+            //--TODO: ...
+            Bug.setDestination(myHqLocation);
         }
 
         RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
