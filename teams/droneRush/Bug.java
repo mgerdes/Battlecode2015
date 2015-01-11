@@ -17,12 +17,19 @@ public class Bug {
     private static int distanceStartBugging;
     private static MapLocation enemyHQLocation;
     private static MapLocation[] enemyTowerLocations;
+    private static MapLocation ignoreLocation;
 
     public static void init(RobotController rcC) {
         rc = rcC;
     }
 
-    public static void setNewDestination(MapLocation destinationC) {
+    public static void setDestination(MapLocation destinationC) {
+        //--Ignore if already set
+        if (destinationC.equals(destination)) {
+            return;
+        }
+
+        //--Reset bug state for new destination
         destination = destinationC;
         followingWall = false;
         previousDirection = null;
@@ -30,10 +37,9 @@ public class Bug {
         previousDistance = Integer.MAX_VALUE;
     }
 
-    //--Returns a navigable direction that
-    //- leads (eventually) to the destination
-    public static Direction getSafeDirection(MapLocation currentLocationC) {
+    public static Direction getSafeDirection(MapLocation currentLocationC, MapLocation ignoreC) {
         currentLocation = currentLocationC;
+        ignoreLocation = ignoreC;
         enemyHQLocation = rc.senseEnemyHQLocation();
         enemyTowerLocations = rc.senseEnemyTowerLocations();
 
@@ -46,6 +52,10 @@ public class Bug {
         }
 
         return getDirectionNotFollowingWall();
+    }
+
+    public static Direction getSafeDirection(MapLocation currentLocationC) {
+        return getSafeDirection(currentLocationC, null);
     }
 
     private static Direction getDirectionFollowingWall() {
@@ -135,6 +145,10 @@ public class Bug {
 
     private static boolean withinTowerAttackRange(MapLocation location) {
         for (MapLocation towerLocation : enemyTowerLocations) {
+            if (towerLocation.equals(ignoreLocation)) {
+                continue;
+
+            }
             if (location.distanceSquaredTo(towerLocation) <= RobotType.TOWER.attackRadiusSquared) {
                 return true;
             }
@@ -144,6 +158,10 @@ public class Bug {
     }
 
     private static boolean withinHqAttackRange(MapLocation location) {
+        if (enemyHQLocation.equals(ignoreLocation)) {
+            return false;
+        }
+
         int hqAttackRange = enemyTowerLocations.length == 0 ?
                 RobotType.HQ.attackRadiusSquared
                 : GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED;
