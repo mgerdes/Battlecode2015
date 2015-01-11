@@ -1,22 +1,18 @@
 package superCircle;
 
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
-
-import java.util.Random;
+import battlecode.common.*;
 
 public class Miner {
     private static RobotController rc;
-    private static Direction[] directions = Direction.values();
-    private static Random random;
     private static MapLocation myHqLocation;
+    private static MapLocation enemyHqLocation;
 
     public static void run(RobotController rcC) {
         rc = rcC;
-        random = new Random(rcC.getID());
         myHqLocation = rc.senseHQLocation();
+        enemyHqLocation = rc.senseEnemyHQLocation();
+
+        Bug.init(rcC);
 
         loop();
     }
@@ -37,25 +33,28 @@ public class Miner {
             return;
         }
 
-        if (rc.senseOre(rc.getLocation()) > 0) {
+        MapLocation currentLocation = rc.getLocation();
+        if (rc.senseOre(currentLocation) > 0) {
             rc.mine();
         }
         else {
-            //--Only move away from HQ is the ore isn't there
-            Direction direction = findBestDirection();
-            if (direction != null) {
-                rc.move(direction);
+            Direction direction = findDirectionClosestToHqWithOre(currentLocation);
+            if (direction == null) {
+                Bug.setDestination(enemyHqLocation);
+                direction = Bug.getSafeDirection(currentLocation);
             }
+
+            rc.move(direction);
         }
     }
 
-    private static Direction findBestDirection() {
-        MapLocation currentLocation = rc.getLocation();
+    private static Direction findDirectionClosestToHqWithOre(MapLocation currentLocation) {
         int directionToHq = Helper.getInt(currentLocation.directionTo(myHqLocation));
-        int[] directions = new int[] {0, -1, 1, -2, 2, -3, 3, -4};
+        int[] directions = new int[]{0, -1, 1, -2, 2, -3, 3, -4};
         for (int n : directions) {
             Direction direction = Helper.getDirection(directionToHq + n);
-            if (rc.senseOre(currentLocation.add(direction)) > 0
+            MapLocation nextLocation = currentLocation.add(direction);
+            if (rc.senseOre(nextLocation) > 0
                     && rc.canMove(direction)) {
                 return direction;
             }

@@ -10,7 +10,7 @@ public class HQ {
     private static MapLocation myHqLocation;
     private static MapLocation enemyHqLocation;
 
-    private static final int BEAVER_COUNT = 3;
+    private static final int BEAVER_COUNT = 1;
 
     public static void run(RobotController rcC) {
         rc = rcC;
