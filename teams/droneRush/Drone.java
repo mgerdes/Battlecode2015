@@ -68,7 +68,6 @@ public class Drone {
         }
         else {
             MapLocation circleLocation = CircleNav.getDestination(4, currentLocation);
-            rc.setIndicatorString(1, String.format("going to %s", circleLocation.toString()));
             Bug.setDestination(circleLocation);
         }
 

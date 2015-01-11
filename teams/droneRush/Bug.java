@@ -25,7 +25,7 @@ public class Bug {
     //--Bug path info
     private static boolean followingWall;
     private static int distanceStartBugging;
-    private static MapLocation loopCheck;
+    private static int numberOfNinetyDegreeRotations;
 
     public static void init(RobotController rcC) {
         rc = rcC;
@@ -44,6 +44,7 @@ public class Bug {
         previousDirection = null;
         distanceStartBugging = 0;
         previousDistance = Integer.MAX_VALUE;
+        numberOfNinetyDegreeRotations = 0;
     }
 
     public static Direction getSafeDirection(MapLocation currentLocationC, MapLocation ignoreC) {
@@ -75,13 +76,9 @@ public class Bug {
         }
 
         //--Hack to stop robots from going in circles!
-        if (Clock.getRoundNum() % 4 == 0) {
-            if (currentLocation.equals(loopCheck)) {
-                followingWall = false;
-                return getDirectionNotFollowingWall();
-            }
-
-            loopCheck = currentLocation;
+        if (numberOfNinetyDegreeRotations == 4) {
+            followingWall = false;
+            return getDirectionNotFollowingWall();
         }
 
         if (currentDistance > previousDistance
@@ -91,7 +88,18 @@ public class Bug {
 
         previousDistance = currentDistance;
 
-        Direction followDirection = getFollowDirection(previousDirection);
+        //--Check if we can go around the corner...
+        Direction checkDirection = defaultLeft ?
+                previousDirection.rotateRight().rotateRight()
+                : previousDirection.rotateLeft().rotateLeft();
+        if (canMoveSafely(checkDirection)) {
+            numberOfNinetyDegreeRotations++;
+            previousDirection = checkDirection;
+            return checkDirection;
+        }
+
+        numberOfNinetyDegreeRotations = 0;
+        Direction followDirection = getTurnDirection(checkDirection);
         previousDirection = followDirection;
         return followDirection;
     }
@@ -104,6 +112,7 @@ public class Bug {
     }
 
     private static Direction getDirectionNotFollowingWall() {
+        numberOfNinetyDegreeRotations = 0;
         Direction direct = currentLocation.directionTo(destination);
         if (canMoveSafely(direct)) {
             return direct;
@@ -115,17 +124,6 @@ public class Bug {
         Direction turnDirection = getTurnDirection(direct);
         previousDirection = turnDirection;
         return turnDirection;
-    }
-
-    //--We turn the opposite way because we may need
-    //- to round the corner
-    private static Direction getFollowDirection(Direction initial) {
-        //--TODO: optimize the double turn
-        if (defaultLeft) {
-            return rotateLeftUntilCanMove(initial.rotateRight().rotateRight());
-        }
-
-        return rotateRightUntilCanMove(initial.rotateLeft().rotateLeft());
     }
 
     private static Direction getTurnDirection(Direction initial) {
