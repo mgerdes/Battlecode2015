@@ -1,17 +1,17 @@
 package droneRush;
 
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
+import battlecode.common.*;
 
 public class Drone {
     private static RobotController rc;
+    private static Team enemyTeam;
 
     public static void run(RobotController rcC) {
         rc = rcC;
         Bug.init(rcC);
         Bug.setNewDestination(rcC.senseEnemyHQLocation());
+
+        enemyTeam = rc.getTeam().opponent();
         loop();
     }
 
@@ -27,14 +27,16 @@ public class Drone {
     }
 
     private static void doYourThing() throws GameActionException {
-        if (!rc.isCoreReady()) {
-            return;
+        RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
+        if (enemiesInAttackRange.length == 0) {
+            if (rc.isCoreReady()) {
+                MapLocation currentLocation = rc.getLocation();
+                Direction direction = Bug.getSafeDirection(currentLocation);
+                rc.move(direction);
+            }
         }
-
-        rc.setIndicatorString(0, "!");
-        MapLocation currentLocation = rc.getLocation();
-        Direction direction = Bug.getSafeDirection(currentLocation);
-        rc.setIndicatorString(1, direction.toString());
-        rc.move(direction);
+        else if (rc.isWeaponReady()) {
+            rc.attackLocation(enemiesInAttackRange[0].location);
+        }
     }
 }
