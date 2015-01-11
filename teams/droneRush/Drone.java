@@ -31,8 +31,10 @@ public class Drone {
             return;
         }
 
+        rc.setIndicatorString(0, "!");
         MapLocation currentLocation = rc.getLocation();
-        Direction direction = Bug.getDirection(currentLocation);
+        Direction direction = Bug.getSafeDirection(currentLocation);
+        rc.setIndicatorString(1, direction.toString());
         rc.move(direction);
     }
 }

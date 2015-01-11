@@ -1,8 +1,6 @@
 package droneRush;
 
-import battlecode.common.Direction;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
+import battlecode.common.*;
 
 //--Version 1.0.1
 
@@ -12,9 +10,12 @@ public class Bug {
     private static final boolean DEFAULT_LEFT = true;
 
     private static MapLocation destination;
+    private static MapLocation currentLocation;
     private static boolean followingWall;
     private static Direction previousDirection;
     private static int distanceStartBugging;
+    private static MapLocation enemyHQLocation;
+    private static MapLocation[] enemyTowerLocations;
 
     public static void init(RobotController rcC) {
         rc = rcC;
@@ -29,22 +30,26 @@ public class Bug {
 
     //--Returns a navigable direction that
     //- leads (eventually) to the destination
-    public static Direction getDirection(MapLocation currentLocation) {
+    public static Direction getSafeDirection(MapLocation currentLocationC) {
+        currentLocation = currentLocationC;
+        enemyHQLocation = rc.senseEnemyHQLocation();
+        enemyTowerLocations = rc.senseEnemyTowerLocations();
+
         if (previousDirection == null) {
-            previousDirection = currentLocation.directionTo(destination);
+            previousDirection = currentLocationC.directionTo(destination);
         }
 
         if (followingWall) {
-            return getDirectionFollowingWall(currentLocation);
+            return getDirectionFollowingWall();
         }
 
-        return getDirectionNotFollowingWall(currentLocation);
+        return getDirectionNotFollowingWall();
     }
 
-    private static Direction getDirectionFollowingWall(MapLocation currentLocation) {
+    private static Direction getDirectionFollowingWall() {
         if (currentLocation.distanceSquaredTo(destination) < distanceStartBugging) {
             followingWall = false;
-            return getDirectionNotFollowingWall(currentLocation);
+            return getDirectionNotFollowingWall();
         }
 
         Direction followDirection = getFollowDirection(previousDirection);
@@ -53,9 +58,9 @@ public class Bug {
         return followDirection;
     }
 
-    private static Direction getDirectionNotFollowingWall(MapLocation currentLocation) {
+    private static Direction getDirectionNotFollowingWall() {
         Direction direct = currentLocation.directionTo(destination);
-        if (rc.canMove(direct)) {
+        if (canMoveSafely(direct)) {
             return direct;
         }
 
@@ -90,7 +95,7 @@ public class Bug {
     }
 
     private static Direction rotateLeftUntilCanMove(Direction direction) {
-        while (!rc.canMove(direction)) {
+        while (!canMoveSafely(direction)) {
             direction = direction.rotateLeft();
         }
 
@@ -98,10 +103,35 @@ public class Bug {
     }
 
     private static Direction rotateRightUntilCanMove(Direction direction) {
-        while (!rc.canMove(direction)) {
+        while (!canMoveSafely(direction)) {
             direction = direction.rotateRight();
         }
 
         return direction;
+    }
+
+    //--Checks if the location will be within the attack range of enemy HQ or tower
+    private static boolean canMoveSafely(Direction direction) {
+        MapLocation next = currentLocation.add(direction);
+        return rc.canMove(direction)
+                && !withinHqAttackRange(next)
+                && !withinTowerAttackRange(next);
+    }
+
+    private static boolean withinTowerAttackRange(MapLocation location) {
+        for (MapLocation towerLocation : enemyTowerLocations) {
+            if (location.distanceSquaredTo(towerLocation) <= RobotType.TOWER.attackRadiusSquared) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean withinHqAttackRange(MapLocation location) {
+        int hqAttackRange = enemyTowerLocations.length == 0 ?
+                RobotType.HQ.attackRadiusSquared
+                : GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED;
+        return location.distanceSquaredTo(enemyHQLocation) <= hqAttackRange;
     }
 }
