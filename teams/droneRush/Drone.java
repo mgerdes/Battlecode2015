@@ -10,6 +10,9 @@ public class Drone {
     private static MapLocation myHqLocation;
     private static MapLocation myFirstTowerLocation;
 
+    private static int fortifyPointNumber = 0;
+    private static MapLocation fortifyLocation;
+
     public static void run(RobotController rcC) {
         rc = rcC;
 
@@ -58,23 +61,26 @@ public class Drone {
     }
 
     private static void fortify() throws GameActionException {
+        MapLocation currentLocation = rc.getLocation();
+
         if (rc.getSupplyLevel() == 0) {
             Bug.setDestination(myHqLocation);
         }
         else {
-            if (myFirstTowerLocation != null) {
-                Bug.setDestination(myFirstTowerLocation);
-            }
-            else {
-                MapLocation rally = myHqLocation.add(myHqLocation.directionTo(enemyHqLocation), 8);
-                Bug.setDestination(rally);
+            int numberOfPoints = rc.readBroadcast(ChannelList.FORTIFY_POINT_COUNT);
+            if (fortifyLocation == null
+                    || currentLocation.distanceSquaredTo(fortifyLocation) <= 9
+                    || rc.senseTerrainTile(fortifyLocation) == TerrainTile.OFF_MAP) {
+                fortifyLocation = Communication.getFortifyPoint(fortifyPointNumber % numberOfPoints);
+                rc.setIndicatorString(1, String.format("going to %s", fortifyLocation.toString()));
+                Bug.setDestination(fortifyLocation);
+                fortifyPointNumber++;
             }
         }
 
         RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
         if (enemiesInAttackRange.length == 0) {
             if (rc.isCoreReady()) {
-                MapLocation currentLocation = rc.getLocation();
                 Direction direction = Bug.getSafeDirection(currentLocation);
                 rc.move(direction);
             }
@@ -96,7 +102,7 @@ public class Drone {
                 rc.move(direction);
             }
         }
-        else  if (rc.isWeaponReady()) {
+        else if (rc.isWeaponReady()) {
             rc.attackLocation(enemiesInAttackRange[0].location);
         }
     }
@@ -111,11 +117,11 @@ public class Drone {
 
         RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
         if (enemiesInAttackRange.length == 0) {
-           if (rc.isCoreReady()) {
-               MapLocation currentLocation = rc.getLocation();
-               Direction direction = Bug.getSafeDirection(currentLocation);
-               rc.move(direction);
-           }
+            if (rc.isCoreReady()) {
+                MapLocation currentLocation = rc.getLocation();
+                Direction direction = Bug.getSafeDirection(currentLocation);
+                rc.move(direction);
+            }
         }
         else if (rc.isWeaponReady()) {
             rc.attackLocation(enemiesInAttackRange[0].location);

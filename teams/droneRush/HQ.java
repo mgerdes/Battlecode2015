@@ -40,6 +40,7 @@ public class HQ {
 
         RobotInfo[] friendlyRobots = rc.senseNearbyRobots(1000000, myTeam);
         setTactic(friendlyRobots);
+        broadcastFortifyPoints(friendlyRobots);
 
         if (rc.isWeaponReady()) {
             RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.HQ.attackRadiusSquared, enemyTeam);
@@ -55,6 +56,29 @@ public class HQ {
         }
     }
 
+    private static void broadcastFortifyPoints(RobotInfo[] friendlyRobots) throws GameActionException {
+        int droneCount = Helper.getRobotsOfType(friendlyRobots,RobotType.DRONE);
+        int count = 0;
+        int distanceAwayFromHq = Math.max(6, droneCount / 2);
+        for (Direction d : directions) {
+            if (d == Direction.NONE
+                    || d == Direction.OMNI) {
+                continue;
+            }
+
+            MapLocation point = myHqLocation.add(d, distanceAwayFromHq);
+            if (rc.senseTerrainTile(point) == TerrainTile.OFF_MAP) {
+                continue;
+            }
+
+            rc.broadcast(ChannelList.FORTIFY_POINT_START + 2 * count, point.x);
+            rc.broadcast(ChannelList.FORTIFY_POINT_START + 2 * count + 1, point.y);
+            count++;
+        }
+
+        rc.broadcast(ChannelList.FORTIFY_POINT_COUNT, count);
+    }
+
     private static boolean shouldSpawnBeaver(RobotInfo[] friendlyRobots) {
         if (rc.getTeamOre() < RobotType.BEAVER.oreCost) {
             return false;
@@ -65,7 +89,8 @@ public class HQ {
     }
 
     private static void setTactic(RobotInfo[] friendlyRobots) throws GameActionException {
-        if (Clock.getRoundNum() < 300) {
+        if (Clock.getRoundNum() < 600) {
+            rc.broadcast(ChannelList.TACTIC, Tactic.FORTIFY);
             return;
         }
 
