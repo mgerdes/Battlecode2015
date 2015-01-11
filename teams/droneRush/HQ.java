@@ -65,12 +65,12 @@ public class HQ {
     }
 
     private static void setTactic(RobotInfo[] friendlyRobots) throws GameActionException {
-        if (Clock.getRoundNum() < 600) {
+        int droneCount = Helper.getRobotsOfType(friendlyRobots, RobotType.DRONE);
+        if (droneCount < 15) {
             rc.broadcast(ChannelList.TACTIC, Tactic.FORTIFY);
             return;
         }
 
-        int droneCount = Helper.getRobotsOfType(friendlyRobots, RobotType.DRONE);
 
         if (droneCount < 25) {
             rc.broadcast(ChannelList.TACTIC, Tactic.SWARM);
@@ -82,7 +82,6 @@ public class HQ {
             MapLocation enemyStructure = getStructureToAttack();
             rc.broadcast(ChannelList.STRUCTURE_TO_ATTACK_X, enemyStructure.x);
             rc.broadcast(ChannelList.STRUCTURE_TO_ATTACK_Y, enemyStructure.y);
-            return;
         }
     }
 
