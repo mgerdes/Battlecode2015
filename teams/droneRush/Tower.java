@@ -25,7 +25,7 @@ public class Tower {
 
     private static void doYourThing() throws GameActionException {
         if (rc.isWeaponReady()) {
-            RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.HQ.attackRadiusSquared, enemyTeam);
+            RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.TOWER.attackRadiusSquared, enemyTeam);
             if (enemiesInAttackRange.length > 0) {
                 rc.attackLocation(enemiesInAttackRange[0].location);
             }
