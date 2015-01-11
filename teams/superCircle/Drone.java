@@ -8,10 +8,6 @@ public class Drone {
     private static Team enemyTeam;
     private static MapLocation enemyHqLocation;
     private static MapLocation myHqLocation;
-    private static MapLocation myFirstTowerLocation;
-
-    private static int fortifyPointNumber = 0;
-    private static MapLocation fortifyLocation;
 
     public static void run(RobotController rcC) {
         rc = rcC;
@@ -19,10 +15,6 @@ public class Drone {
         myHqLocation = rc.senseHQLocation();
         enemyHqLocation = rc.senseEnemyHQLocation();
         enemyTeam = rc.getTeam().opponent();
-        MapLocation[] towerLocations = rc.senseTowerLocations();
-        if (towerLocations.length > 0) {
-            myFirstTowerLocation = towerLocations[0];
-        }
 
         Bug.init(rcC);
         CircleNav.init(rcC, myHqLocation);
@@ -62,12 +54,13 @@ public class Drone {
 
     private static void fortify() throws GameActionException {
         MapLocation currentLocation = rc.getLocation();
+        int minerRadius = rc.readBroadcast(ChannelList.MINER_RADIUS_FROM_HQ);
 
         if (rc.getSupplyLevel() == 0) {
             Bug.setDestination(myHqLocation);
         }
         else {
-            MapLocation circleLocation = CircleNav.getDestination(4, currentLocation);
+            MapLocation circleLocation = CircleNav.getDestination(minerRadius + 2, currentLocation);
             Bug.setDestination(circleLocation);
         }
 
