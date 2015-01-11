@@ -2,17 +2,18 @@ package droneRush;
 
 import battlecode.common.*;
 
-//--Version 1.0.1
+//--Version 1.0.2
 
 public class Bug {
     private static RobotController rc;
 
-    private static final boolean DEFAULT_LEFT = true;
+    private static boolean DEFAULT_LEFT = true;
 
     private static MapLocation destination;
     private static MapLocation currentLocation;
     private static boolean followingWall;
     private static Direction previousDirection;
+    private static int previousDistance = Integer.MAX_VALUE;
     private static int distanceStartBugging;
     private static MapLocation enemyHQLocation;
     private static MapLocation[] enemyTowerLocations;
@@ -26,6 +27,7 @@ public class Bug {
         followingWall = false;
         previousDirection = null;
         distanceStartBugging = 0;
+        previousDistance = Integer.MAX_VALUE;
     }
 
     //--Returns a navigable direction that
@@ -47,15 +49,30 @@ public class Bug {
     }
 
     private static Direction getDirectionFollowingWall() {
-        if (currentLocation.distanceSquaredTo(destination) < distanceStartBugging) {
+        int currentDistance = currentLocation.distanceSquaredTo(destination);
+        if (currentDistance < distanceStartBugging) {
             followingWall = false;
             return getDirectionNotFollowingWall();
         }
+
+        if (currentDistance > previousDistance
+                && onMapEdge()) {
+            DEFAULT_LEFT = !DEFAULT_LEFT;
+        }
+
+        previousDistance = currentDistance;
 
         Direction followDirection = getFollowDirection(previousDirection);
         previousDirection = followDirection;
         rc.setIndicatorString(0, previousDirection.toString());
         return followDirection;
+    }
+
+    private static boolean onMapEdge() {
+        Direction wallDirection = DEFAULT_LEFT
+                ? previousDirection.rotateRight().rotateRight()
+                : previousDirection.rotateLeft().rotateLeft();
+        return rc.senseTerrainTile(currentLocation.add(wallDirection)) == TerrainTile.OFF_MAP;
     }
 
     private static Direction getDirectionNotFollowingWall() {
