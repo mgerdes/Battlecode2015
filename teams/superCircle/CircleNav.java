@@ -50,7 +50,7 @@ public class CircleNav {
     private static MapLocation getLocationForRotation(int rotation) {
         Direction d = Helper.getDirection(rotation);
         return d.isDiagonal() ?
-                center.add(d, (int) (radius * 1.414))
+                center.add(d, (int) (radius / 1.414))
                 : center.add(d, radius);
     }
 

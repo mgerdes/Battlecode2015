@@ -35,9 +35,9 @@ public class Miner {
 
         int currentMinerRadius = rc.readBroadcast(ChannelList.MINER_RADIUS_FROM_HQ);
         MapLocation currentLocation = rc.getLocation();
-        int currentDistanceFromHq = currentLocation.distanceSquaredTo(myHqLocation);
+        int currentDistanceFromHq = (int) Math.sqrt(currentLocation.distanceSquaredTo(myHqLocation));
         if (currentDistanceFromHq > currentMinerRadius) {
-            rc.broadcast(ChannelList.MINER_RADIUS_FROM_HQ, (int) Math.sqrt(currentDistanceFromHq));
+            rc.broadcast(ChannelList.MINER_RADIUS_FROM_HQ, currentDistanceFromHq);
         }
 
         if (rc.senseOre(currentLocation) > 0) {
