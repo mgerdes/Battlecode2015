@@ -8,6 +8,8 @@ public class HQ {
     private static Direction[] directions = Direction.values();
     private static Team enemyTeam;
     private static Team myTeam;
+    private static MapLocation myHqLocation;
+    private static MapLocation enemyHqLocation;
 
     public static void run(RobotController rcC) {
         rc = rcC;
@@ -15,6 +17,8 @@ public class HQ {
 
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
+        myHqLocation = rc.getLocation(); //--This is the HQ!
+        enemyHqLocation = rc.senseEnemyHQLocation();
         loop();
     }
 
@@ -33,6 +37,8 @@ public class HQ {
     private static void doYourThing() throws GameActionException {
         SupplySharing.shareMore();
 
+        setTactic();
+
         if (rc.isWeaponReady()) {
             RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.HQ.attackRadiusSquared, enemyTeam);
             if (enemiesInAttackRange.length > 0) {
@@ -43,6 +49,41 @@ public class HQ {
         if (rc.isCoreReady()) {
             spawnBeaver();
         }
+    }
+
+    private static void setTactic() throws GameActionException {
+        int roundNumber = Clock.getRoundNum();
+        if (roundNumber < 1000) {
+            rc.broadcast(ChannelList.TACTIC, Tactic.SWARM);
+        }
+        else {
+            rc.broadcast(ChannelList.TACTIC, Tactic.ATTACK_ENEMY_STRUCTURE);
+            MapLocation enemyStructure = getStructureToAttack();
+            rc.broadcast(ChannelList.STRUCTURE_TO_ATTACK_X, enemyStructure.x);
+            rc.broadcast(ChannelList.STRUCTURE_TO_ATTACK_Y, enemyStructure.y);
+        }
+    }
+
+    private static MapLocation getStructureToAttack() {
+        //--if enemy has towers
+        //    return the closest one to our HQ
+        //--else return enemy HQ
+        MapLocation[] enemyTowerLocations = rc.senseEnemyTowerLocations();
+        if (enemyTowerLocations.length == 0) {
+            return enemyHqLocation;
+        }
+
+        int index = 0;
+        int minDistance = Integer.MAX_VALUE;
+        for (int i = 0; i < enemyTowerLocations.length; i++) {
+            int thisDistance = myHqLocation.distanceSquaredTo(enemyTowerLocations[i]);
+            if (thisDistance < minDistance) {
+                minDistance = thisDistance;
+                index = i;
+            }
+        }
+
+        return enemyTowerLocations[index];
     }
 
     private static void spawnBeaver() throws GameActionException {
