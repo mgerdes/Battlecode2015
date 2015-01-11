@@ -52,15 +52,25 @@ public class HQ {
     }
 
     private static void setTactic() throws GameActionException {
-        int roundNumber = Clock.getRoundNum();
-        if (roundNumber < 1000) {
-            rc.broadcast(ChannelList.TACTIC, Tactic.SWARM);
+        int droneCount = 0;
+        RobotInfo[] friendlyRobots = rc.senseNearbyRobots(1000000, myTeam);
+        for (RobotInfo robot : friendlyRobots) {
+            if (robot.type == RobotType.DRONE) {
+                droneCount++;
+            }
         }
-        else {
+
+        if (droneCount < 25) {
+            rc.broadcast(ChannelList.TACTIC, Tactic.SWARM);
+            return;
+        }
+
+        if (droneCount > 35) {
             rc.broadcast(ChannelList.TACTIC, Tactic.ATTACK_ENEMY_STRUCTURE);
             MapLocation enemyStructure = getStructureToAttack();
             rc.broadcast(ChannelList.STRUCTURE_TO_ATTACK_X, enemyStructure.x);
             rc.broadcast(ChannelList.STRUCTURE_TO_ATTACK_Y, enemyStructure.y);
+            return;
         }
     }
 
