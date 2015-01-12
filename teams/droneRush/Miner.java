@@ -1,8 +1,6 @@
 package droneRush;
 
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.RobotController;
+import battlecode.common.*;
 
 import java.util.Random;
 
@@ -10,10 +8,15 @@ public class Miner {
     private static RobotController rc;
     private static Direction[] directions = Direction.values();
     private static Random random;
+    private static Team enemyTeam;
 
     public static void run(RobotController rcC) {
         rc = rcC;
+
         random = new Random(rcC.getID());
+        enemyTeam = rc.getTeam().opponent();
+
+        Communication.init(rcC);
 
         loop();
     }
@@ -30,6 +33,11 @@ public class Miner {
     }
 
     private static void doYourThing() throws GameActionException {
+        RobotInfo[] enemies = rc.senseNearbyRobots(RobotType.BEAVER.sensorRadiusSquared, enemyTeam);
+        if (enemies.length > 0) {
+            Communication.broadcastEnemyInBase(enemies[0].location);
+        }
+
         if (!rc.isCoreReady()) {
             return;
         }

@@ -10,11 +10,16 @@ public class Beaver {
     private static Direction[] directions = Direction.values();
     private static Random random;
     private static final int MINER_FACTORY_COUNT = 1;
+    private static Team enemyTeam;
 
     public static void run(RobotController rcC) {
         rc = rcC;
         myTeam = rcC.getTeam();
+        enemyTeam = myTeam.opponent();
         random = new Random(rcC.getID());
+
+        Communication.init(rcC);
+
         loop();
     }
 
@@ -30,6 +35,11 @@ public class Beaver {
     }
 
     private static void doYourThing() throws GameActionException {
+        RobotInfo[] enemies = rc.senseNearbyRobots(RobotType.BEAVER.sensorRadiusSquared, enemyTeam);
+        if (enemies.length > 0) {
+            Communication.broadcastEnemyInBase(enemies[0].location);
+        }
+
         if (!rc.isCoreReady()) {
             return;
         }
