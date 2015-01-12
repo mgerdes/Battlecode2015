@@ -179,9 +179,19 @@ public class Bug {
             return false;
         }
 
-        int hqAttackRange = enemyTowerLocations.length == 0 ?
-                RobotType.HQ.attackRadiusSquared
-                : GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED;
+        int hqAttackRange;
+        if (enemyTowerLocations.length > 4) {
+            //--Bonus for 2 and 5 towers
+            hqAttackRange = GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED + GameConstants.HQ_BUFFED_SPLASH_RADIUS_SQUARED;
+        }
+        else if (enemyTowerLocations.length > 1) {
+            //--Bonus for 2 towers
+            hqAttackRange = GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED;
+        }
+        else {
+            hqAttackRange = RobotType.HQ.attackRadiusSquared;
+        }
+
         return location.distanceSquaredTo(enemyHQLocation) <= hqAttackRange;
     }
 }
