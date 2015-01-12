@@ -19,6 +19,9 @@ public class RobotPlayer {
         else if (type == RobotType.HELIPAD) {
             Helipad.run(rc);
         }
+        else if (type == RobotType.SUPPLYDEPOT) {
+            SupplyDepot.run(rc);
+        }
         else if (type == RobotType.BEAVER) {
             Beaver.run(rc);
         }

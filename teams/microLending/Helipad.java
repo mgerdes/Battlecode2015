@@ -2,6 +2,7 @@ package microLending;
 
 import battlecode.common.*;
 import microLending.util.ChannelList;
+import microLending.util.Debug;
 
 public class Helipad {
     private static RobotController rc;
@@ -47,6 +48,7 @@ public class Helipad {
     private static void broadcastDroneCount(RobotInfo[] friendlyRobots) throws GameActionException {
         int droneCount = Helper.getRobotsOfType(friendlyRobots, RobotType.DRONE);
         rc.broadcast(ChannelList.DRONE_COUNT, droneCount);
+        Debug.setString(1, String.format("broadcasting %s on channel %s", droneCount, ChannelList.DRONE_COUNT), rc);
     }
 
     private static void spawn(RobotType type) throws GameActionException {

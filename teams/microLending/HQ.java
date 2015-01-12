@@ -32,7 +32,7 @@ public class HQ {
     private static void loop() {
         while (true) {
             try {
-                Debug.setString(1, String.format("%f at beginning of round", rc.getTeamOre()), rc);
+                Debug.setString(0, String.format("%f at beginning of round", rc.getTeamOre()), rc);
                 doYourThing();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -103,6 +103,7 @@ public class HQ {
 
     private static void setTactic() throws GameActionException {
         int droneCount = rc.readBroadcast(ChannelList.DRONE_COUNT);
+
         if (droneCount < 15) {
             rc.broadcast(ChannelList.TACTIC, Tactic.FORTIFY);
             return;

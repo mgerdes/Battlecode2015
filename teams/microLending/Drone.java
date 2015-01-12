@@ -5,6 +5,8 @@ import microLending.navigation.Bug;
 import microLending.navigation.CircleNav;
 import microLending.navigation.SafeBug;
 import microLending.util.ChannelList;
+import microLending.util.Debug;
+import microLending.util.Job;
 import microLending.util.Tactic;
 
 public class Drone {
@@ -15,13 +17,15 @@ public class Drone {
     private static Team enemyTeam;
     private static MapLocation enemyHqLocation;
     private static MapLocation myHqLocation;
+    private static Team myTeam;
 
     public static void run(RobotController rcC) {
         rc = rcC;
 
         myHqLocation = rc.senseHQLocation();
         enemyHqLocation = rc.senseEnemyHQLocation();
-        enemyTeam = rc.getTeam().opponent();
+        myTeam = rc.getTeam();
+        enemyTeam = myTeam.opponent();
 
         Bug.init(rcC);
         SafeBug.init(rcC);
@@ -44,8 +48,15 @@ public class Drone {
     }
 
     private static void doYourThing() throws GameActionException {
-        SupplySharing.share();
 
+        if (Communication.someoneIsNeededFor(Job.SUPPLY_MINERS)) {
+            Communication.reportTo(Job.SUPPLY_MINERS);
+            Debug.setString(1, "suppling miners...", rc);
+            supplyMiners();
+            return;
+        }
+
+        SupplySharing.share();
         int tactic = rc.readBroadcast(ChannelList.TACTIC);
         switch (tactic) {
             case Tactic.FORTIFY:
@@ -57,6 +68,39 @@ public class Drone {
             case Tactic.ATTACK_ENEMY_STRUCTURE:
                 attackEnemyStructure();
                 break;
+        }
+    }
+
+    private static void supplyMiners() throws GameActionException {
+        if (!rc.isCoreReady()) {
+            return;
+        }
+
+        MapLocation currentLocation = rc.getLocation();
+        if (rc.getSupplyLevel() < 1000) {
+            SafeBug.setDestination(myHqLocation);
+            Direction direction = SafeBug.getDirection(currentLocation);
+            rc.move(direction);
+            return;
+        }
+
+        RobotInfo[] friendlies = rc.senseNearbyRobots(1000000, myTeam);
+        MapLocation destination = null;
+        for (RobotInfo robot : friendlies) {
+            if (robot.type == RobotType.MINER
+                && robot.supplyLevel == 0) {
+                destination = robot.location;
+                break;
+            }
+        }
+
+        if (currentLocation.distanceSquaredTo(destination) > GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED) {
+            SafeBug.setDestination(destination);
+            Direction direction = SafeBug.getDirection(currentLocation);
+            rc.move(direction);
+        }
+        else {
+            rc.transferSupplies((int) rc.getSupplyLevel(), destination);
         }
     }
 

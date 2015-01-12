@@ -2,6 +2,8 @@ package microLending;
 
 import battlecode.common.*;
 import microLending.navigation.Bug;
+import microLending.util.ChannelList;
+import microLending.util.Debug;
 
 import java.util.Random;
 
@@ -11,7 +13,9 @@ public class Beaver {
     private static final int MAX_DISTANCE_SQUARED_FROM_HQ = 25;
 
     private static final int MAX_MINER_FACTORY_COUNT = 1;
-    private static final int MAX_HELIPAD_COUNT = 3;
+    private static final int MAX_HELIPAD_COUNT = 4;
+    private static final int MAX_SUPPLY_DEPOT_COUNT = 1;
+    private static final int DRONE_AND_MINER_COUNT_NEEDED_FOR_SUPPLY_DEPOT = 30;
 
     private static Team myTeam;
     private static Random random;
@@ -57,6 +61,11 @@ public class Beaver {
             return;
         }
 
+        if (shouldBuildSupplyDepot(allFriendlies)) {
+            build(RobotType.SUPPLYDEPOT);
+            return;
+        }
+
         if (rc.senseOre(rc.getLocation()) > 0) {
             rc.mine();
         }
@@ -70,6 +79,17 @@ public class Beaver {
                 moveInRandomDirection();
             }
         }
+    }
+
+    private static boolean shouldBuildSupplyDepot(RobotInfo[] friendlyRobots) throws GameActionException {
+        if (rc.getTeamOre() < RobotType.SUPPLYDEPOT.oreCost) {
+            return false;
+        }
+
+        int supplyDepotCount = Helper.getRobotsOfType(friendlyRobots, RobotType.SUPPLYDEPOT);
+        int droneAndMinerCount = rc.readBroadcast(ChannelList.DRONE_COUNT) + rc.readBroadcast(ChannelList.MINER_COUNT);
+        return supplyDepotCount < MAX_SUPPLY_DEPOT_COUNT
+                && droneAndMinerCount >= DRONE_AND_MINER_COUNT_NEEDED_FOR_SUPPLY_DEPOT;
     }
 
     private static boolean shouldBuildMinerFactory(RobotInfo[] friendlyRobots) {
