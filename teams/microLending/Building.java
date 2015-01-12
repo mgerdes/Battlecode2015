@@ -1,6 +1,7 @@
 package microLending;
 
 import battlecode.common.*;
+import microLending.util.ChannelList;
 
 public class Building {
     private static RobotController rc;
@@ -34,11 +35,14 @@ public class Building {
     }
 
     private static void doYourThing() throws GameActionException {
+        //--TODO: can optimize because type.spawnSource == mytype is checked twice
+        RobotInfo[] allFriendlies = rc.senseNearbyRobots(1000000, myTeam);
+        broadcastDroneCount(allFriendlies);
+
         if (!rc.isCoreReady()) {
             return;
         }
         
-        RobotInfo[] allFriendlies = rc.senseNearbyRobots(1000000, myTeam);
         if (canSpawn(RobotType.MINER)) {
             int minerCount = Helper.getRobotsOfType(allFriendlies, RobotType.MINER);
             if (minerCount < MAX_MINER_COUNT) {
@@ -52,6 +56,14 @@ public class Building {
                 spawn(RobotType.DRONE);
                 return;
             }
+        }
+    }
+
+    private static void broadcastDroneCount(RobotInfo[] friendlyRobots) throws GameActionException {
+        //--Broadcast the drone count if I produce them
+        if (myType == RobotType.DRONE.spawnSource) {
+            int droneCount = Helper.getRobotsOfType(friendlyRobots, RobotType.DRONE);
+            rc.broadcast(ChannelList.DRONE_COUNT, droneCount);
         }
     }
 

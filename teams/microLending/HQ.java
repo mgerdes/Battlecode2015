@@ -14,6 +14,7 @@ public class HQ {
     private static MapLocation enemyHqLocation;
 
     private static final int BEAVER_COUNT = 1;
+    private static final int DO_NOT_ATTACK_BEFORE_ROUND = 40;
 
     public static void run(RobotController rcC) {
         rc = rcC;
@@ -44,10 +45,10 @@ public class HQ {
         SupplySharing.shareMore();
 
         RobotInfo[] friendlyRobots = rc.senseNearbyRobots(1000000, myTeam);
-        setTactic(friendlyRobots);
+        setTactic();
 
         if (rc.isWeaponReady()
-                && Clock.getRoundNum() > 10) {
+                && Clock.getRoundNum() > DO_NOT_ATTACK_BEFORE_ROUND) {
             tryToAttack();
         }
 
@@ -100,13 +101,12 @@ public class HQ {
         return beaverCount < BEAVER_COUNT;
     }
 
-    private static void setTactic(RobotInfo[] friendlyRobots) throws GameActionException {
-        int droneCount = Helper.getRobotsOfType(friendlyRobots, RobotType.DRONE);
+    private static void setTactic() throws GameActionException {
+        int droneCount = rc.readBroadcast(ChannelList.DRONE_COUNT);
         if (droneCount < 15) {
             rc.broadcast(ChannelList.TACTIC, Tactic.FORTIFY);
             return;
         }
-
 
         if (droneCount < 25) {
             rc.broadcast(ChannelList.TACTIC, Tactic.SWARM);
