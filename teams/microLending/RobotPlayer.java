@@ -13,6 +13,12 @@ public class RobotPlayer {
         else if (type == RobotType.TOWER) {
             Tower.run(rc);
         }
+        else if (type == RobotType.MINERFACTORY) {
+            MinerFactory.run(rc);
+        }
+        else if (type == RobotType.HELIPAD) {
+            Helipad.run(rc);
+        }
         else if (type == RobotType.BEAVER) {
             Beaver.run(rc);
         }
@@ -21,9 +27,6 @@ public class RobotPlayer {
         }
         else if (type == RobotType.DRONE) {
             Drone.run(rc);
-        }
-        else  {
-            Building.run(rc);
         }
     }
 }
