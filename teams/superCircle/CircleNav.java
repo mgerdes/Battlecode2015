@@ -15,14 +15,17 @@ public class CircleNav {
     //  the direction that the hour hand is pointed
     //  i.e. 3'oclock is east, 6 o'clock is south
     private static int currentRotation = 0;
+    private static int startingRotation = 0;
 
     private static MapLocation currentDestination;
     private static boolean goingClockwise = true;
     private static int radius;
 
-    public static void init(RobotController rcC, MapLocation centerC) {
+    public static void init(RobotController rcC, MapLocation centerC, Direction startingDirection) {
         rc = rcC;
         center = centerC;
+        startingRotation = Helper.getInt(startingDirection);
+        currentRotation = startingRotation;
     }
 
     //--Depending on the robot's position, this will return the next position
@@ -36,7 +39,7 @@ public class CircleNav {
 
         if (aboutToHitAWall(currentLocation)) {
             goingClockwise = !goingClockwise;
-            currentRotation = getNextRotation();
+            currentRotation = startingRotation;
             currentDestination = getLocationForRotation(currentRotation);
         }
         else  if (currentLocation.distanceSquaredTo(currentDestination) <= 4) {
@@ -65,7 +68,8 @@ public class CircleNav {
     }
 
     private static boolean aboutToHitAWall(MapLocation currentLocation) {
-        return rc.senseTerrainTile(currentLocation.add(getMovementDirection(), 2)) == TerrainTile.OFF_MAP;
+        return rc.senseTerrainTile(currentLocation.add(getMovementDirection(), 2)) == TerrainTile.OFF_MAP
+                || rc.senseTerrainTile(currentLocation.add(Helper.getDirection(currentRotation))) == TerrainTile.OFF_MAP;
     }
 
     private static Direction getMovementDirection() {

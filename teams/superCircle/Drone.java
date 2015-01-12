@@ -17,7 +17,7 @@ public class Drone {
         enemyTeam = rc.getTeam().opponent();
 
         Bug.init(rcC);
-        CircleNav.init(rcC, myHqLocation);
+        CircleNav.init(rcC, myHqLocation, myHqLocation.directionTo(enemyHqLocation));
         SupplySharing.init(rcC);
         Communication.init(rcC);
 
