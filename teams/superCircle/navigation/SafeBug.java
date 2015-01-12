@@ -1,4 +1,4 @@
-package superCircle;
+package superCircle.navigation;
 
 import battlecode.common.*;
 

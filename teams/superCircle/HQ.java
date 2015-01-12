@@ -1,6 +1,8 @@
 package superCircle;
 
 import battlecode.common.*;
+import superCircle.util.ChannelList;
+import superCircle.util.Tactic;
 
 public class HQ {
     private static RobotController rc;

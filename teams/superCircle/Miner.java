@@ -1,6 +1,8 @@
 package superCircle;
 
 import battlecode.common.*;
+import superCircle.navigation.Bug;
+import superCircle.util.ChannelList;
 
 public class Miner {
     private static RobotController rc;

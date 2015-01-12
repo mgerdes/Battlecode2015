@@ -1,4 +1,4 @@
-package superCircle;
+package superCircle.util;
 
 public class ChannelList {
     public static final int TACTIC = 0;

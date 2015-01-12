@@ -1,4 +1,4 @@
-package superCircle;
+package superCircle.util;
 
 import battlecode.common.Clock;
 import battlecode.common.RobotController;

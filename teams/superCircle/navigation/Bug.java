@@ -1,4 +1,4 @@
-package superCircle;
+package superCircle.navigation;
 
 //--Version 1.0.4
 

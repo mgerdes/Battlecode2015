@@ -1,6 +1,11 @@
 package superCircle;
 
 import battlecode.common.*;
+import superCircle.navigation.Bug;
+import superCircle.navigation.CircleNav;
+import superCircle.navigation.SafeBug;
+import superCircle.util.ChannelList;
+import superCircle.util.Tactic;
 
 public class Drone {
     private static RobotController rc;

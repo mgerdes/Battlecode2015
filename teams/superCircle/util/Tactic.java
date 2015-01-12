@@ -1,4 +1,4 @@
-package superCircle;
+package superCircle.util;
 
 public class Tactic {
     public static final int FORTIFY = 0;

@@ -3,6 +3,7 @@ package superCircle;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
+import superCircle.util.ChannelList;
 
 public class Communication {
     private static RobotController rc;
