@@ -13,11 +13,13 @@ public class Drone {
     private static RobotController rc;
 
     private static final int MAX_DISTANCE_TO_GO_TO_HQ_FOR_SUPPLIES = 25;
+    private static final int ROBOT_NOT_SET = -1;
 
     private static Team enemyTeam;
     private static MapLocation enemyHqLocation;
     private static MapLocation myHqLocation;
     private static Team myTeam;
+    private static int robotThatNeedsSupplyId;
 
     public static void run(RobotController rcC) {
         rc = rcC;
@@ -50,12 +52,13 @@ public class Drone {
     private static void doYourThing() throws GameActionException {
 
         if (Communication.someoneIsNeededFor(Job.SUPPLY_MINERS)) {
+            Debug.setString(1, "doing job", rc);
             Communication.reportTo(Job.SUPPLY_MINERS);
-            Debug.setString(1, "suppling miners...", rc);
             supplyMiners();
             return;
         }
 
+        Debug.setString(1, "not doing job", rc);
         SupplySharing.share();
         int tactic = rc.readBroadcast(ChannelList.TACTIC);
         switch (tactic) {
@@ -81,18 +84,36 @@ public class Drone {
             SafeBug.setDestination(myHqLocation);
             Direction direction = SafeBug.getDirection(currentLocation);
             rc.move(direction);
+            Debug.setString(0, "going back home", rc);
             return;
         }
 
-        RobotInfo[] friendlies = rc.senseNearbyRobots(1000000, myTeam);
         MapLocation destination = null;
-        for (RobotInfo robot : friendlies) {
-            if (robot.type == RobotType.MINER
-                && robot.supplyLevel == 0) {
-                destination = robot.location;
-                break;
+        if (robotThatNeedsSupplyId != ROBOT_NOT_SET) {
+            //--Find the location of specific robot
+            RobotInfo[] friendlies = rc.senseNearbyRobots(1000000, myTeam);
+            for (RobotInfo robot : friendlies) {
+                if (robot.ID == robotThatNeedsSupplyId) {
+                    destination = robot.location;
+                    break;
+                }
             }
         }
+
+        //--Find any miner with no supply and save the ID for next round
+        if (destination == null) {
+            RobotInfo[] friendlies = rc.senseNearbyRobots(1000000, myTeam);
+            for (RobotInfo robot : friendlies) {
+                if (robot.type == RobotType.MINER
+                        && robot.supplyLevel == 0) {
+                    destination = robot.location;
+                    robotThatNeedsSupplyId = robot.ID;
+                    break;
+                }
+            }
+        }
+
+        Debug.setString(0, String.format("going to robot %d at %s", robotThatNeedsSupplyId, destination), rc);
 
         if (currentLocation.distanceSquaredTo(destination) > GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED) {
             SafeBug.setDestination(destination);
@@ -101,6 +122,7 @@ public class Drone {
         }
         else {
             rc.transferSupplies((int) rc.getSupplyLevel(), destination);
+            robotThatNeedsSupplyId = ROBOT_NOT_SET;
         }
     }
 

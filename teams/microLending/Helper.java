@@ -26,7 +26,7 @@ public class Helper {
         return count;
     }
 
-    public static int getRobotsOfATypeWithNoSupply(RobotInfo[] robots, RobotType type) {
+    public static int getRobotsOfATypeWithNoSupply(RobotInfo[] robots, RobotType type, int max) {
         int count = 0;
         for (RobotInfo robot : robots) {
             if (robot.type == type

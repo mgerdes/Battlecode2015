@@ -30,7 +30,7 @@ public class Communication {
     public static boolean someoneIsNeededFor(int job) throws GameActionException {
         switch (job) {
             case Job.SUPPLY_MINERS:
-                return rc.readBroadcast(ChannelList.SUPPLY_MINERS_JOB_IS_NEEDED) == Clock.getRoundNum()
+                return rc.readBroadcast(ChannelList.SUPPLY_MINERS_JOB_IS_NEEDED) >= Clock.getRoundNum() - 1
                         && rc.readBroadcast(ChannelList.SUPPLY_MINERS_JOB_REPORTING) < Clock.getRoundNum();
             default:
                 return false;

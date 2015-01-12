@@ -43,7 +43,8 @@ public class MinerFactory {
         Debug.setString(1, String.format("broadcasting %s on channel %s", minerCount, ChannelList.MINER_COUNT), rc);
 
         boolean currentlyNeedJob = Communication.someoneIsNeededFor(Job.SUPPLY_MINERS);
-        int minersWithoutSupply = Helper.getRobotsOfATypeWithNoSupply(allFriendlies, RobotType.MINER);
+        int minersWithoutSupply = Helper.getRobotsOfATypeWithNoSupply(allFriendlies, RobotType.MINER,
+                MINER_WITH_NO_SUPPLY_TOP_THRESHOLD + 1);
 
         if (currentlyNeedJob) {
             if (minersWithoutSupply >= MINER_WITH_NO_SUPPLY_BOTTOM_THRESHOLD) {
@@ -55,7 +56,6 @@ public class MinerFactory {
                 Communication.weNeed(Job.SUPPLY_MINERS);
             }
         }
-
 
         if (!rc.isCoreReady()) {
             return;
