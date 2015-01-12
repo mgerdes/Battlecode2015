@@ -14,12 +14,14 @@ public class HQ {
 
     public static void run(RobotController rcC) {
         rc = rcC;
-        SupplySharing.init(rcC);
 
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
         myHqLocation = rc.getLocation(); //--This is the HQ!
         enemyHqLocation = rc.senseEnemyHQLocation();
+
+        SupplySharing.init(rcC);
+        
         loop();
     }
 
@@ -41,16 +43,47 @@ public class HQ {
         RobotInfo[] friendlyRobots = rc.senseNearbyRobots(1000000, myTeam);
         setTactic(friendlyRobots);
 
-        if (rc.isWeaponReady()) {
-            RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.HQ.attackRadiusSquared, enemyTeam);
-            if (enemiesInAttackRange.length > 0) {
-                rc.attackLocation(enemiesInAttackRange[0].location);
-            }
+        if (rc.isWeaponReady()
+                && Clock.getRoundNum() > 10) {
+            tryToAttack();
         }
 
         if (rc.isCoreReady()) {
             if (shouldSpawnBeaver(friendlyRobots)) {
                 spawn(RobotType.BEAVER);
+            }
+        }
+    }
+
+    private static void tryToAttack() throws GameActionException {
+        int myTowerCount = rc.senseTowerLocations().length;
+        int attackRadiusSquared = myTowerCount > 1 ?
+                GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED
+                : RobotType.HQ.attackRadiusSquared;
+
+        RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(attackRadiusSquared, enemyTeam);
+        if (enemiesInAttackRange.length > 0) {
+            rc.attackLocation(enemiesInAttackRange[0].location);
+            return;
+        }
+
+        //--Try splash attack!
+        if (myTowerCount > 4) {
+            RobotInfo[] enemiesInSplashRange = rc.senseNearbyRobots(attackRadiusSquared + GameConstants
+                    .HQ_BUFFED_SPLASH_RADIUS_SQUARED, enemyTeam);
+            if (enemiesInSplashRange.length == 0) {
+                return;
+            }
+
+            MapLocation enemyToSplash = enemiesInSplashRange[0].location;
+            MapLocation locationToSplash = enemyToSplash;
+            while (myHqLocation.distanceSquaredTo(locationToSplash) > attackRadiusSquared) {
+                locationToSplash = locationToSplash.add(locationToSplash.directionTo(myHqLocation));
+            }
+
+            if (enemyToSplash.distanceSquaredTo(locationToSplash) <= GameConstants.HQ_BUFFED_SPLASH_RADIUS_SQUARED) {
+                rc.setIndicatorString(0, "splash on round " + Clock.getRoundNum());
+                rc.attackLocation(locationToSplash);
             }
         }
     }
