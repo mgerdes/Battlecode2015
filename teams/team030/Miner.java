@@ -1,19 +1,18 @@
 package team030;
 
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.RobotController;
-
-import java.util.Random;
+import battlecode.common.*;
 
 public class Miner {
     private static RobotController rc;
-    private static Direction[] directions = Direction.values();
-    private static Random random;
+    private static MapLocation myHqLocation;
+    private static MapLocation enemyHqLocation;
 
     public static void run(RobotController rcC) {
         rc = rcC;
-        random = new Random(rcC.getID());
+        myHqLocation = rc.senseHQLocation();
+        enemyHqLocation = rc.senseEnemyHQLocation();
+
+        Bug.init(rcC);
 
         loop();
     }
@@ -34,24 +33,39 @@ public class Miner {
             return;
         }
 
-        if (rc.senseOre(rc.getLocation()) > 0) {
+        int currentMinerRadius = rc.readBroadcast(ChannelList.MINER_RADIUS_FROM_HQ);
+        MapLocation currentLocation = rc.getLocation();
+        int currentDistanceFromHq = (int) Math.sqrt(currentLocation.distanceSquaredTo(myHqLocation));
+        if (currentDistanceFromHq > currentMinerRadius) {
+            rc.broadcast(ChannelList.MINER_RADIUS_FROM_HQ, currentDistanceFromHq);
+        }
+
+        if (rc.senseOre(currentLocation) > 0) {
             rc.mine();
         }
         else {
-            moveInRandomDirection();
+            Direction direction = findDirectionClosestToHqWithOre(currentLocation);
+            if (direction == null) {
+                Bug.setDestination(enemyHqLocation);
+                direction = Bug.getDirection(currentLocation);
+            }
+
+            rc.move(direction);
         }
     }
 
-    private static void moveInRandomDirection() throws GameActionException {
-        int firstDirection = random.nextInt(8);
-        int direction = firstDirection;
-        while (!rc.canMove(directions[direction])) {
-            direction = (direction + 1) % 8;
-            if (direction == firstDirection) {
-                return;
+    private static Direction findDirectionClosestToHqWithOre(MapLocation currentLocation) {
+        int directionToHq = Helper.getInt(currentLocation.directionTo(myHqLocation));
+        int[] directions = new int[]{0, -1, 1, -2, 2, -3, 3, -4};
+        for (int n : directions) {
+            Direction direction = Helper.getDirection(directionToHq + n);
+            MapLocation nextLocation = currentLocation.add(direction);
+            if (rc.senseOre(nextLocation) > 0
+                    && rc.canMove(direction)) {
+                return direction;
             }
         }
 
-        rc.move(directions[direction]);
+        return null;
     }
 }

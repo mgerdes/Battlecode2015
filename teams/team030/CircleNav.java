@@ -8,7 +8,6 @@ import battlecode.common.TerrainTile;
 public class CircleNav {
     private static RobotController rc;
     private static MapLocation center;
-    private static Direction[] directions;
 
     //--Current rotation is a number that represents
     //  what point in the circle we are going to.
@@ -16,23 +15,17 @@ public class CircleNav {
     //  the direction that the hour hand is pointed
     //  i.e. 3'oclock is east, 6 o'clock is south
     private static int currentRotation = 0;
+    private static int startingRotation = 0;
 
     private static MapLocation currentDestination;
     private static boolean goingClockwise = true;
     private static int radius;
 
-    public static void init(RobotController rcC, MapLocation centerC) {
+    public static void init(RobotController rcC, MapLocation centerC, Direction startingDirection) {
         rc = rcC;
         center = centerC;
-
-        directions = new Direction[]{Direction.NORTH,
-                                     Direction.NORTH_EAST,
-                                     Direction.EAST,
-                                     Direction.SOUTH_EAST,
-                                     Direction.SOUTH,
-                                     Direction.SOUTH_WEST,
-                                     Direction.WEST,
-                                     Direction.NORTH_WEST};
+        startingRotation = Helper.getInt(startingDirection);
+        currentRotation = startingRotation;
     }
 
     //--Depending on the robot's position, this will return the next position
@@ -46,7 +39,7 @@ public class CircleNav {
 
         if (aboutToHitAWall(currentLocation)) {
             goingClockwise = !goingClockwise;
-            currentRotation = getNextRotation();
+            currentRotation = startingRotation;
             currentDestination = getLocationForRotation(currentRotation);
         }
         else  if (currentLocation.distanceSquaredTo(currentDestination) <= 4) {
@@ -58,9 +51,9 @@ public class CircleNav {
     }
 
     private static MapLocation getLocationForRotation(int rotation) {
-        Direction d = directions[rotation];
+        Direction d = Helper.getDirection(rotation);
         return d.isDiagonal() ?
-                center.add(d, (int) (radius * 1.414))
+                center.add(d, (int) (radius / 1.414))
                 : center.add(d, radius);
     }
 
@@ -75,17 +68,16 @@ public class CircleNav {
     }
 
     private static boolean aboutToHitAWall(MapLocation currentLocation) {
-        return rc.senseTerrainTile(currentLocation.add(getMovementDirection(), 2)) == TerrainTile.OFF_MAP;
+        return rc.senseTerrainTile(currentLocation.add(getMovementDirection(), 2)) == TerrainTile.OFF_MAP
+                || rc.senseTerrainTile(currentLocation.add(Helper.getDirection(currentRotation))) == TerrainTile.OFF_MAP;
     }
 
     private static Direction getMovementDirection() {
         //--We are moving orthogonal to our current rotation
         if (goingClockwise) {
-            return directions[currentRotation].rotateRight().rotateRight();
+            return Helper.getDirection(currentRotation).rotateRight().rotateRight();
         }
 
-        return directions[currentRotation].rotateLeft().rotateLeft();
+        return Helper.getDirection(currentRotation).rotateLeft().rotateLeft();
     }
-
-
 }
