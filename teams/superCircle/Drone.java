@@ -67,7 +67,7 @@ public class Drone {
         RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
         if (enemiesInAttackRange.length == 0) {
             if (rc.isCoreReady()) {
-                Direction direction = SafeBug.getSafeDirection(currentLocation);
+                Direction direction = SafeBug.getDirection(currentLocation);
                 rc.move(direction);
             }
         }
@@ -84,7 +84,7 @@ public class Drone {
         if (enemiesInAttackRange.length == 0) {
             if (rc.isCoreReady()) {
                 MapLocation currentLocation = rc.getLocation();
-                Direction direction = SafeBug.getSafeDirection(currentLocation, attackLocation);
+                Direction direction = SafeBug.getDirection(currentLocation, attackLocation);
                 rc.move(direction);
             }
         }
@@ -105,7 +105,7 @@ public class Drone {
         if (enemiesInAttackRange.length == 0) {
             if (rc.isCoreReady()) {
                 MapLocation currentLocation = rc.getLocation();
-                Direction direction = SafeBug.getSafeDirection(currentLocation);
+                Direction direction = SafeBug.getDirection(currentLocation);
                 rc.move(direction);
             }
         }

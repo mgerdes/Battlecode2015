@@ -47,7 +47,7 @@ public class Miner {
             Direction direction = findDirectionClosestToHqWithOre(currentLocation);
             if (direction == null) {
                 SafeBug.setDestination(enemyHqLocation);
-                direction = SafeBug.getSafeDirection(currentLocation);
+                direction = SafeBug.getDirection(currentLocation);
             }
 
             rc.move(direction);

@@ -2,18 +2,18 @@ package superCircle;
 
 import battlecode.common.*;
 
-//--Version 1.0.2
+//--Version 1.0.0
 
 public class SafeBug {
-    //--Global
+    //--Set once with init()
     private static RobotController rc;
     private static boolean defaultLeft;
 
-    //--Map info
-    private static MapLocation enemyHQLocation;
+    //--Map info, set every call to getDirection()
+    private static MapLocation enemyHqLocations;
     private static MapLocation[] enemyTowerLocations;
 
-    //--Per navigation path
+    //--Per navigation path, set on setDestination()
     private static MapLocation destination;
     private static MapLocation ignoreLocation;
 
@@ -47,10 +47,10 @@ public class SafeBug {
         numberOfNinetyDegreeRotations = 0;
     }
 
-    public static Direction getSafeDirection(MapLocation currentLocationC, MapLocation ignoreC) {
+    public static Direction getDirection(MapLocation currentLocationC, MapLocation ignoreC) {
         currentLocation = currentLocationC;
         ignoreLocation = ignoreC;
-        enemyHQLocation = rc.senseEnemyHQLocation();
+        enemyHqLocations = rc.senseEnemyHQLocation();
         enemyTowerLocations = rc.senseEnemyTowerLocations();
 
         if (previousDirection == null) {
@@ -64,8 +64,8 @@ public class SafeBug {
         return getDirectionNotFollowingWall();
     }
 
-    public static Direction getSafeDirection(MapLocation currentLocationC) {
-        return getSafeDirection(currentLocationC, null);
+    public static Direction getDirection(MapLocation currentLocationC) {
+        return getDirection(currentLocationC, null);
     }
 
     private static Direction getDirectionFollowingWall() {
@@ -175,7 +175,7 @@ public class SafeBug {
     }
 
     private static boolean withinHqAttackRange(MapLocation location) {
-        if (enemyHQLocation.equals(ignoreLocation)) {
+        if (enemyHqLocations.equals(ignoreLocation)) {
             return false;
         }
 
@@ -192,6 +192,6 @@ public class SafeBug {
             hqAttackRange = RobotType.HQ.attackRadiusSquared;
         }
 
-        return location.distanceSquaredTo(enemyHQLocation) <= hqAttackRange;
+        return location.distanceSquaredTo(enemyHqLocations) <= hqAttackRange;
     }
 }
