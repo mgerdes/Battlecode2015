@@ -103,18 +103,13 @@ public class HQ {
 
     private static void setTactic() throws GameActionException {
         int droneCount = rc.readBroadcast(ChannelList.DRONE_COUNT);
-
         if (droneCount < 15) {
             rc.broadcast(ChannelList.TACTIC, Tactic.FORTIFY);
-            return;
         }
-
-        if (droneCount < 25) {
+        else if (droneCount < 25) {
             rc.broadcast(ChannelList.TACTIC, Tactic.SWARM);
-            return;
         }
-
-        if (droneCount > 35) {
+        else if (droneCount > 35) {
             rc.broadcast(ChannelList.TACTIC, Tactic.ATTACK_ENEMY_STRUCTURE);
             MapLocation enemyStructure = getStructureToAttack();
             rc.broadcast(ChannelList.STRUCTURE_TO_ATTACK_X, enemyStructure.x);
