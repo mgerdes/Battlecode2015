@@ -16,6 +16,7 @@ public class Drone {
         enemyHqLocation = rc.senseEnemyHQLocation();
         enemyTeam = rc.getTeam().opponent();
 
+        Bug.init(rcC);
         SafeBug.init(rcC);
         CircleNav.init(rcC, myHqLocation, myHqLocation.directionTo(enemyHqLocation));
         SupplySharing.init(rcC);
@@ -57,17 +58,17 @@ public class Drone {
         int minerRadius = rc.readBroadcast(ChannelList.MINER_RADIUS_FROM_HQ);
 
         if (rc.getSupplyLevel() == 0) {
-            SafeBug.setDestination(myHqLocation);
+            Bug.setDestination(myHqLocation);
         }
         else {
             MapLocation circleLocation = CircleNav.getDestination(minerRadius + 3, currentLocation);
-            SafeBug.setDestination(circleLocation);
+            Bug.setDestination(circleLocation);
         }
 
         RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
         if (enemiesInAttackRange.length == 0) {
             if (rc.isCoreReady()) {
-                Direction direction = SafeBug.getDirection(currentLocation);
+                Direction direction = Bug.getDirection(currentLocation);
                 rc.move(direction);
             }
         }
