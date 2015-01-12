@@ -1,6 +1,7 @@
 package moneyMaker;
 
 import battlecode.common.*;
+import moneyMaker.util.Debug;
 
 public class SupplySharing {
     private static RobotController rc;
@@ -38,7 +39,7 @@ public class SupplySharing {
         }
 
         int bytecodesUsed = Clock.getBytecodeNum() - initialBytecode;
-        rc.setIndicatorString(2, String.format("%d bytecodes for supply sharing", bytecodesUsed));
+        Debug.setString(2, String.format("%d bytecodes for supply sharing", bytecodesUsed), rc);
     }
 
     public static void shareMore() throws GameActionException {
