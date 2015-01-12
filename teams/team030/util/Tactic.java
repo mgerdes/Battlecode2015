@@ -1,5 +1,6 @@
-package team030;
+package team030.util;
 
+//--Enum class
 public class Tactic {
     public static final int FORTIFY = 0;
     public static final int SWARM = 1;

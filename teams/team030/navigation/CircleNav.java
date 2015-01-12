@@ -1,9 +1,10 @@
-package team030;
+package team030.navigation;
 
 import battlecode.common.Direction;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.TerrainTile;
+import team030.Helper;
 
 public class CircleNav {
     private static RobotController rc;

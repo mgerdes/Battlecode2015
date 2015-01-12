@@ -6,19 +6,31 @@ import battlecode.common.RobotType;
 
 public class Helper {
     private static Direction[] directions = new Direction[]{Direction.NORTH,
-                                         Direction.NORTH_EAST,
-                                         Direction.EAST,
-                                         Direction.SOUTH_EAST,
-                                         Direction.SOUTH,
-                                         Direction.SOUTH_WEST,
-                                         Direction.WEST,
-                                         Direction.NORTH_WEST};
+                                                            Direction.NORTH_EAST,
+                                                            Direction.EAST,
+                                                            Direction.SOUTH_EAST,
+                                                            Direction.SOUTH,
+                                                            Direction.SOUTH_WEST,
+                                                            Direction.WEST,
+                                                            Direction.NORTH_WEST};
 
 
     public static int getRobotsOfType(RobotInfo[] robots, RobotType type) {
         int count = 0;
         for (RobotInfo robot : robots) {
             if (robot.type == type) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    public static int getRobotsOfATypeWithNoSupply(RobotInfo[] robots, RobotType type, int max) {
+        int count = 0;
+        for (RobotInfo robot : robots) {
+            if (robot.type == type
+                    && robot.supplyLevel == 0) {
                 count++;
             }
         }
@@ -35,7 +47,7 @@ public class Helper {
     }
 
     public static int getInt(Direction d) {
-        switch(d) {
+        switch (d) {
             case NORTH:
                 return 0;
             case NORTH_EAST:

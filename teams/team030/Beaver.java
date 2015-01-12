@@ -1,19 +1,34 @@
 package team030;
 
 import battlecode.common.*;
+import team030.navigation.Bug;
+import team030.util.ChannelList;
 
 import java.util.Random;
 
 public class Beaver {
     private static RobotController rc;
+
+    private static final int MAX_DISTANCE_SQUARED_FROM_HQ = 25;
+
+    private static final int MAX_MINER_FACTORY_COUNT = 1;
+    private static final int MAX_HELIPAD_COUNT = 4;
+    private static final int MAX_SUPPLY_DEPOT_COUNT = 1;
+    private static final int DRONE_AND_MINER_COUNT_NEEDED_FOR_SUPPLY_DEPOT = 30;
+
     private static Team myTeam;
     private static Random random;
-    private static final int MINER_FACTORY_COUNT = 1;
+    private static MapLocation myHqLocation;
 
     public static void run(RobotController rcC) {
         rc = rcC;
+
         myTeam = rcC.getTeam();
+        myHqLocation = rcC.senseHQLocation();
         random = new Random(rcC.getID());
+
+        Bug.init(rcC);
+
         loop();
     }
 
@@ -45,12 +60,35 @@ public class Beaver {
             return;
         }
 
+        if (shouldBuildSupplyDepot(allFriendlies)) {
+            build(RobotType.SUPPLYDEPOT);
+            return;
+        }
+
         if (rc.senseOre(rc.getLocation()) > 0) {
             rc.mine();
         }
         else {
-            moveInRandomDirection();
+            MapLocation currentLocation = rc.getLocation();
+            if (currentLocation.distanceSquaredTo(myHqLocation) > MAX_DISTANCE_SQUARED_FROM_HQ) {
+                Bug.setDestination(myHqLocation);
+                rc.move(Bug.getDirection(currentLocation));
+            }
+            else {
+                moveInRandomDirection();
+            }
         }
+    }
+
+    private static boolean shouldBuildSupplyDepot(RobotInfo[] friendlyRobots) throws GameActionException {
+        if (rc.getTeamOre() < RobotType.SUPPLYDEPOT.oreCost) {
+            return false;
+        }
+
+        int supplyDepotCount = Helper.getRobotsOfType(friendlyRobots, RobotType.SUPPLYDEPOT);
+        int droneAndMinerCount = rc.readBroadcast(ChannelList.DRONE_COUNT) + rc.readBroadcast(ChannelList.MINER_COUNT);
+        return supplyDepotCount < MAX_SUPPLY_DEPOT_COUNT
+                && droneAndMinerCount >= DRONE_AND_MINER_COUNT_NEEDED_FOR_SUPPLY_DEPOT;
     }
 
     private static boolean shouldBuildMinerFactory(RobotInfo[] friendlyRobots) {
@@ -59,7 +97,7 @@ public class Beaver {
         }
 
         int minerFactoryCount = Helper.getRobotsOfType(friendlyRobots, RobotType.MINERFACTORY);
-        return minerFactoryCount < MINER_FACTORY_COUNT;
+        return minerFactoryCount < MAX_MINER_FACTORY_COUNT;
     }
 
     private static boolean shouldBuildHelipad(RobotInfo[] friendlyRobots) {
@@ -68,13 +106,14 @@ public class Beaver {
         }
 
         int helipadCount = Helper.getRobotsOfType(friendlyRobots, RobotType.HELIPAD);
-        if (helipadCount > 1) {
+        if (helipadCount >= MAX_HELIPAD_COUNT) {
             return false;
         }
 
+        //--Build a helipad, then miner factory, then rest of helipads
         int minerFactoryCount = Helper.getRobotsOfType(friendlyRobots, RobotType.MINERFACTORY);
         return helipadCount < 1
-                || (helipadCount < 2 && minerFactoryCount > 0);
+                || (helipadCount < MAX_HELIPAD_COUNT && minerFactoryCount > 0);
     }
 
     private static void build(RobotType type) throws GameActionException {

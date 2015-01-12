@@ -1,6 +1,9 @@
 package team030;
 
 import battlecode.common.*;
+import team030.util.ChannelList;
+import team030.util.Debug;
+import team030.util.Tactic;
 
 public class HQ {
     private static RobotController rc;
@@ -11,6 +14,7 @@ public class HQ {
     private static MapLocation enemyHqLocation;
 
     private static final int BEAVER_COUNT = 1;
+    private static final int DO_NOT_ATTACK_BEFORE_ROUND = 40;
 
     public static void run(RobotController rcC) {
         rc = rcC;
@@ -28,7 +32,7 @@ public class HQ {
     private static void loop() {
         while (true) {
             try {
-                rc.setIndicatorString(1, String.format("current ore: %f", rc.getTeamOre()));
+                Debug.setString(0, String.format("%f at beginning of round", rc.getTeamOre()), rc);
                 doYourThing();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -41,10 +45,10 @@ public class HQ {
         SupplySharing.shareMore();
 
         RobotInfo[] friendlyRobots = rc.senseNearbyRobots(1000000, myTeam);
-        setTactic(friendlyRobots);
+        setTactic();
 
         if (rc.isWeaponReady()
-                && Clock.getRoundNum() > 10) {
+                && Clock.getRoundNum() > DO_NOT_ATTACK_BEFORE_ROUND) {
             tryToAttack();
         }
 
@@ -97,20 +101,15 @@ public class HQ {
         return beaverCount < BEAVER_COUNT;
     }
 
-    private static void setTactic(RobotInfo[] friendlyRobots) throws GameActionException {
-        int droneCount = Helper.getRobotsOfType(friendlyRobots, RobotType.DRONE);
+    private static void setTactic() throws GameActionException {
+        int droneCount = rc.readBroadcast(ChannelList.DRONE_COUNT);
         if (droneCount < 15) {
             rc.broadcast(ChannelList.TACTIC, Tactic.FORTIFY);
-            return;
         }
-
-
-        if (droneCount < 25) {
+        else if (droneCount < 25) {
             rc.broadcast(ChannelList.TACTIC, Tactic.SWARM);
-            return;
         }
-
-        if (droneCount > 35) {
+        else if (droneCount > 35) {
             rc.broadcast(ChannelList.TACTIC, Tactic.ATTACK_ENEMY_STRUCTURE);
             MapLocation enemyStructure = getStructureToAttack();
             rc.broadcast(ChannelList.STRUCTURE_TO_ATTACK_X, enemyStructure.x);

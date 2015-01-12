@@ -1,19 +1,21 @@
-package team030;
+package team030.navigation;
 
-//--Version 1.0.4
+import battlecode.common.*;
 
-import battlecode.common.Direction;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
-import battlecode.common.TerrainTile;
+//--Version 1.0.0
 
-public class Bug {
+public class SafeBug {
     //--Set once with init()
     private static RobotController rc;
     private static boolean defaultLeft;
 
+    //--Map info, set every call to getDirection()
+    private static MapLocation enemyHqLocations;
+    private static MapLocation[] enemyTowerLocations;
+
     //--Per navigation path, set on setDestination()
     private static MapLocation destination;
+    private static MapLocation ignoreLocation;
 
     //--Per round
     private static MapLocation currentLocation;
@@ -45,8 +47,11 @@ public class Bug {
         numberOfNinetyDegreeRotations = 0;
     }
 
-    public static Direction getDirection(MapLocation currentLocationC) {
+    public static Direction getDirection(MapLocation currentLocationC, MapLocation ignoreC) {
         currentLocation = currentLocationC;
+        ignoreLocation = ignoreC;
+        enemyHqLocations = rc.senseEnemyHQLocation();
+        enemyTowerLocations = rc.senseEnemyTowerLocations();
 
         if (previousDirection == null) {
             previousDirection = currentLocationC.directionTo(destination);
@@ -57,6 +62,10 @@ public class Bug {
         }
 
         return getDirectionNotFollowingWall();
+    }
+
+    public static Direction getDirection(MapLocation currentLocationC) {
+        return getDirection(currentLocationC, null);
     }
 
     private static Direction getDirectionFollowingWall() {
@@ -83,7 +92,7 @@ public class Bug {
         Direction checkDirection = defaultLeft ?
                 previousDirection.rotateRight().rotateRight()
                 : previousDirection.rotateLeft().rotateLeft();
-        if (rc.canMove(checkDirection)) {
+        if (canMoveSafely(checkDirection)) {
             numberOfNinetyDegreeRotations++;
             previousDirection = checkDirection;
             return checkDirection;
@@ -105,7 +114,7 @@ public class Bug {
     private static Direction getDirectionNotFollowingWall() {
         numberOfNinetyDegreeRotations = 0;
         Direction direct = currentLocation.directionTo(destination);
-        if (rc.canMove(direct)) {
+        if (canMoveSafely(direct)) {
             return direct;
         }
 
@@ -128,7 +137,7 @@ public class Bug {
     }
 
     private static Direction rotateLeftUntilCanMove(Direction direction) {
-        while (!rc.canMove(direction)) {
+        while (!canMoveSafely(direction)) {
             direction = direction.rotateLeft();
         }
 
@@ -136,10 +145,53 @@ public class Bug {
     }
 
     private static Direction rotateRightUntilCanMove(Direction direction) {
-        while (!rc.canMove(direction)) {
+        while (!canMoveSafely(direction)) {
             direction = direction.rotateRight();
         }
 
         return direction;
+    }
+
+    //--Checks if the location will be within the attack range of enemy HQ or tower
+    private static boolean canMoveSafely(Direction direction) {
+        MapLocation next = currentLocation.add(direction);
+        return rc.canMove(direction)
+                && !withinHqAttackRange(next)
+                && !withinTowerAttackRange(next);
+    }
+
+    private static boolean withinTowerAttackRange(MapLocation location) {
+        for (MapLocation towerLocation : enemyTowerLocations) {
+            if (towerLocation.equals(ignoreLocation)) {
+                continue;
+
+            }
+            if (location.distanceSquaredTo(towerLocation) <= RobotType.TOWER.attackRadiusSquared) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean withinHqAttackRange(MapLocation location) {
+        if (enemyHqLocations.equals(ignoreLocation)) {
+            return false;
+        }
+
+        int hqAttackRange;
+        if (enemyTowerLocations.length > 4) {
+            //--Bonus for 2 and 5 towers
+            hqAttackRange = GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED + GameConstants.HQ_BUFFED_SPLASH_RADIUS_SQUARED;
+        }
+        else if (enemyTowerLocations.length > 1) {
+            //--Bonus for 2 towers
+            hqAttackRange = GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED;
+        }
+        else {
+            hqAttackRange = RobotType.HQ.attackRadiusSquared;
+        }
+
+        return location.distanceSquaredTo(enemyHqLocations) <= hqAttackRange;
     }
 }

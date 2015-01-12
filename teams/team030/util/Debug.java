@@ -1,4 +1,4 @@
-package team030;
+package team030.util;
 
 import battlecode.common.Clock;
 import battlecode.common.RobotController;
