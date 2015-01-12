@@ -1,19 +1,31 @@
 package moneyMaker;
 
 import battlecode.common.*;
+import moneyMaker.navigation.Bug;
 
 import java.util.Random;
 
 public class Beaver {
     private static RobotController rc;
+
+    private static final int MAX_DISTANCE_SQUARED_FROM_HQ = 25;
+
+    private static final int MAX_MINER_FACTORY_COUNT = 1;
+    private static final int MAX_HELIPAD_COUNT = 3;
+
     private static Team myTeam;
     private static Random random;
-    private static final int MINER_FACTORY_COUNT = 1;
+    private static MapLocation myHqLocation;
 
     public static void run(RobotController rcC) {
         rc = rcC;
+
         myTeam = rcC.getTeam();
+        myHqLocation = rcC.senseHQLocation();
         random = new Random(rcC.getID());
+
+        Bug.init(rcC);
+
         loop();
     }
 
@@ -49,7 +61,14 @@ public class Beaver {
             rc.mine();
         }
         else {
-            moveInRandomDirection();
+            MapLocation currentLocation = rc.getLocation();
+            if (currentLocation.distanceSquaredTo(myHqLocation) > MAX_DISTANCE_SQUARED_FROM_HQ) {
+                Bug.setDestination(myHqLocation);
+                rc.move(Bug.getDirection(currentLocation));
+            }
+            else {
+                moveInRandomDirection();
+            }
         }
     }
 
@@ -59,7 +78,7 @@ public class Beaver {
         }
 
         int minerFactoryCount = Helper.getRobotsOfType(friendlyRobots, RobotType.MINERFACTORY);
-        return minerFactoryCount < MINER_FACTORY_COUNT;
+        return minerFactoryCount < MAX_MINER_FACTORY_COUNT;
     }
 
     private static boolean shouldBuildHelipad(RobotInfo[] friendlyRobots) {
@@ -68,13 +87,14 @@ public class Beaver {
         }
 
         int helipadCount = Helper.getRobotsOfType(friendlyRobots, RobotType.HELIPAD);
-        if (helipadCount > 1) {
+        if (helipadCount >= MAX_HELIPAD_COUNT) {
             return false;
         }
 
+        //--Build a helipad, then miner factory, then rest of helipads
         int minerFactoryCount = Helper.getRobotsOfType(friendlyRobots, RobotType.MINERFACTORY);
         return helipadCount < 1
-                || (helipadCount < 2 && minerFactoryCount > 0);
+                || (helipadCount < MAX_HELIPAD_COUNT && minerFactoryCount > 0);
     }
 
     private static void build(RobotType type) throws GameActionException {

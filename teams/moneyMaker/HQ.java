@@ -2,6 +2,7 @@ package moneyMaker;
 
 import battlecode.common.*;
 import moneyMaker.util.ChannelList;
+import moneyMaker.util.Debug;
 import moneyMaker.util.Tactic;
 
 public class HQ {
@@ -30,7 +31,7 @@ public class HQ {
     private static void loop() {
         while (true) {
             try {
-                rc.setIndicatorString(1, String.format("current ore: %f", rc.getTeamOre()));
+                Debug.setString(1, String.format("%f at beginning of round", rc.getTeamOre()), rc);
                 doYourThing();
             } catch (Exception e) {
                 e.printStackTrace();

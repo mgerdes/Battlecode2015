@@ -5,7 +5,7 @@ import battlecode.common.*;
 public class Building {
     private static RobotController rc;
 
-    private static final int MAX_MINER_COUNT = 4;
+    private static final int MAX_MINER_COUNT = 20;
     private static final int MIN_DRONE_ROUND = 140;
 
     private static Direction[] directions = Direction.values();

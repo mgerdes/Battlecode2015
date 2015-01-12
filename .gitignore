@@ -16,4 +16,5 @@ lib/*
 maps/*
 music/*
 sound/*
+replays/*.rms
 version.txt
