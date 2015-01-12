@@ -10,6 +10,8 @@ import moneyMaker.util.Tactic;
 public class Drone {
     private static RobotController rc;
 
+    private static final int MAX_DISTANCE_TO_GO_TO_HQ_FOR_SUPPLIES = 25;
+
     private static Team enemyTeam;
     private static MapLocation enemyHqLocation;
     private static MapLocation myHqLocation;
@@ -83,13 +85,21 @@ public class Drone {
     }
 
     private static void attackEnemyStructure() throws GameActionException {
+        MapLocation currentLocation = rc.getLocation();
         MapLocation attackLocation = Communication.getAttackLocation();
-        SafeBug.setDestination(attackLocation);
+
+        //--Don't leave home without supplies
+        if (rc.getSupplyLevel() == 0
+                && currentLocation.distanceSquaredTo(myHqLocation) <= MAX_DISTANCE_TO_GO_TO_HQ_FOR_SUPPLIES) {
+            SafeBug.setDestination(myHqLocation);
+        }
+        else {
+            SafeBug.setDestination(attackLocation);
+        }
 
         RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
         if (enemiesInAttackRange.length == 0) {
             if (rc.isCoreReady()) {
-                MapLocation currentLocation = rc.getLocation();
                 Direction direction = SafeBug.getDirection(currentLocation, attackLocation);
                 rc.move(direction);
             }
@@ -100,7 +110,11 @@ public class Drone {
     }
 
     private static void swarm() throws GameActionException {
-        if (rc.getSupplyLevel() == 0) {
+        MapLocation currentLocation = rc.getLocation();
+
+        //--Don't leave home without supplies
+        if (rc.getSupplyLevel() == 0
+                && currentLocation.distanceSquaredTo(myHqLocation) <= MAX_DISTANCE_TO_GO_TO_HQ_FOR_SUPPLIES) {
             SafeBug.setDestination(myHqLocation);
         }
         else {
@@ -110,7 +124,6 @@ public class Drone {
         RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
         if (enemiesInAttackRange.length == 0) {
             if (rc.isCoreReady()) {
-                MapLocation currentLocation = rc.getLocation();
                 Direction direction = SafeBug.getDirection(currentLocation);
                 rc.move(direction);
             }
