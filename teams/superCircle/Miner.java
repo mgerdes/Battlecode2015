@@ -12,7 +12,7 @@ public class Miner {
         myHqLocation = rc.senseHQLocation();
         enemyHqLocation = rc.senseEnemyHQLocation();
 
-        Bug.init(rcC);
+        SafeBug.init(rcC);
 
         loop();
     }
@@ -46,8 +46,8 @@ public class Miner {
         else {
             Direction direction = findDirectionClosestToHqWithOre(currentLocation);
             if (direction == null) {
-                Bug.setDestination(enemyHqLocation);
-                direction = Bug.getSafeDirection(currentLocation);
+                SafeBug.setDestination(enemyHqLocation);
+                direction = SafeBug.getSafeDirection(currentLocation);
             }
 
             rc.move(direction);

@@ -4,7 +4,7 @@ import battlecode.common.*;
 
 //--Version 1.0.2
 
-public class Bug {
+public class SafeBug {
     //--Global
     private static RobotController rc;
     private static boolean defaultLeft;

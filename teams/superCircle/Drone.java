@@ -16,7 +16,7 @@ public class Drone {
         enemyHqLocation = rc.senseEnemyHQLocation();
         enemyTeam = rc.getTeam().opponent();
 
-        Bug.init(rcC);
+        SafeBug.init(rcC);
         CircleNav.init(rcC, myHqLocation, myHqLocation.directionTo(enemyHqLocation));
         SupplySharing.init(rcC);
         Communication.init(rcC);
@@ -57,17 +57,17 @@ public class Drone {
         int minerRadius = rc.readBroadcast(ChannelList.MINER_RADIUS_FROM_HQ);
 
         if (rc.getSupplyLevel() == 0) {
-            Bug.setDestination(myHqLocation);
+            SafeBug.setDestination(myHqLocation);
         }
         else {
             MapLocation circleLocation = CircleNav.getDestination(minerRadius + 3, currentLocation);
-            Bug.setDestination(circleLocation);
+            SafeBug.setDestination(circleLocation);
         }
 
         RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
         if (enemiesInAttackRange.length == 0) {
             if (rc.isCoreReady()) {
-                Direction direction = Bug.getSafeDirection(currentLocation);
+                Direction direction = SafeBug.getSafeDirection(currentLocation);
                 rc.move(direction);
             }
         }
@@ -78,13 +78,13 @@ public class Drone {
 
     private static void attackEnemyStructure() throws GameActionException {
         MapLocation attackLocation = Communication.getAttackLocation();
-        Bug.setDestination(attackLocation);
+        SafeBug.setDestination(attackLocation);
 
         RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
         if (enemiesInAttackRange.length == 0) {
             if (rc.isCoreReady()) {
                 MapLocation currentLocation = rc.getLocation();
-                Direction direction = Bug.getSafeDirection(currentLocation, attackLocation);
+                Direction direction = SafeBug.getSafeDirection(currentLocation, attackLocation);
                 rc.move(direction);
             }
         }
@@ -95,17 +95,17 @@ public class Drone {
 
     private static void swarm() throws GameActionException {
         if (rc.getSupplyLevel() == 0) {
-            Bug.setDestination(myHqLocation);
+            SafeBug.setDestination(myHqLocation);
         }
         else {
-            Bug.setDestination(enemyHqLocation);
+            SafeBug.setDestination(enemyHqLocation);
         }
 
         RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
         if (enemiesInAttackRange.length == 0) {
             if (rc.isCoreReady()) {
                 MapLocation currentLocation = rc.getLocation();
-                Direction direction = Bug.getSafeDirection(currentLocation);
+                Direction direction = SafeBug.getSafeDirection(currentLocation);
                 rc.move(direction);
             }
         }
