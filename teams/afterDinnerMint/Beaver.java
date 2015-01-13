@@ -1,8 +1,9 @@
 package afterDinnerMint;
 
+import afterDinnerMint.constants.Building;
+import afterDinnerMint.util.Helper;
 import battlecode.common.*;
 import afterDinnerMint.navigation.Bug;
-import afterDinnerMint.util.ChannelList;
 
 import java.util.Random;
 
@@ -11,22 +12,16 @@ public class Beaver {
 
     private static final int MAX_DISTANCE_SQUARED_FROM_HQ = 25;
 
-    private static final int MAX_MINER_FACTORY_COUNT = 1;
-    private static final int MAX_HELIPAD_COUNT = 4;
-    private static final int MAX_SUPPLY_DEPOT_COUNT = 1;
-    private static final int DRONE_AND_MINER_COUNT_NEEDED_FOR_SUPPLY_DEPOT = 30;
-
-    private static Team myTeam;
     private static Random random;
     private static MapLocation myHqLocation;
 
-    public static void run(RobotController rcC) {
+    public static void run(RobotController rcC) throws GameActionException {
         rc = rcC;
 
-        myTeam = rcC.getTeam();
         myHqLocation = rcC.senseHQLocation();
         random = new Random(rcC.getID());
 
+        BuildingQueue.init(rcC);
         Bug.init(rcC);
 
         loop();
@@ -48,20 +43,8 @@ public class Beaver {
             return;
         }
 
-        RobotInfo[] allFriendlies = rc.senseNearbyRobots(Integer.MAX_VALUE, myTeam);
-
-        if (shouldBuildMinerFactory(allFriendlies)) {
-            build(RobotType.MINERFACTORY);
-            return;
-        }
-
-        if (shouldBuildHelipad(allFriendlies)) {
-            build(RobotType.HELIPAD);
-            return;
-        }
-
-        if (shouldBuildSupplyDepot(allFriendlies)) {
-            build(RobotType.SUPPLYDEPOT);
+        boolean builtSomethingThisTurn = tryToBuild();
+        if (builtSomethingThisTurn) {
             return;
         }
 
@@ -80,52 +63,34 @@ public class Beaver {
         }
     }
 
-    private static boolean shouldBuildSupplyDepot(RobotInfo[] friendlyRobots) throws GameActionException {
-        if (rc.getTeamOre() < RobotType.SUPPLYDEPOT.oreCost) {
-            return false;
+    private static boolean tryToBuild() throws GameActionException {
+        int nextBuilding = BuildingQueue.getNextBuilding();
+        switch (nextBuilding) {
+            case Building.MINER_FACTORY:
+                return build(RobotType.MINERFACTORY);
+            case Building.HELIPAD:
+                return build(RobotType.HELIPAD);
+            default:
+                return false;
         }
-
-        int supplyDepotCount = Helper.getRobotsOfType(friendlyRobots, RobotType.SUPPLYDEPOT);
-        int droneAndMinerCount = rc.readBroadcast(ChannelList.DRONE_COUNT) + rc.readBroadcast(ChannelList.MINER_COUNT);
-        return supplyDepotCount < MAX_SUPPLY_DEPOT_COUNT
-                && droneAndMinerCount >= DRONE_AND_MINER_COUNT_NEEDED_FOR_SUPPLY_DEPOT;
     }
 
-    private static boolean shouldBuildMinerFactory(RobotInfo[] friendlyRobots) {
-        if (rc.getTeamOre() < RobotType.MINERFACTORY.oreCost) {
+    private static boolean build(RobotType type) throws GameActionException {
+        if (rc.getTeamOre() < type.oreCost) {
             return false;
         }
 
-        int minerFactoryCount = Helper.getRobotsOfType(friendlyRobots, RobotType.MINERFACTORY);
-        return minerFactoryCount < MAX_MINER_FACTORY_COUNT;
-    }
-
-    private static boolean shouldBuildHelipad(RobotInfo[] friendlyRobots) {
-        if (rc.getTeamOre() < RobotType.HELIPAD.oreCost) {
-            return false;
-        }
-
-        int helipadCount = Helper.getRobotsOfType(friendlyRobots, RobotType.HELIPAD);
-        if (helipadCount >= MAX_HELIPAD_COUNT) {
-            return false;
-        }
-
-        //--Build a helipad, then miner factory, then rest of helipads
-        int minerFactoryCount = Helper.getRobotsOfType(friendlyRobots, RobotType.MINERFACTORY);
-        return helipadCount < 1
-                || (helipadCount < MAX_HELIPAD_COUNT && minerFactoryCount > 0);
-    }
-
-    private static void build(RobotType type) throws GameActionException {
         int direction = 0;
         while (!rc.canBuild(Helper.getDirection(direction), type)) {
             direction++;
             if (direction > 7) {
-                return;
+                return false;
             }
         }
 
         rc.build(Helper.getDirection(direction), type);
+        BuildingQueue.confirmBuildingBegun();
+        return true;
     }
 
     private static void moveInRandomDirection() throws GameActionException {

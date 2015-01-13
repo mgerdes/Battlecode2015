@@ -1,4 +1,4 @@
-package afterDinnerMint.util;
+package afterDinnerMint.constants;
 
 //--Enum class
 public class Job {

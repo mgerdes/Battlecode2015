@@ -4,7 +4,7 @@ import battlecode.common.Direction;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.TerrainTile;
-import afterDinnerMint.Helper;
+import afterDinnerMint.util.Helper;
 
 public class CircleNav {
     private static RobotController rc;

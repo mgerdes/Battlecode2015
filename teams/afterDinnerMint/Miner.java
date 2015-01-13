@@ -1,8 +1,9 @@
 package afterDinnerMint;
 
+import afterDinnerMint.constants.ChannelList;
+import afterDinnerMint.util.Helper;
 import battlecode.common.*;
 import afterDinnerMint.navigation.Bug;
-import afterDinnerMint.util.ChannelList;
 
 public class Miner {
     private static RobotController rc;

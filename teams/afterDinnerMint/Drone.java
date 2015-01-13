@@ -1,13 +1,12 @@
 package afterDinnerMint;
 
+import afterDinnerMint.constants.ChannelList;
 import battlecode.common.*;
 import afterDinnerMint.navigation.Bug;
 import afterDinnerMint.navigation.CircleNav;
 import afterDinnerMint.navigation.SafeBug;
-import afterDinnerMint.util.ChannelList;
 import afterDinnerMint.util.Debug;
-import afterDinnerMint.util.Job;
-import afterDinnerMint.util.Tactic;
+import afterDinnerMint.constants.Job;
 
 public class Drone {
     private static RobotController rc;
@@ -60,18 +59,20 @@ public class Drone {
 
         Debug.setString(1, "not doing job", rc);
         SupplySharing.share();
-        int tactic = rc.readBroadcast(ChannelList.TACTIC);
-        switch (tactic) {
-            case Tactic.FORTIFY:
-                fortify();
-                break;
-            case Tactic.SWARM:
-                swarm();
-                break;
-            case Tactic.ATTACK_ENEMY_STRUCTURE:
-                attackEnemyStructure();
-                break;
-        }
+        swarm();
+
+//        int tactic = rc.readBroadcast(ChannelList.TACTIC);
+//        switch (tactic) {
+//            case Tactic.FORTIFY:
+//                fortify();
+//                break;
+//            case Tactic.SWARM:
+//                swarm();
+//                break;
+//            case Tactic.ATTACK_ENEMY_STRUCTURE:
+//                attackEnemyStructure();
+//                break;
+//        }
     }
 
     private static void supplyMiners() throws GameActionException {

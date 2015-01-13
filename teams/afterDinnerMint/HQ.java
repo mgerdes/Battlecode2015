@@ -1,9 +1,10 @@
 package afterDinnerMint;
 
+import afterDinnerMint.constants.Building;
+import afterDinnerMint.constants.Order;
+import afterDinnerMint.util.Helper;
 import battlecode.common.*;
-import afterDinnerMint.util.ChannelList;
 import afterDinnerMint.util.Debug;
-import afterDinnerMint.util.Tactic;
 
 public class HQ {
     private static RobotController rc;
@@ -13,10 +14,17 @@ public class HQ {
     private static MapLocation myHqLocation;
     private static MapLocation enemyHqLocation;
 
+
     private static final int BEAVER_COUNT = 1;
     private static final int DO_NOT_ATTACK_BEFORE_ROUND = 40;
 
-    public static void run(RobotController rcC) {
+    //--Map analysis data
+    private static int distanceBetweenHq;
+    private static int towerCount;
+    private static double averageTowerToTowerDistance;
+    private static double averageTowerToHqDistance;
+
+    public static void run(RobotController rcC) throws GameActionException {
         rc = rcC;
 
         myTeam = rc.getTeam();
@@ -24,9 +32,52 @@ public class HQ {
         myHqLocation = rc.getLocation(); //--This is the HQ!
         enemyHqLocation = rc.senseEnemyHQLocation();
 
+        BuildingQueue.init(rcC);
+        Communication.init(rcC);
         SupplySharing.init(rcC);
-        
+
+        analyzeMap();
+        setInitialBuildings();
         loop();
+    }
+
+    private static void analyzeMap() {
+        distanceBetweenHq = myHqLocation.distanceSquaredTo(enemyHqLocation);
+        MapLocation[] enemyTowers = rc.senseEnemyTowerLocations();
+        towerCount = enemyTowers.length;
+
+        double sumDistance = 0;
+        int numberOfDistances = 0;
+        for (int i = 0; i < towerCount; i++) {
+            for (int j = i; j < towerCount; j++) {
+                sumDistance += enemyTowers[i].distanceSquaredTo(enemyTowers[j]);
+                numberOfDistances++;
+            }
+        }
+
+        averageTowerToTowerDistance = sumDistance / numberOfDistances;
+
+        sumDistance = 0;
+        for (int i = 0; i < towerCount; i++) {
+            sumDistance += enemyTowers[i].distanceSquaredTo(enemyHqLocation);
+        }
+
+        averageTowerToHqDistance = sumDistance / towerCount;
+
+        System.out.printf("hqDist: %d\ncount %d\ntower2tower: %f\ntower2Hq: %f\n", distanceBetweenHq,
+                towerCount, averageTowerToTowerDistance, averageTowerToHqDistance);
+    }
+
+    private static void setInitialBuildings() throws GameActionException {
+        if (rc.getTeam() == Team.A) {
+            BuildingQueue.addBuilding(Building.HELIPAD);
+            BuildingQueue.addBuilding(Building.MINER_FACTORY);
+        }
+        else {
+            BuildingQueue.addBuilding(Building.MINER_FACTORY);
+            BuildingQueue.addBuilding(Building.MINER_FACTORY);
+            BuildingQueue.addBuilding(Building.HELIPAD);
+        }
     }
 
     private static void loop() {
@@ -45,7 +96,7 @@ public class HQ {
         SupplySharing.shareMore();
 
         RobotInfo[] friendlyRobots = rc.senseNearbyRobots(1000000, myTeam);
-        setTactic();
+        setOrders();
 
         if (rc.isWeaponReady()
                 && Clock.getRoundNum() > DO_NOT_ATTACK_BEFORE_ROUND) {
@@ -56,6 +107,17 @@ public class HQ {
             if (shouldSpawnBeaver(friendlyRobots)) {
                 spawn(RobotType.BEAVER);
             }
+        }
+    }
+
+    private static void setOrders() throws GameActionException {
+        //--Fake orders for testing...
+        if (rc.getTeam() == Team.A) {
+            Communication.setOrder(Order.SPAWN_MORE_DRONES, Order.YES);
+            Communication.setOrder(Order.SPAWN_MORE_MINERS, Order.YES);
+        }
+        else {
+            Communication.setOrder(Order.SPAWN_MORE_MINERS, Order.YES);
         }
     }
 
@@ -99,22 +161,6 @@ public class HQ {
 
         int beaverCount = Helper.getRobotsOfType(friendlyRobots, RobotType.BEAVER);
         return beaverCount < BEAVER_COUNT;
-    }
-
-    private static void setTactic() throws GameActionException {
-        int droneCount = rc.readBroadcast(ChannelList.DRONE_COUNT);
-        if (droneCount < 15) {
-            rc.broadcast(ChannelList.TACTIC, Tactic.FORTIFY);
-        }
-        else if (droneCount < 25) {
-            rc.broadcast(ChannelList.TACTIC, Tactic.SWARM);
-        }
-        else if (droneCount > 35) {
-            rc.broadcast(ChannelList.TACTIC, Tactic.ATTACK_ENEMY_STRUCTURE);
-            MapLocation enemyStructure = getStructureToAttack();
-            rc.broadcast(ChannelList.STRUCTURE_TO_ATTACK_X, enemyStructure.x);
-            rc.broadcast(ChannelList.STRUCTURE_TO_ATTACK_Y, enemyStructure.y);
-        }
     }
 
     private static MapLocation getStructureToAttack() {
