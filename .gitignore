@@ -13,7 +13,6 @@ bin/*
 build.xml
 doc/*
 lib/*
-maps/*
 music/*
 sound/*
 replays/*.rms
