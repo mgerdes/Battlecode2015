@@ -1,6 +1,7 @@
 package afterDinnerMint;
 
 import afterDinnerMint.constants.Order;
+import afterDinnerMint.util.Debug;
 import afterDinnerMint.util.Helper;
 import battlecode.common.*;
 
@@ -24,11 +25,13 @@ public class Spawner {
     private static void loop() {
         while (true) {
             try {
-                broadcastRobotCounts();
-
                 if (rc.isCoreReady()) {
                     tryToSpawn();
                 }
+
+                broadcastRobotCounts();
+
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -49,7 +52,7 @@ public class Spawner {
         for (int i = 0; i < typesBuiltHere.length; i++) {
             int channel = robotProductionChannels[i];
             if (rc.readBroadcast(channel) == Order.YES
-                && rc.getTeamOre() >= typesBuiltHere[i].oreCost) {
+                    && rc.getTeamOre() >= typesBuiltHere[i].oreCost) {
                 spawn(typesBuiltHere[i]);
                 return;
             }
@@ -66,21 +69,23 @@ public class Spawner {
         }
 
         rc.spawn(Helper.getDirection(direction), type);
+        Debug.setString(1, String.format("%s will spawn in round %d", type.name(), Clock.getRoundNum() + type
+                .buildTurns), rc);
     }
 
     private static void buildUnitData() {
         RobotType myType = rc.getType();
         if (myType == RobotType.MINERFACTORY) {
-            typesBuiltHere = new RobotType[] {RobotType.MINER};
+            typesBuiltHere = new RobotType[]{RobotType.MINER};
         }
         else if (myType == RobotType.BARRACKS) {
-            typesBuiltHere = new RobotType[] {RobotType.SOLDIER, RobotType.BASHER};
+            typesBuiltHere = new RobotType[]{RobotType.SOLDIER, RobotType.BASHER};
         }
         else if (myType == RobotType.HELIPAD) {
-            typesBuiltHere = new RobotType[] {RobotType.DRONE};
+            typesBuiltHere = new RobotType[]{RobotType.DRONE};
         }
         else if (myType == RobotType.TANKFACTORY) {
-            typesBuiltHere = new RobotType[] {RobotType.TANK};
+            typesBuiltHere = new RobotType[]{RobotType.TANK};
         }
 
         robotCountChannels = new int[typesBuiltHere.length];

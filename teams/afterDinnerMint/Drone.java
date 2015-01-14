@@ -1,6 +1,7 @@
 package afterDinnerMint;
 
 import afterDinnerMint.constants.ChannelList;
+import afterDinnerMint.constants.Order;
 import battlecode.common.*;
 import afterDinnerMint.navigation.Bug;
 import afterDinnerMint.navigation.CircleNav;
@@ -59,20 +60,16 @@ public class Drone {
 
         Debug.setString(1, "not doing job", rc);
         SupplySharing.share();
-        swarm();
 
-//        int tactic = rc.readBroadcast(ChannelList.TACTIC);
-//        switch (tactic) {
-//            case Tactic.FORTIFY:
-//                fortify();
-//                break;
-//            case Tactic.SWARM:
-//                swarm();
-//                break;
-//            case Tactic.ATTACK_ENEMY_STRUCTURE:
-//                attackEnemyStructure();
-//                break;
-//        }
+        if (rc.readBroadcast(ChannelList.DRONE_SWARM) == Order.YES) {
+            swarm();
+        }
+        else if (rc.readBroadcast(ChannelList.DRONE_ATTACK) == Order.YES) {
+            attackEnemyStructure();
+        }
+        else if (rc.readBroadcast(ChannelList.DRONE_DEFEND) == Order.YES) {
+            fortify();
+        }
     }
 
     private static void supplyMiners() throws GameActionException {

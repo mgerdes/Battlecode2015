@@ -1,6 +1,7 @@
 package afterDinnerMint;
 
 import afterDinnerMint.constants.Building;
+import afterDinnerMint.constants.ChannelList;
 import afterDinnerMint.constants.Order;
 import afterDinnerMint.util.Helper;
 import battlecode.common.*;
@@ -23,6 +24,12 @@ public class HQ {
     private static int towerCount;
     private static double averageTowerToTowerDistance;
     private static double averageTowerToHqDistance;
+
+    //--One time triggers
+    private static boolean trigger1;
+    private static boolean trigger2;
+    private static boolean trigger3;
+    private static boolean trigger4;
 
     public static void run(RobotController rcC) throws GameActionException {
         rc = rcC;
@@ -69,12 +76,11 @@ public class HQ {
     }
 
     private static void setInitialBuildings() throws GameActionException {
-        if (rc.getTeam() == Team.A) {
+        if (distanceBetweenHq < 2000) {
             BuildingQueue.addBuilding(Building.HELIPAD);
             BuildingQueue.addBuilding(Building.MINER_FACTORY);
         }
         else {
-            BuildingQueue.addBuilding(Building.MINER_FACTORY);
             BuildingQueue.addBuilding(Building.MINER_FACTORY);
             BuildingQueue.addBuilding(Building.HELIPAD);
         }
@@ -96,7 +102,9 @@ public class HQ {
         SupplySharing.shareMore();
 
         RobotInfo[] friendlyRobots = rc.senseNearbyRobots(1000000, myTeam);
+
         setOrders();
+        queueBuildings();
 
         if (rc.isWeaponReady()
                 && Clock.getRoundNum() > DO_NOT_ATTACK_BEFORE_ROUND) {
@@ -110,14 +118,69 @@ public class HQ {
         }
     }
 
+    private static void queueBuildings() throws GameActionException {
+        if (Clock.getRoundNum() < 250) {
+            //--Early buildings are handled by the initial buildings method
+            return;
+        }
+
+        if (rc.getTeamOre() > RobotType.HELIPAD.oreCost) {
+            BuildingQueue.addBuildingWithPostDelay(Building.HELIPAD, RobotType.HELIPAD.buildTurns * 2);
+        }
+
+        int unitCount = rc.readBroadcast(ChannelList.MINER_COUNT) + rc.readBroadcast(ChannelList.DRONE_COUNT);
+        if (!trigger1
+                && unitCount > 40) {
+            BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
+            trigger1 = true;
+        }
+
+        if (!trigger2
+                && unitCount > 60) {
+            BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
+            trigger2 = true;
+        }
+
+        if (!trigger3
+                && unitCount > 70) {
+            BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
+            trigger3 = true;
+        }
+
+        if (!trigger4
+                && unitCount > 80) {
+            BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
+            trigger4 = true;
+        }
+    }
+
     private static void setOrders() throws GameActionException {
-        //--Fake orders for testing...
-        if (rc.getTeam() == Team.A) {
-            Communication.setOrder(Order.SPAWN_MORE_DRONES, Order.YES);
-            Communication.setOrder(Order.SPAWN_MORE_MINERS, Order.YES);
+        int minerCount = rc.readBroadcast(ChannelList.MINER_COUNT);
+        int droneCount = rc.readBroadcast(ChannelList.DRONE_COUNT);
+
+        Communication.setOrder(Order.SPAWN_MORE_DRONES, Order.YES);
+
+        if (distanceBetweenHq < 2000) {
+            Communication.setOrder(Order.SPAWN_MORE_MINERS, minerCount < 20 ? Order.YES : Order.NO);
+            Communication.setOrder(Order.DRONE_SWARM, Order.YES);
         }
         else {
-            Communication.setOrder(Order.SPAWN_MORE_MINERS, Order.YES);
+            Communication.setOrder(Order.SPAWN_MORE_MINERS, minerCount < 30 ? Order.YES : Order.NO);
+            Communication.setOrder(Order.DRONE_DEFEND, Order.YES);
+        }
+
+        if (droneCount > 60) {
+            if (droneCount > 80) {
+                Communication.setOrder(Order.DRONE_ATTACK, Order.YES);
+                Communication.setOrder(Order.DRONE_SWARM, Order.NO);
+                MapLocation enemyStructure = getStructureToAttack();
+                rc.broadcast(ChannelList.STRUCTURE_TO_ATTACK_X, enemyStructure.x);
+                rc.broadcast(ChannelList.STRUCTURE_TO_ATTACK_Y, enemyStructure.y);
+            }
+            else {
+                Communication.setOrder(Order.DRONE_ATTACK, Order.NO);
+                Communication.setOrder(Order.DRONE_SWARM, Order.YES);
+            }
         }
     }
 
