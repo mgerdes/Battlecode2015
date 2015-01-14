@@ -8,17 +8,36 @@ import underdog.Communication;
 
 public class WallFormation {
     //--Distance between units, not squared
-    private static final int DEFAULT_ORTHOGONAL_DISTANCE = 3;
-    private static final int DEFAULT_DIAGONAL_DISTANCE = 2;
+    private static final int DEFAULT_ORTHOGONAL_DISTANCE = 2;
+    private static final int DEFAULT_DIAGONAL_DISTANCE = 1;
+
+    private static int maxCount = 0;
 
     public static void updatePositions(MapLocation frontAndCenter,
                                        Direction perpendicular,
                                        int count,
+                                       int wallWidth,
                                        int firstChannel) throws GameActionException {
-        if (count == 0) {
+        if (count > maxCount) {
+            maxCount = count;
+        }
+        else {
             return;
         }
 
+        int numberOfLayers = (int) Math.ceil((double) count / wallWidth);
+        for (int i = 0; i < numberOfLayers; i++) {
+            int distanceBetweenRows =
+                    perpendicular.isDiagonal() ? DEFAULT_DIAGONAL_DISTANCE : DEFAULT_ORTHOGONAL_DISTANCE;
+            MapLocation rowCenter = frontAndCenter.add(perpendicular.opposite(), distanceBetweenRows * (i - 1));
+            updatePositions(rowCenter, perpendicular, Math.min(count, wallWidth), firstChannel + i * wallWidth * 3);
+        }
+    }
+
+    private static void updatePositions(MapLocation frontAndCenter,
+                                       Direction perpendicular,
+                                       int count,
+                                       int firstChannel) throws GameActionException {
         int distanceBetweenRobots =
                 perpendicular.isDiagonal() ? DEFAULT_DIAGONAL_DISTANCE : DEFAULT_ORTHOGONAL_DISTANCE;
 
@@ -30,23 +49,5 @@ public class WallFormation {
         }
 
         Communication.broadcastLocations(positions, firstChannel);
-    }
-
-    public static void updatePositions(MapLocation frontAndCenter,
-                                       Direction perpendicular,
-                                       int count,
-                                       int wallWidth,
-                                       int firstChannel) throws GameActionException {
-        if (count == 0) {
-            return;
-        }
-
-        int numberOfLayers = (int) Math.ceil((double) count / wallWidth);
-        for (int i = 0; i < numberOfLayers; i++) {
-            int distanceBetweenRows =
-                    perpendicular.isDiagonal() ? DEFAULT_DIAGONAL_DISTANCE : DEFAULT_ORTHOGONAL_DISTANCE;
-            MapLocation rowCenter = frontAndCenter.add(perpendicular.opposite(), distanceBetweenRows * (i - 1));
-            updatePositions(rowCenter, perpendicular, Math.min(count, wallWidth), firstChannel + i * wallWidth * 3);
-        }
     }
 }
