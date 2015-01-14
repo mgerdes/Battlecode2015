@@ -28,4 +28,37 @@ public class WallFormation {
 
         Communication.broadcastLocations(positions, firstChannel);
     }
+
+    public static void updatePositions(MapLocation center,
+                                       Direction perpendicular,
+                                       int count,
+                                       int layers,
+                                       int firstChannel) throws GameActionException {
+        if (count == 0) {
+            return;
+        }
+
+        if (layers < 2) {
+            updatePositions(center, perpendicular, count, firstChannel);
+            return;
+        }
+
+        distanceBetweenRobots = perpendicular.isDiagonal() ? 2 : 3;
+
+        MapLocation[] positions = new MapLocation[count];
+        int lengthOfWall = (count - 1) * distanceBetweenRobots;
+        int depthOfWall = (layers - 1) * distanceBetweenRobots;
+        MapLocation sideOffset = center.add(perpendicular.rotateLeft().rotateLeft(), lengthOfWall / 2 / layers);
+        positions[0] = sideOffset.add(perpendicular, depthOfWall / 2);
+        for (int i = 1; i < count; i++) {
+            if (i % layers == 0) {
+                positions[i] = positions[i - layers].add(perpendicular.rotateRight().rotateRight(), distanceBetweenRobots);
+            }
+            else {
+                positions[i] = positions[i - 1].add(perpendicular.opposite(), distanceBetweenRobots);
+            }
+        }
+
+        Communication.broadcastLocations(positions, firstChannel);
+    }
 }

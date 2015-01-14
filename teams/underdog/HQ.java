@@ -72,8 +72,11 @@ public class HQ {
 
         averageTowerToHqDistance = sumDistance / towerCount;
 
-        System.out.printf("hqDist: %d\ncount %d\ntower2tower: %f\ntower2Hq: %f\n", distanceBetweenHq,
-                towerCount, averageTowerToTowerDistance, averageTowerToHqDistance);
+        System.out.printf("hqDist: %d\ncount %d\ntower2tower: %f\ntower2Hq: %f\n",
+                          distanceBetweenHq,
+                          towerCount,
+                          averageTowerToTowerDistance,
+                          averageTowerToHqDistance);
     }
 
     private static void setInitialBuildings() throws GameActionException {
@@ -131,7 +134,7 @@ public class HQ {
 
         if (rc.getTeamOre() > RobotType.TANKFACTORY.oreCost) {
             BuildingQueue.addBuildingWithPostDelay(Building.TANK_FACTORY,
-                                                    (int) (RobotType.TANKFACTORY.buildTurns * 1.5));
+                                                   (int) (RobotType.TANKFACTORY.buildTurns * 1.5));
         }
 
         int unitCount = rc.readBroadcast(ChannelList.MINER_COUNT) + rc.readBroadcast(ChannelList.DRONE_COUNT);
@@ -180,17 +183,20 @@ public class HQ {
         //--TODO put this somewhere else
         int tankCount = rc.readBroadcast(ChannelList.TANK_COUNT);
         int initialByteCode = Clock.getBytecodeNum();
-        WallFormation.updatePositions(new MapLocation(-8093, 3731), myHqLocation.directionTo(enemyHqLocation), tankCount, ChannelList
-                .TANK_FORMATION_FIRST_CHANNEL);
-        Debug.setString(1, String.format("used %d bytecodes for to broadcast a 20 member formation", Clock
-                .getBytecodeNum() - initialByteCode), rc);
+        WallFormation.updatePositions(new MapLocation(-8093, 3731),
+                                      myHqLocation.directionTo(enemyHqLocation),
+                                      tankCount,
+                                      tankCount / 7,
+                                      ChannelList.TANK_FORMATION_FIRST_CHANNEL);
+        Debug.setString(1, String.format("used %d bytecodes for to broadcast a 20 member formation",
+                                         Clock.getBytecodeNum() - initialByteCode), rc);
     }
 
     private static void tryToAttack() throws GameActionException {
         int myTowerCount = rc.senseTowerLocations().length;
         int attackRadiusSquared = myTowerCount > 1 ?
-                GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED
-                : RobotType.HQ.attackRadiusSquared;
+                                  GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED
+                                                   : RobotType.HQ.attackRadiusSquared;
 
         RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(attackRadiusSquared, enemyTeam);
         if (enemiesInAttackRange.length > 0) {
@@ -200,8 +206,10 @@ public class HQ {
 
         //--Try splash attack!
         if (myTowerCount > 4) {
-            RobotInfo[] enemiesInSplashRange = rc.senseNearbyRobots(attackRadiusSquared + GameConstants
-                    .HQ_BUFFED_SPLASH_RADIUS_SQUARED, enemyTeam);
+            RobotInfo[]
+                    enemiesInSplashRange =
+                    rc.senseNearbyRobots(attackRadiusSquared + GameConstants.HQ_BUFFED_SPLASH_RADIUS_SQUARED,
+                                         enemyTeam);
             if (enemiesInSplashRange.length == 0) {
                 return;
             }
