@@ -171,22 +171,22 @@ public class HQ {
         Communication.setOrder(Order.DRONE_DEFEND, Order.YES);
 
         if (distanceBetweenHq < 2000) {
-            Communication.setOrder(Order.SPAWN_MORE_MINERS, minerCount < 20 ? Order.YES : Order.NO);
-        }
-        else {
             Communication.setOrder(Order.SPAWN_MORE_MINERS, minerCount < 30 ? Order.YES : Order.NO);
         }
+        else {
+            Communication.setOrder(Order.SPAWN_MORE_MINERS, minerCount < 40 ? Order.YES : Order.NO);
+        }
 
-        Communication.setOrder(Order.SPAWN_MORE_TANKS, Order.YES);
+        int tankCount = rc.readBroadcast(ChannelList.TANK_COUNT);
+        Communication.setOrder(Order.SPAWN_MORE_TANKS, tankCount < 30 ? Order.YES : Order.NO);
         Communication.setOrder(Order.TANK_FORTIFY, Order.YES);
 
         //--TODO put this somewhere else
-        int tankCount = rc.readBroadcast(ChannelList.TANK_COUNT);
         int initialByteCode = Clock.getBytecodeNum();
         WallFormation.updatePositions(new MapLocation(-8093, 3731),
                                       myHqLocation.directionTo(enemyHqLocation),
                                       tankCount,
-                                      tankCount / 7,
+                                      10,
                                       ChannelList.TANK_FORMATION_FIRST_CHANNEL);
         Debug.setString(1, String.format("used %d bytecodes for to broadcast a 20 member formation",
                                          Clock.getBytecodeNum() - initialByteCode), rc);

@@ -1,5 +1,6 @@
 package underdog.navigation;
 
+import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
@@ -7,9 +8,10 @@ import underdog.Communication;
 
 public class WallFormation {
     //--Distance between units, not squared
-    private static int distanceBetweenRobots = 3;
+    private static final int DEFAULT_ORTHOGONAL_DISTANCE = 3;
+    private static final int DEFAULT_DIAGONAL_DISTANCE = 2;
 
-    public static void updatePositions(MapLocation center,
+    public static void updatePositions(MapLocation frontAndCenter,
                                        Direction perpendicular,
                                        int count,
                                        int firstChannel) throws GameActionException {
@@ -17,11 +19,12 @@ public class WallFormation {
             return;
         }
 
-        distanceBetweenRobots = perpendicular.isDiagonal() ? 2 : 3;
+        int distanceBetweenRobots =
+                perpendicular.isDiagonal() ? DEFAULT_DIAGONAL_DISTANCE : DEFAULT_ORTHOGONAL_DISTANCE;
 
         MapLocation[] positions = new MapLocation[count];
         int lengthOfWall = (count - 1) * distanceBetweenRobots;
-        positions[0] = center.add(perpendicular.rotateLeft().rotateLeft(), lengthOfWall / 2);
+        positions[0] = frontAndCenter.add(perpendicular.rotateLeft().rotateLeft(), lengthOfWall / 2);
         for (int i = 1; i < count; i++) {
             positions[i] = positions[i - 1].add(perpendicular.rotateRight().rotateRight(), distanceBetweenRobots);
         }
@@ -29,36 +32,21 @@ public class WallFormation {
         Communication.broadcastLocations(positions, firstChannel);
     }
 
-    public static void updatePositions(MapLocation center,
+    public static void updatePositions(MapLocation frontAndCenter,
                                        Direction perpendicular,
                                        int count,
-                                       int layers,
+                                       int wallWidth,
                                        int firstChannel) throws GameActionException {
         if (count == 0) {
             return;
         }
 
-        if (layers < 2) {
-            updatePositions(center, perpendicular, count, firstChannel);
-            return;
+        int numberOfLayers = (int) Math.ceil((double) count / wallWidth);
+        for (int i = 0; i < numberOfLayers; i++) {
+            int distanceBetweenRows =
+                    perpendicular.isDiagonal() ? DEFAULT_DIAGONAL_DISTANCE : DEFAULT_ORTHOGONAL_DISTANCE;
+            MapLocation rowCenter = frontAndCenter.add(perpendicular.opposite(), distanceBetweenRows * (i - 1));
+            updatePositions(rowCenter, perpendicular, Math.min(count, wallWidth), firstChannel + i * wallWidth * 3);
         }
-
-        distanceBetweenRobots = perpendicular.isDiagonal() ? 2 : 3;
-
-        MapLocation[] positions = new MapLocation[count];
-        int lengthOfWall = (count - 1) * distanceBetweenRobots;
-        int depthOfWall = (layers - 1) * distanceBetweenRobots;
-        MapLocation sideOffset = center.add(perpendicular.rotateLeft().rotateLeft(), lengthOfWall / 2 / layers);
-        positions[0] = sideOffset.add(perpendicular, depthOfWall / 2);
-        for (int i = 1; i < count; i++) {
-            if (i % layers == 0) {
-                positions[i] = positions[i - layers].add(perpendicular.rotateRight().rotateRight(), distanceBetweenRobots);
-            }
-            else {
-                positions[i] = positions[i - 1].add(perpendicular.opposite(), distanceBetweenRobots);
-            }
-        }
-
-        Communication.broadcastLocations(positions, firstChannel);
     }
 }
