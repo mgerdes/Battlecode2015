@@ -70,6 +70,10 @@ public class Beaver {
                 return build(RobotType.MINERFACTORY);
             case Building.HELIPAD:
                 return build(RobotType.HELIPAD);
+            case Building.BARRACKS:
+                return build(RobotType.BARRACKS);
+            case Building.TANK_FACTORY:
+                return build(RobotType.TANKFACTORY);
             case Building.SUPPLY_DEPOT:
                 return build(RobotType.SUPPLYDEPOT);
             default:
