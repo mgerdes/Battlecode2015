@@ -1,6 +1,7 @@
 package afterDinnerMint;
 
 import afterDinnerMint.constants.Building;
+import afterDinnerMint.util.Debug;
 import afterDinnerMint.util.Helper;
 import battlecode.common.*;
 import afterDinnerMint.navigation.Bug;
@@ -70,6 +71,8 @@ public class Beaver {
                 return build(RobotType.MINERFACTORY);
             case Building.HELIPAD:
                 return build(RobotType.HELIPAD);
+            case Building.SUPPLY_DEPOT:
+                return build(RobotType.SUPPLYDEPOT);
             default:
                 return false;
         }

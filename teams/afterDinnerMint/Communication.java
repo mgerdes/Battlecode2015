@@ -53,6 +53,15 @@ public class Communication {
             case Order.SPAWN_MORE_DRONES:
                 updateOrder(ChannelList.MORE_DRONES, value);
                 break;
+            case Order.DRONE_DEFEND:
+                updateOrder(ChannelList.DRONE_DEFEND, value);
+                break;
+            case Order.DRONE_SWARM:
+                updateOrder(ChannelList.DRONE_SWARM, value);
+                break;
+            case Order.DRONE_ATTACK:
+                updateOrder(ChannelList.DRONE_ATTACK, value);
+                break;
         }
     }
 
