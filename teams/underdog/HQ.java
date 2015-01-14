@@ -80,18 +80,9 @@ public class HQ {
     }
 
     private static void setInitialBuildings() throws GameActionException {
-        if (distanceBetweenHq < 2000) {
-            BuildingQueue.addBuilding(Building.HELIPAD);
-            BuildingQueue.addBuilding(Building.MINER_FACTORY);
-            BuildingQueue.addBuilding(Building.BARRACKS);
-            BuildingQueue.addBuilding(Building.TANK_FACTORY);
-        }
-        else {
-            BuildingQueue.addBuilding(Building.MINER_FACTORY);
-            BuildingQueue.addBuilding(Building.HELIPAD);
-            BuildingQueue.addBuilding(Building.BARRACKS);
-            BuildingQueue.addBuilding(Building.TANK_FACTORY);
-        }
+        BuildingQueue.addBuilding(Building.MINER_FACTORY);
+        BuildingQueue.addBuilding(Building.BARRACKS);
+        BuildingQueue.addBuilding(Building.TANK_FACTORY);
     }
 
     private static void loop() {
@@ -127,7 +118,7 @@ public class HQ {
     }
 
     private static void queueBuildings() throws GameActionException {
-        if (Clock.getRoundNum() < 400) {
+        if (Clock.getRoundNum() < 350) {
             //--Early buildings are handled by the initial buildings method
             return;
         }
@@ -165,10 +156,6 @@ public class HQ {
 
     private static void setOrders() throws GameActionException {
         int minerCount = rc.readBroadcast(ChannelList.MINER_COUNT);
-        int droneCount = rc.readBroadcast(ChannelList.DRONE_COUNT);
-
-        Communication.setOrder(Order.SPAWN_MORE_DRONES, droneCount < 20 ? Order.YES : Order.NO);
-        Communication.setOrder(Order.DRONE_DEFEND, Order.YES);
 
         if (distanceBetweenHq < 2000) {
             Communication.setOrder(Order.SPAWN_MORE_MINERS, minerCount < 30 ? Order.YES : Order.NO);
@@ -178,18 +165,22 @@ public class HQ {
         }
 
         int tankCount = rc.readBroadcast(ChannelList.TANK_COUNT);
-        Communication.setOrder(Order.SPAWN_MORE_TANKS, tankCount < 30 ? Order.YES : Order.NO);
-        Communication.setOrder(Order.TANK_FORTIFY, Order.YES);
+        Communication.setOrder(Order.SPAWN_MORE_TANKS, tankCount < 100 ? Order.YES : Order.NO);
 
-        //--TODO put this somewhere else
-        int initialByteCode = Clock.getBytecodeNum();
-        WallFormation.updatePositions(new MapLocation(-8093, 3731),
-                                      myHqLocation.directionTo(enemyHqLocation),
-                                      tankCount,
-                                      10,
-                                      ChannelList.TANK_FORMATION_FIRST_CHANNEL);
-        Debug.setString(1, String.format("used %d bytecodes for to broadcast a 20 member formation",
-                                         Clock.getBytecodeNum() - initialByteCode), rc);
+        if (Clock.getRoundNum() < 1500) {
+            Communication.setOrder(Order.TANK_FORTIFY, Order.YES);
+            MapLocation fortifyLocation = getFortifyLocation();
+            WallFormation.updatePositions(fortifyLocation,
+                                          myHqLocation.directionTo(enemyHqLocation),
+                                          tankCount,
+                                          15,
+                                          ChannelList.TANK_FORMATION_FIRST_CHANNEL);
+        }
+        else {
+            Communication.setOrder(Order.TANK_ATTACK, Order.YES);
+            Communication.setOrder(Order.TANK_FORTIFY, Order.NO);
+            Communication.setMapLocation(ChannelList.STRUCTURE_TO_ATTACK, getStructureToAttack());
+        }
     }
 
     private static void tryToAttack() throws GameActionException {
@@ -256,6 +247,11 @@ public class HQ {
         }
 
         return enemyTowerLocations[index];
+    }
+
+    private static MapLocation getFortifyLocation() {
+        //--TODO: This logic needs to account for VOID tiles, etc...
+        return Helper.getWaypoint(.7, myHqLocation, enemyHqLocation);
     }
 
     private static void spawn(RobotType type) throws GameActionException {

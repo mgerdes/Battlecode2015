@@ -25,10 +25,14 @@ public class Communication {
         return new MapLocation(x, y);
     }
 
+    public static void setMapLocation(int firstChannel, MapLocation location) throws GameActionException {
+        rc.broadcast(firstChannel, location.x);
+        rc.broadcast(firstChannel + 1, location.y);
+    }
+
     public static void broadcastLocations(MapLocation[] positions, int firstChannel) throws GameActionException {
         for (int i = 0; i < positions.length; i++) {
-            rc.broadcast(firstChannel + 3 * i, positions[i].x);
-            rc.broadcast(firstChannel + (3 * i) + 1, positions[i].y);
+            setMapLocation(firstChannel + 3 * i, positions[i]);
         }
     }
 

@@ -3,7 +3,7 @@ package underdog;
 import battlecode.common.*;
 import underdog.constants.ChannelList;
 import underdog.constants.Order;
-import underdog.navigation.Bug;
+import underdog.navigation.SafeBug;
 
 public class Tank {
     private static RobotController rc;
@@ -21,7 +21,7 @@ public class Tank {
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
 
-        Bug.init(rcC);
+        SafeBug.init(rcC);
         SupplySharing.init(rcC);
         Communication.init(rcC);
 
@@ -44,12 +44,33 @@ public class Tank {
         if (rc.readBroadcast(ChannelList.TANK_FORTIFY) == Order.YES) {
             fortify();
         }
+        else if (rc.readBroadcast(ChannelList.TANK_ATTACK) == Order.YES) {
+            attack();
+        }
+    }
+
+    private static void attack() throws GameActionException {
+        MapLocation currentLocation = rc.getLocation();
+        MapLocation attackLocation = Communication.getMapLocation(ChannelList.STRUCTURE_TO_ATTACK);
+
+        SafeBug.setDestination(attackLocation);
+
+        RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
+        if (enemiesInAttackRange.length == 0) {
+            if (rc.isCoreReady()) {
+                Direction direction = SafeBug.getDirection(currentLocation, attackLocation);
+                rc.move(direction);
+            }
+        }
+        else if (rc.isWeaponReady()) {
+            rc.attackLocation(enemiesInAttackRange[0].location);
+        }
     }
 
     private static void fortify() throws GameActionException {
         //--We have to get the location every turn or someone else will grab it
-        MapLocation myPositionInTheFormation = Communication.getUnclaimedLocation(ChannelList
-                .TANK_FORMATION_FIRST_CHANNEL);
+        MapLocation myPositionInTheFormation =
+                Communication.getUnclaimedLocation(ChannelList.TANK_FORMATION_FIRST_CHANNEL);
 
         if (rc.isWeaponReady()) {
             RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
@@ -64,8 +85,8 @@ public class Tank {
 
         MapLocation currentLocation = rc.getLocation();
         if (!currentLocation.equals(myPositionInTheFormation)) {
-            Bug.setDestination(myPositionInTheFormation);
-            Direction direction = Bug.getDirection(rc.getLocation());
+            SafeBug.setDestination(myPositionInTheFormation);
+            Direction direction = SafeBug.getDirection(rc.getLocation());
             rc.move(direction);
         }
     }

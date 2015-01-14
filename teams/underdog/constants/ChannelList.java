@@ -3,8 +3,8 @@ package underdog.constants;
 //--Enum class
 public class ChannelList {
     public static final int TACTIC = 0;
-    public static final int STRUCTURE_TO_ATTACK = 1; //--2, 3
-    public static final int MINER_RADIUS_FROM_HQ = 4;
+    public static final int STRUCTURE_TO_ATTACK = 1; //--2
+    public static final int MINER_RADIUS_FROM_HQ = 3;
 
     //--Unit counts
     public static final int DRONE_COUNT = 100;
