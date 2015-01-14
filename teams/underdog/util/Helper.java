@@ -122,4 +122,11 @@ public class Helper {
         int yAve = (int) (pointA.y * percentage + pointB.y * (1 - percentage));
         return new MapLocation(xAve, yAve);
     }
+
+    public static boolean isInRectangle(MapLocation test, MapLocation corner1, MapLocation corner2) {
+        return test.x > Math.min(corner1.x, corner2.x)
+                && test.x < Math.max(corner1.x, corner2.x)
+                && test.y > Math.min(corner1.y, corner2.y)
+                && test.y < Math.max(corner1.y, corner2.y);
+    }
 }

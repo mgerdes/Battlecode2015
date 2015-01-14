@@ -3,6 +3,7 @@ package underdog;
 import underdog.constants.Building;
 import underdog.constants.ChannelList;
 import underdog.constants.Order;
+import underdog.navigation.WallFormation;
 import underdog.util.Helper;
 import battlecode.common.*;
 import underdog.util.Debug;
@@ -129,7 +130,8 @@ public class HQ {
         }
 
         if (rc.getTeamOre() > RobotType.TANKFACTORY.oreCost) {
-            BuildingQueue.addBuildingWithPostDelay(Building.TANK_FACTORY, (int) (RobotType.TANKFACTORY.buildTurns * 1.5));
+            BuildingQueue.addBuildingWithPostDelay(Building.TANK_FACTORY,
+                                                    (int) (RobotType.TANKFACTORY.buildTurns * 1.5));
         }
 
         int unitCount = rc.readBroadcast(ChannelList.MINER_COUNT) + rc.readBroadcast(ChannelList.DRONE_COUNT);
@@ -173,6 +175,15 @@ public class HQ {
         }
 
         Communication.setOrder(Order.SPAWN_MORE_TANKS, Order.YES);
+        Communication.setOrder(Order.TANK_FORTIFY, Order.YES);
+
+        //--TODO put this somewhere else
+        int tankCount = rc.readBroadcast(ChannelList.TANK_COUNT);
+        int initialByteCode = Clock.getBytecodeNum();
+        WallFormation.updatePositions(new MapLocation(-8093, 3731), myHqLocation.directionTo(enemyHqLocation), tankCount, ChannelList
+                .TANK_FORMATION_FIRST_CHANNEL);
+        Debug.setString(1, String.format("used %d bytecodes for to broadcast a 20 member formation", Clock
+                .getBytecodeNum() - initialByteCode), rc);
     }
 
     private static void tryToAttack() throws GameActionException {

@@ -1,8 +1,9 @@
 package underdog;
 
 import battlecode.common.*;
-import underdog.navigation.SafeBug;
-import underdog.util.Helper;
+import underdog.constants.ChannelList;
+import underdog.constants.Order;
+import underdog.navigation.Bug;
 
 public class Tank {
     private static RobotController rc;
@@ -12,9 +13,6 @@ public class Tank {
     private static Team myTeam;
     private static MapLocation myHqLocation;
 
-    private static int MIN_SUPPLY_LEVEL_BEFORE_LEAVING = 1500;
-    private static int MAX_DISTANCE_TO_GO_TO_HQ_FOR_SUPPLIES = 36;
-
     public static void run(RobotController rcC) {
         rc = rcC;
 
@@ -23,7 +21,7 @@ public class Tank {
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
 
-        SafeBug.init(rcC);
+        Bug.init(rcC);
         SupplySharing.init(rcC);
         Communication.init(rcC);
 
@@ -43,27 +41,32 @@ public class Tank {
 
     private static void doYourThing() throws GameActionException {
         SupplySharing.shareOnlyWithType(RobotType.TANK);
-        MapLocation currentLocation = rc.getLocation();
-        MapLocation destination = Helper.getWaypoint(.6, myHqLocation, enemyHqLocation);
-
-        //--Don't leave home without supplies
-        if (rc.getSupplyLevel() < MIN_SUPPLY_LEVEL_BEFORE_LEAVING
-                && currentLocation.distanceSquaredTo(myHqLocation) <= MAX_DISTANCE_TO_GO_TO_HQ_FOR_SUPPLIES) {
-            SafeBug.setDestination(myHqLocation);
+        if (rc.readBroadcast(ChannelList.TANK_FORTIFY) == Order.YES) {
+            fortify();
         }
-        else {
-            SafeBug.setDestination(destination);
-        }
+    }
 
-        RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
-        if (enemiesInAttackRange.length == 0) {
-            if (rc.isCoreReady()) {
-                Direction direction = SafeBug.getDirection(currentLocation);
-                rc.move(direction);
+    private static void fortify() throws GameActionException {
+        //--We have to get the location every turn or someone else will grab it
+        MapLocation myPositionInTheFormation = Communication.getUnclaimedLocation(ChannelList
+                .TANK_FORMATION_FIRST_CHANNEL);
+
+        if (rc.isWeaponReady()) {
+            RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
+            if (enemiesInAttackRange.length > 0) {
+                rc.attackLocation(enemiesInAttackRange[0].location);
             }
         }
-        else if (rc.isWeaponReady()) {
-            rc.attackLocation(enemiesInAttackRange[0].location);
+
+        if (!rc.isCoreReady()) {
+            return;
+        }
+
+        MapLocation currentLocation = rc.getLocation();
+        if (!currentLocation.equals(myPositionInTheFormation)) {
+            Bug.setDestination(myPositionInTheFormation);
+            Direction direction = Bug.getDirection(rc.getLocation());
+            rc.move(direction);
         }
     }
 }

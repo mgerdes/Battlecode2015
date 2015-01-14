@@ -22,6 +22,7 @@ public class CircleNav {
     private static boolean goingClockwise = true;
     private static int radius;
 
+    //--TODO: can we make this a moving center?
     public static void init(RobotController rcC, MapLocation centerC, Direction startingDirection) {
         rc = rcC;
         center = centerC;
