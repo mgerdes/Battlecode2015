@@ -1,5 +1,6 @@
 package underdog.util;
 
+import battlecode.common.MapLocation;
 import underdog.constants.ChannelList;
 import battlecode.common.Direction;
 import battlecode.common.RobotInfo;
@@ -77,6 +78,15 @@ public class Helper {
         else if (type == RobotType.DRONE) {
             return ChannelList.DRONE_COUNT;
         }
+        else if (type == RobotType.SOLDIER) {
+            return ChannelList.SOLDIER_COUNT;
+        }
+        else if (type == RobotType.BASHER) {
+            return ChannelList.BASHER_COUNT;
+        }
+        else if (type == RobotType.TANK) {
+            return ChannelList.TANK_COUNT;
+        }
 
         return -1;
     }
@@ -88,7 +98,28 @@ public class Helper {
         else if (type == RobotType.DRONE) {
             return ChannelList.MORE_DRONES;
         }
+        else if (type == RobotType.SOLDIER) {
+            return ChannelList.MORE_SOLDIERS;
+        }
+        else if (type == RobotType.BASHER) {
+            return ChannelList.MORE_BASHERS;
+        }
+        else if (type == RobotType.TANK) {
+            return ChannelList.MORE_TANKS;
+        }
 
         return -1;
+    }
+
+    public static MapLocation getMidpoint(MapLocation pointA, MapLocation pointB) {
+        int xAve = (pointA.x + pointB.x) / 2;
+        int yAve = (pointA.y + pointB.y) / 2;
+        return new MapLocation(xAve, yAve);
+    }
+
+    public static MapLocation getWaypoint(double percentage, MapLocation pointA, MapLocation pointB) {
+        int xAve = (int) (pointA.x * percentage + pointB.x * (1 - percentage));
+        int yAve = (int) (pointA.y * percentage + pointB.y * (1 - percentage));
+        return new MapLocation(xAve, yAve);
     }
 }

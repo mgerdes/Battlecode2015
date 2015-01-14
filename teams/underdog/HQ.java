@@ -79,10 +79,14 @@ public class HQ {
         if (distanceBetweenHq < 2000) {
             BuildingQueue.addBuilding(Building.HELIPAD);
             BuildingQueue.addBuilding(Building.MINER_FACTORY);
+            BuildingQueue.addBuilding(Building.BARRACKS);
+            BuildingQueue.addBuilding(Building.TANK_FACTORY);
         }
         else {
             BuildingQueue.addBuilding(Building.MINER_FACTORY);
             BuildingQueue.addBuilding(Building.HELIPAD);
+            BuildingQueue.addBuilding(Building.BARRACKS);
+            BuildingQueue.addBuilding(Building.TANK_FACTORY);
         }
     }
 
@@ -119,36 +123,36 @@ public class HQ {
     }
 
     private static void queueBuildings() throws GameActionException {
-        if (Clock.getRoundNum() < 250) {
+        if (Clock.getRoundNum() < 400) {
             //--Early buildings are handled by the initial buildings method
             return;
         }
 
-        if (rc.getTeamOre() > RobotType.HELIPAD.oreCost) {
-            BuildingQueue.addBuildingWithPostDelay(Building.HELIPAD, RobotType.HELIPAD.buildTurns * 2);
+        if (rc.getTeamOre() > RobotType.TANKFACTORY.oreCost) {
+            BuildingQueue.addBuildingWithPostDelay(Building.TANK_FACTORY, (int) (RobotType.TANKFACTORY.buildTurns * 1.5));
         }
 
         int unitCount = rc.readBroadcast(ChannelList.MINER_COUNT) + rc.readBroadcast(ChannelList.DRONE_COUNT);
         if (!trigger1
-                && unitCount > 40) {
+                && unitCount > 30) {
             BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
             trigger1 = true;
         }
 
         if (!trigger2
-                && unitCount > 60) {
+                && unitCount > 45) {
             BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
             trigger2 = true;
         }
 
         if (!trigger3
-                && unitCount > 70) {
+                && unitCount > 55) {
             BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
             trigger3 = true;
         }
 
         if (!trigger4
-                && unitCount > 80) {
+                && unitCount > 62) {
             BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
             trigger4 = true;
         }
@@ -158,30 +162,17 @@ public class HQ {
         int minerCount = rc.readBroadcast(ChannelList.MINER_COUNT);
         int droneCount = rc.readBroadcast(ChannelList.DRONE_COUNT);
 
-        Communication.setOrder(Order.SPAWN_MORE_DRONES, Order.YES);
+        Communication.setOrder(Order.SPAWN_MORE_DRONES, droneCount < 20 ? Order.YES : Order.NO);
+        Communication.setOrder(Order.DRONE_DEFEND, Order.YES);
 
         if (distanceBetweenHq < 2000) {
             Communication.setOrder(Order.SPAWN_MORE_MINERS, minerCount < 20 ? Order.YES : Order.NO);
-            Communication.setOrder(Order.DRONE_SWARM, Order.YES);
         }
         else {
             Communication.setOrder(Order.SPAWN_MORE_MINERS, minerCount < 30 ? Order.YES : Order.NO);
-            Communication.setOrder(Order.DRONE_DEFEND, Order.YES);
         }
 
-        if (droneCount > 60) {
-            if (droneCount > 80) {
-                Communication.setOrder(Order.DRONE_ATTACK, Order.YES);
-                Communication.setOrder(Order.DRONE_SWARM, Order.NO);
-                MapLocation enemyStructure = getStructureToAttack();
-                rc.broadcast(ChannelList.STRUCTURE_TO_ATTACK_X, enemyStructure.x);
-                rc.broadcast(ChannelList.STRUCTURE_TO_ATTACK_Y, enemyStructure.y);
-            }
-            else {
-                Communication.setOrder(Order.DRONE_ATTACK, Order.NO);
-                Communication.setOrder(Order.DRONE_SWARM, Order.YES);
-            }
-        }
+        Communication.setOrder(Order.SPAWN_MORE_TANKS, Order.YES);
     }
 
     private static void tryToAttack() throws GameActionException {
