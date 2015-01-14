@@ -3,9 +3,8 @@ package underdog.constants;
 //--Enum class
 public class ChannelList {
     public static final int TACTIC = 0;
-    public static final int STRUCTURE_TO_ATTACK_X = 1;
-    public static final int STRUCTURE_TO_ATTACK_Y = 2;
-    public static final int MINER_RADIUS_FROM_HQ = 3;
+    public static final int STRUCTURE_TO_ATTACK = 1; //--2, 3
+    public static final int MINER_RADIUS_FROM_HQ = 4;
 
     //--Unit counts
     public static final int DRONE_COUNT = 100;
@@ -25,6 +24,9 @@ public class ChannelList {
     public static final int DRONE_DEFEND = 701;
     public static final int DRONE_ATTACK = 702;
 
+    public static final int TANK_ATTACK = 800;
+    public static final int TANK_FORTIFY = 801;
+
     //--Job reporting
     public static final int SUPPLY_MINERS_JOB_IS_NEEDED = 1000;
     public static final int SUPPLY_MINERS_JOB_REPORTING = 1001;
@@ -33,4 +35,7 @@ public class ChannelList {
     public static final int BUILDING_QUEUE_START = 3000;
     public static final int NEXT_BUILDING_POINTER = 4000;
     public static final int QUEUE_END_POINTER = 4001;
+
+    //--Formations
+    public static final int TANK_FORMATION_FIRST_CHANNEL = 5000;
 }

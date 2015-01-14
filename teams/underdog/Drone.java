@@ -128,6 +128,13 @@ public class Drone {
         MapLocation currentLocation = rc.getLocation();
         int minerRadius = rc.readBroadcast(ChannelList.MINER_RADIUS_FROM_HQ);
 
+        //--TODO: Investigate issue with ant build or Battlecode engine or ??
+        //--The drones were behaving correctly, so I added this print statement to see
+        //  what the radius was. After adding the statement, the drones behaved as expected.
+        //--This has happened a few times before, so it would be good to figure out exactly
+        //  what is happening. The first step is to find a way to reliably re-create the problem.
+        Debug.setString(0, String.format("Fortifying... miner radius is %d", minerRadius), rc);
+
         if (rc.getSupplyLevel() == 0) {
             Bug.setDestination(myHqLocation);
         }
@@ -150,7 +157,7 @@ public class Drone {
 
     private static void attackEnemyStructure() throws GameActionException {
         MapLocation currentLocation = rc.getLocation();
-        MapLocation attackLocation = Communication.getAttackLocation();
+        MapLocation attackLocation = Communication.getMapLocation(ChannelList.STRUCTURE_TO_ATTACK);
 
         //--Don't leave home without supplies
         if (rc.getSupplyLevel() == 0

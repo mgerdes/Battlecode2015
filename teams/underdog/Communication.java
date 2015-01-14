@@ -15,10 +15,35 @@ public class Communication {
         rc = rcC;
     }
 
-    public static MapLocation getAttackLocation() throws GameActionException {
-        int x = rc.readBroadcast(ChannelList.STRUCTURE_TO_ATTACK_X);
-        int y = rc.readBroadcast(ChannelList.STRUCTURE_TO_ATTACK_Y);
+    //--Locations are broadcast on three channels
+    //--The format is (X, Y, claimed)
+    //--Claimed will be the round number that the robot last claimed it
+
+    public static MapLocation getMapLocation(int firstChannel) throws GameActionException {
+        int x = rc.readBroadcast(firstChannel);
+        int y = rc.readBroadcast(firstChannel + 1);
         return new MapLocation(x, y);
+    }
+
+    public static void broadcastLocations(MapLocation[] positions, int firstChannel) throws GameActionException {
+        for (int i = 0; i < positions.length; i++) {
+            rc.broadcast(firstChannel + 3 * i, positions[i].x);
+            rc.broadcast(firstChannel + (3 * i) + 1, positions[i].y);
+        }
+    }
+
+    public static MapLocation getUnclaimedLocation(int firstChannel) throws GameActionException {
+        while (positionClaimed(firstChannel)) {
+            firstChannel += 3;
+        }
+
+        rc.broadcast(firstChannel + 2, Clock.getRoundNum());
+        return getMapLocation(firstChannel);
+    }
+
+    private static boolean positionClaimed(int firstChannel) throws GameActionException {
+        //--It is claimed if a robot updated it this round
+        return rc.readBroadcast(firstChannel + 2) == Clock.getRoundNum();
     }
 
     public static void weNeed(int job) throws GameActionException {
@@ -64,6 +89,12 @@ public class Communication {
                 break;
             case Order.DRONE_ATTACK:
                 updateOrder(ChannelList.DRONE_ATTACK, value);
+                break;
+            case Order.TANK_ATTACK:
+                updateOrder(ChannelList.TANK_ATTACK, value);
+                break;
+            case Order.TANK_FORTIFY:
+                updateOrder(ChannelList.TANK_FORTIFY, value);
                 break;
         }
     }
