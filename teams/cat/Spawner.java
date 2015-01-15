@@ -75,6 +75,7 @@ public class Spawner {
 
     private static void buildUnitData() {
         RobotType myType = rc.getType();
+        //--TODO: fix this!
         if (myType == RobotType.MINERFACTORY) {
             typesBuiltHere = new RobotType[]{RobotType.MINER};
         }
@@ -86,6 +87,9 @@ public class Spawner {
         }
         else if (myType == RobotType.TANKFACTORY) {
             typesBuiltHere = new RobotType[]{RobotType.TANK};
+        }
+        else if (myType == RobotType.AEROSPACELAB) {
+            typesBuiltHere = new RobotType[]{RobotType.LAUNCHER};
         }
 
         robotCountChannels = new int[typesBuiltHere.length];

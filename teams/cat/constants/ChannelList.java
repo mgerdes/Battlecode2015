@@ -12,6 +12,7 @@ public class ChannelList {
     public static final int SOLDIER_COUNT = 102;
     public static final int BASHER_COUNT = 103;
     public static final int TANK_COUNT = 104;
+    public static final int LAUNCHER_COUNT = 105;
 
     //--HQ orders
     public static final int MORE_MINERS = 500;
@@ -19,6 +20,7 @@ public class ChannelList {
     public static final int MORE_SOLDIERS = 502;
     public static final int MORE_BASHERS = 503;
     public static final int MORE_TANKS = 504;
+    public static final int MORE_LAUNCHER = 505;
 
     public static final int DRONE_SWARM = 700;
     public static final int DRONE_DEFEND = 701;

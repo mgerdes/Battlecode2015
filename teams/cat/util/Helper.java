@@ -87,6 +87,9 @@ public class Helper {
         else if (type == RobotType.TANK) {
             return ChannelList.TANK_COUNT;
         }
+        else if (type == RobotType.LAUNCHER) {
+            return ChannelList.LAUNCHER_COUNT;
+        }
 
         return -1;
     }
@@ -106,6 +109,9 @@ public class Helper {
         }
         else if (type == RobotType.TANK) {
             return ChannelList.MORE_TANKS;
+        }
+        else if (type == RobotType.LAUNCHER) {
+            return ChannelList.MORE_LAUNCHER;
         }
 
         return -1;

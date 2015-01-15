@@ -1,5 +1,7 @@
 package cat.constants;
 
+import battlecode.common.RobotType;
+
 public class Building {
     //--Values must be less than 20 (see array in BuildingQueue that handles delays)
     public static final int NOT_SET = 0;
@@ -8,4 +10,5 @@ public class Building {
     public static final int SUPPLY_DEPOT = 3;
     public static final int BARRACKS = 4;
     public static final int TANK_FACTORY = 5;
+    public static final int AEROSPACE_LAB = 6;
 }

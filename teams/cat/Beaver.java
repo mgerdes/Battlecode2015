@@ -76,6 +76,8 @@ public class Beaver {
                 return build(RobotType.TANKFACTORY);
             case Building.SUPPLY_DEPOT:
                 return build(RobotType.SUPPLYDEPOT);
+            case Building.AEROSPACE_LAB:
+                return build(RobotType.AEROSPACELAB);
             default:
                 return false;
         }
