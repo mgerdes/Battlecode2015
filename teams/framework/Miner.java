@@ -25,6 +25,7 @@ public class Miner {
 
         Bug.init(rcC);
         SupplySharing.init(rcC);
+        Communication.init(rcC);
 
         loop();
     }
@@ -45,6 +46,11 @@ public class Miner {
 
         MapLocation currentLocation = rc.getLocation();
         updateMinerRadius(currentLocation);
+
+        RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.MINER.sensorRadiusSquared, enemyTeam);
+        if (enemiesInSensorRange.length > 0) {
+            Communication.setDistressLocation(enemiesInSensorRange[0].location);
+        }
 
         if (rc.isWeaponReady()) {
             RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.MINER.attackRadiusSquared, enemyTeam);

@@ -26,6 +26,7 @@ public class ChannelList {
     public static final int DRONE_ATTACK = 602;
 
     public static final int SOLDIER_ATTACK_ENEMY_MINERS = 700;
+    public static final int SOLDIER_DEFEND_MINERS = 701;
 
     //--Job reporting
     public static final int SUPPLY_MINERS_JOB_IS_NEEDED = 1000;
@@ -35,4 +36,10 @@ public class ChannelList {
     public static final int BUILDING_QUEUE_START = 3000;
     public static final int NEXT_BUILDING_POINTER = 4000;
     public static final int QUEUE_END_POINTER = 4001;
+
+    //--Distress!
+    public static final int DISTRESS_SIGNAL_ROUND_NUMBER = 5000;
+    public static final int DISTRESS_SIGNAL_CREATOR = 5001;
+    public static final int DISTRESS_LOCATION_X = 5002;
+    public static final int DISTRESS_LOCATION_Y = 5003;
 }

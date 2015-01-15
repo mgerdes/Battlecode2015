@@ -4,6 +4,7 @@ import battlecode.common.*;
 import battlecode.world.Robot;
 import framework.constants.ChannelList;
 import framework.constants.Order;
+import framework.navigation.Bug;
 import framework.navigation.SafeBug;
 import framework.util.Helper;
 
@@ -24,6 +25,7 @@ public class Soldier {
         enemyTeam = myTeam.opponent();
 
         SafeBug.init(rcC);
+        Bug.init(rcC);
         SupplySharing.init(rcC);
         Communication.init(rcC);
         loop();
@@ -41,11 +43,53 @@ public class Soldier {
     }
 
     private static void doYourThing() throws GameActionException {
+        SupplySharing.share();
+
         if (rc.readBroadcast(ChannelList.SOLDIER_ATTACK_ENEMY_MINERS) == Order.YES) {
             attackEnemyMiners();
         }
+        else if (rc.readBroadcast(ChannelList.SOLDIER_DEFEND_MINERS) == Order.YES) {
+            defendMiners();
+        }
         else {
             goToWayPoint();
+        }
+    }
+
+    private static void defendMiners() throws GameActionException {
+        if (rc.isWeaponReady()) {
+            RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.SOLDIER.attackRadiusSquared, enemyTeam);
+            if (enemiesInAttackRange.length > 0) {
+                rc.attackLocation(enemiesInAttackRange[0].location);
+                return;
+            }
+        }
+
+        MapLocation currentLocation = rc.getLocation();
+        if (rc.isCoreReady()) {
+            MapLocation distressLocation = Communication.getDistressLocation();
+            if (distressLocation != null) {
+                Bug.setDestination(distressLocation);
+                rc.move(Bug.getDirection(currentLocation));
+                return;
+            }
+
+            //--This code chases down enemies..
+            //--It might be nice for defending, but the defender should probably return to
+            //  its swarm after it gets a certain distance away.
+//            RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.SOLDIER.sensorRadiusSquared, enemyTeam);
+//            if (enemiesInSensorRange.length > 0) {
+//                Bug.setDestination(enemiesInSensorRange[0].location);
+//                rc.move(Bug.getDirection(currentLocation));
+//                return;
+//            }
+
+            MapLocation destination = Helper.getWaypoint(0.7, myHqLocation, enemyHqLocation);
+            if (!currentLocation.equals(destination)) {
+                Bug.setDestination(destination);
+                Direction direction = Bug.getDirection(rc.getLocation());
+                rc.move(direction);
+            }
         }
     }
 
@@ -61,7 +105,6 @@ public class Soldier {
             }
         }
 
-        SupplySharing.share();
         SafeBug.setDestination(enemyHqLocation);
 
         if (!rc.isCoreReady()) {

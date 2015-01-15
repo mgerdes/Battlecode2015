@@ -169,6 +169,9 @@ public class HQ {
         if (rc.getTeam() == Team.A) {
             Communication.setOrder(Order.SOLDIER_ATTACK_ENEMY_MINERS, Order.YES);
         }
+        else {
+            Communication.setOrder(Order.SOLDIER_DEFEND_MINERS, Order.YES);
+        }
     }
 
     private static void tryToAttack() throws GameActionException {
