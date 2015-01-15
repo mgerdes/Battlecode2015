@@ -1,5 +1,6 @@
 package framework;
 
+import framework.constants.ChannelList;
 import framework.constants.Order;
 import framework.util.Debug;
 import framework.util.Helper;
@@ -77,23 +78,23 @@ public class Spawner {
         RobotType myType = rc.getType();
         if (myType == RobotType.MINERFACTORY) {
             typesBuiltHere = new RobotType[]{RobotType.MINER};
+            robotCountChannels = new int[]{ChannelList.MINER_COUNT};
+            robotProductionChannels = new int[]{ChannelList.MORE_MINERS};
         }
         else if (myType == RobotType.BARRACKS) {
             typesBuiltHere = new RobotType[]{RobotType.SOLDIER, RobotType.BASHER};
+            robotCountChannels = new int[]{ChannelList.SOLDIER_COUNT, ChannelList.BASHER_COUNT};
+            robotProductionChannels = new int[]{ChannelList.MORE_SOLDIERS, ChannelList.MORE_BASHERS};
         }
         else if (myType == RobotType.HELIPAD) {
             typesBuiltHere = new RobotType[]{RobotType.DRONE};
+            robotCountChannels = new int[]{ChannelList.DRONE_COUNT};
+            robotProductionChannels = new int[]{ChannelList.MORE_DRONES};
         }
         else if (myType == RobotType.TANKFACTORY) {
             typesBuiltHere = new RobotType[]{RobotType.TANK};
-        }
-
-        robotCountChannels = new int[typesBuiltHere.length];
-        robotProductionChannels = new int[typesBuiltHere.length];
-
-        for (int i = 0; i < typesBuiltHere.length; i++) {
-            robotCountChannels[i] = Helper.getCountChannelFor(typesBuiltHere[i]);
-            robotProductionChannels[i] = Helper.getProductionChannelFor(typesBuiltHere[i]);
+            robotCountChannels = new int[]{ChannelList.TANK_COUNT};
+            robotProductionChannels = new int[]{ChannelList.MORE_TANKS};
         }
     }
 }

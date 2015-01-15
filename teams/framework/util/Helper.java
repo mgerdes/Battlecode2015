@@ -71,40 +71,6 @@ public class Helper {
         }
     }
 
-    public static int getCountChannelFor(RobotType type) {
-        if (type == RobotType.MINER) {
-            return ChannelList.MINER_COUNT;
-        }
-        else if (type == RobotType.DRONE) {
-            return ChannelList.DRONE_COUNT;
-        }
-        else if (type == RobotType.SOLDIER) {
-            return ChannelList.SOLDIER_COUNT;
-        }
-        else if (type == RobotType.BASHER) {
-            return ChannelList.BASHER_COUNT;
-        }
-
-        return -1;
-    }
-
-    public static int getProductionChannelFor(RobotType type) {
-        if (type == RobotType.MINER) {
-            return ChannelList.MORE_MINERS;
-        }
-        else if (type == RobotType.DRONE) {
-            return ChannelList.MORE_DRONES;
-        }
-        else if (type == RobotType.SOLDIER) {
-            return ChannelList.MORE_SOLDIERS;
-        }
-        else if (type == RobotType.BASHER) {
-            return ChannelList.MORE_BASHERS;
-        }
-
-        return -1;
-    }
-
     public static MapLocation getMidpoint(MapLocation pointA, MapLocation pointB) {
         int xAve = (pointA.x + pointB.x) / 2;
         int yAve = (pointA.y + pointB.y) / 2;
