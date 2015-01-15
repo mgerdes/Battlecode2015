@@ -12,6 +12,8 @@ public class SafeBug {
     //--Map info, set every call to getDirection()
     private static MapLocation enemyHqLocation;
     private static MapLocation[] enemyTowerLocations;
+    private static RobotInfo[] enemyRobots;
+    private static RobotType[] typesToIgnore;
 
     //--Per navigation path, set on setDestination()
     private static MapLocation destination;
@@ -48,10 +50,15 @@ public class SafeBug {
         numberOfNinetyDegreeRotations = 0;
     }
 
-    public static Direction getDirection(MapLocation currentLocationC, MapLocation ignoreC) {
+    public static Direction getDirection(MapLocation currentLocationC,
+                                         MapLocation ignoreC,
+                                         RobotInfo[] enemyRobotsC,
+                                         RobotType[] typesToIgnoreC) {
         currentLocation = currentLocationC;
         ignoreLocation = ignoreC;
         enemyTowerLocations = rc.senseEnemyTowerLocations();
+        enemyRobots = enemyRobotsC;
+        typesToIgnore = typesToIgnoreC;
 
         if (previousDirection == null) {
             previousDirection = currentLocationC.directionTo(destination);
@@ -65,7 +72,11 @@ public class SafeBug {
     }
 
     public static Direction getDirection(MapLocation currentLocationC) {
-        return getDirection(currentLocationC, null);
+        return getDirection(currentLocationC, null, null, null);
+    }
+
+    public static Direction getDirection(MapLocation currentLocation, MapLocation locationToIgnore) {
+        return getDirection(currentLocation, locationToIgnore, null, null);
     }
 
     private static Direction getDirectionFollowingWall() {
@@ -90,8 +101,8 @@ public class SafeBug {
 
         //--Check if we can go around the corner...
         Direction checkDirection = defaultLeft ?
-                previousDirection.rotateRight().rotateRight()
-                : previousDirection.rotateLeft().rotateLeft();
+                                   previousDirection.rotateRight().rotateRight()
+                                               : previousDirection.rotateLeft().rotateLeft();
         if (canMoveSafely(checkDirection)) {
             numberOfNinetyDegreeRotations++;
             previousDirection = checkDirection;
@@ -106,8 +117,8 @@ public class SafeBug {
 
     private static boolean onMapEdge() {
         Direction wallDirection = defaultLeft
-                ? previousDirection.rotateRight().rotateRight()
-                : previousDirection.rotateLeft().rotateLeft();
+                                  ? previousDirection.rotateRight().rotateRight()
+                                  : previousDirection.rotateLeft().rotateLeft();
         return rc.senseTerrainTile(currentLocation.add(wallDirection)) == TerrainTile.OFF_MAP;
     }
 
@@ -157,7 +168,8 @@ public class SafeBug {
         MapLocation next = currentLocation.add(direction);
         return rc.canMove(direction)
                 && !withinHqAttackRange(next)
-                && !withinTowerAttackRange(next);
+                && !withinTowerAttackRange(next)
+                && !withinEnemyAttackRange(next);
     }
 
     private static boolean withinTowerAttackRange(MapLocation location) {
@@ -182,7 +194,8 @@ public class SafeBug {
         int hqAttackRange;
         if (enemyTowerLocations.length > 4) {
             //--Bonus for 2 and 5 towers
-            hqAttackRange = GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED + GameConstants.HQ_BUFFED_SPLASH_RADIUS_SQUARED;
+            hqAttackRange =
+                    GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED + GameConstants.HQ_BUFFED_SPLASH_RADIUS_SQUARED;
         }
         else if (enemyTowerLocations.length > 1) {
             //--Bonus for 2 towers
@@ -193,5 +206,34 @@ public class SafeBug {
         }
 
         return location.distanceSquaredTo(enemyHqLocation) <= hqAttackRange;
+    }
+
+    private static boolean withinEnemyAttackRange(MapLocation location) {
+        if (enemyRobots == null
+                || enemyRobots.length == 0) {
+            return false;
+        }
+
+        for (RobotInfo enemy : enemyRobots) {
+            if (ignoringThisType(enemy.type)) {
+                continue;
+            }
+
+            if (location.distanceSquaredTo(enemy.location) <= enemy.type.attackRadiusSquared) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean ignoringThisType(RobotType type) {
+        for (RobotType ignoreType : typesToIgnore) {
+            if (type == ignoreType) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
