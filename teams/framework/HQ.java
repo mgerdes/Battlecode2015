@@ -24,6 +24,7 @@ public class HQ {
     private static int towerCount;
     private static double averageTowerToTowerDistance;
     private static double averageTowerToHqDistance;
+    private static double oreNearHq;
 
     //--One time triggers
     private static boolean trigger1;
@@ -62,6 +63,12 @@ public class HQ {
             }
         }
 
+        MapLocation[] mapLocationsCloseToHq =
+                MapLocation.getAllMapLocationsWithinRadiusSq(myHqLocation, RobotType.HQ.sensorRadiusSquared);
+        for (MapLocation location : mapLocationsCloseToHq) {
+            oreNearHq += rc.senseOre(location);
+        }
+
         averageTowerToTowerDistance = sumDistance / numberOfDistances;
 
         sumDistance = 0;
@@ -71,19 +78,18 @@ public class HQ {
 
         averageTowerToHqDistance = sumDistance / towerCount;
 
-        System.out.printf("hqDist: %d\ncount %d\ntower2tower: %f\ntower2Hq: %f\n", distanceBetweenHq,
-                towerCount, averageTowerToTowerDistance, averageTowerToHqDistance);
+        System.out.printf(
+                "hqDist: %d\ncount %d\ntower2tower: %f\ntower2Hq: %f\noreNearHQ: %f\n",
+                distanceBetweenHq,
+                towerCount,
+                averageTowerToTowerDistance,
+                averageTowerToHqDistance,
+                oreNearHq);
     }
 
     private static void setInitialBuildings() throws GameActionException {
-        if (distanceBetweenHq < 2000) {
-            BuildingQueue.addBuilding(Building.HELIPAD);
-            BuildingQueue.addBuilding(Building.MINER_FACTORY);
-        }
-        else {
-            BuildingQueue.addBuilding(Building.MINER_FACTORY);
-            BuildingQueue.addBuilding(Building.HELIPAD);
-        }
+        BuildingQueue.addBuilding(Building.MINER_FACTORY);
+        BuildingQueue.addBuilding(Building.BARRACKS);
     }
 
     private static void loop() {
@@ -187,8 +193,8 @@ public class HQ {
     private static void tryToAttack() throws GameActionException {
         int myTowerCount = rc.senseTowerLocations().length;
         int attackRadiusSquared = myTowerCount > 1 ?
-                GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED
-                : RobotType.HQ.attackRadiusSquared;
+                                  GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED
+                                                   : RobotType.HQ.attackRadiusSquared;
 
         RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(attackRadiusSquared, enemyTeam);
         if (enemiesInAttackRange.length > 0) {
@@ -198,8 +204,9 @@ public class HQ {
 
         //--Try splash attack!
         if (myTowerCount > 4) {
-            RobotInfo[] enemiesInSplashRange = rc.senseNearbyRobots(attackRadiusSquared + GameConstants
-                    .HQ_BUFFED_SPLASH_RADIUS_SQUARED, enemyTeam);
+            RobotInfo[] enemiesInSplashRange = rc.senseNearbyRobots(
+                    attackRadiusSquared + GameConstants
+                            .HQ_BUFFED_SPLASH_RADIUS_SQUARED, enemyTeam);
             if (enemiesInSplashRange.length == 0) {
                 return;
             }
