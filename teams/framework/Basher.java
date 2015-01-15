@@ -39,19 +39,17 @@ public class Basher {
     }
 
     private static void doYourThing() throws GameActionException {
-        if (rc.isWeaponReady()) {
-            RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
-            if (enemiesInAttackRange.length > 0) {
-                rc.attackLocation(enemiesInAttackRange[0].location);
-            }
-        }
-
         if (!rc.isCoreReady()) {
             return;
         }
 
         MapLocation currentLocation = rc.getLocation();
         MapLocation destination = Helper.getWaypoint(0.7, myHqLocation, enemyHqLocation);
+
+        RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.BASHER.attackRadiusSquared, enemyTeam);
+        if (enemiesInAttackRange.length > 0) {
+            destination = enemiesInAttackRange[0].location;
+        }
         if (!currentLocation.equals(destination)) {
             SafeBug.setDestination(destination);
             Direction direction = SafeBug.getDirection(rc.getLocation());
