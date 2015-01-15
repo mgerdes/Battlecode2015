@@ -6,7 +6,10 @@ public class Order {
 
     public static final int SPAWN_MORE_MINERS = 1000;
     public static final int SPAWN_MORE_DRONES = 1001;
-    public static final int DRONE_SWARM = 1002;
-    public static final int DRONE_DEFEND = 1003;
-    public static final int DRONE_ATTACK = 1004;
+    public static final int SPAWN_MORE_SOLDIERS = 1002;
+    public static final int SPAWN_MORE_BASHERS = 1003;
+
+    public static final int DRONE_SWARM = 2000;
+    public static final int DRONE_DEFEND = 2001;
+    public static final int DRONE_ATTACK = 2002;
 }

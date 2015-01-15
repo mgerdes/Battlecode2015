@@ -10,13 +10,18 @@ public class ChannelList {
     //--Unit counts
     public static final int DRONE_COUNT = 100;
     public static final int MINER_COUNT = 101;
+    public static final int BASHER_COUNT = 102;
+    public static final int SOLDIER_COUNT = 103;
 
     //--HQ orders
     public static final int MORE_MINERS = 500;
     public static final int MORE_DRONES = 501;
-    public static final int DRONE_SWARM = 502;
-    public static final int DRONE_DEFEND = 503;
-    public static final int DRONE_ATTACK = 504;
+    public static final int MORE_BASHERS = 502;
+    public static final int MORE_SOLDIERS = 503;
+
+    public static final int DRONE_SWARM = 600;
+    public static final int DRONE_DEFEND = 601;
+    public static final int DRONE_ATTACK = 602;
 
     //--Job reporting
     public static final int SUPPLY_MINERS_JOB_IS_NEEDED = 1000;

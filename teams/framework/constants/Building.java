@@ -6,4 +6,5 @@ public class Building {
     public static final int MINER_FACTORY = 1;
     public static final int HELIPAD = 2;
     public static final int SUPPLY_DEPOT = 3;
+    public static final int BARRACKS = 4;
 }

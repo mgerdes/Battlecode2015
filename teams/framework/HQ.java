@@ -125,69 +125,22 @@ public class HQ {
     }
 
     private static void queueBuildings() throws GameActionException {
-        if (Clock.getRoundNum() < 250) {
-            //--Early buildings are handled by the initial buildings method
-            return;
-        }
-
-        if (rc.getTeamOre() > RobotType.HELIPAD.oreCost) {
-            BuildingQueue.addBuildingWithPostDelay(Building.HELIPAD, RobotType.HELIPAD.buildTurns * 2);
-        }
-
-        int unitCount = rc.readBroadcast(ChannelList.MINER_COUNT) + rc.readBroadcast(ChannelList.DRONE_COUNT);
-        if (!trigger1
-                && unitCount > 40) {
-            BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
-            trigger1 = true;
-        }
-
-        if (!trigger2
-                && unitCount > 60) {
-            BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
-            trigger2 = true;
-        }
-
-        if (!trigger3
-                && unitCount > 70) {
-            BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
-            trigger3 = true;
-        }
-
-        if (!trigger4
-                && unitCount > 80) {
-            BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
-            trigger4 = true;
-        }
+        //--Logic for adding buildings mid-game
     }
 
     private static void setOrders() throws GameActionException {
-        int minerCount = rc.readBroadcast(ChannelList.MINER_COUNT);
-        int droneCount = rc.readBroadcast(ChannelList.DRONE_COUNT);
-
-        Communication.setOrder(Order.SPAWN_MORE_DRONES, Order.YES);
-
-        if (distanceBetweenHq < 2000) {
-            Communication.setOrder(Order.SPAWN_MORE_MINERS, minerCount < 20 ? Order.YES : Order.NO);
-            Communication.setOrder(Order.DRONE_SWARM, Order.YES);
+        int soldierCount = rc.readBroadcast(ChannelList.SOLDIER_COUNT);
+        int basherCount = rc.readBroadcast(ChannelList.BASHER_COUNT);
+        if (soldierCount > basherCount) {
+            Communication.setOrder(Order.SPAWN_MORE_SOLDIERS, Order.YES);
+            Communication.setOrder(Order.SPAWN_MORE_BASHERS, Order.NO);
         }
         else {
-            Communication.setOrder(Order.SPAWN_MORE_MINERS, minerCount < 30 ? Order.YES : Order.NO);
-            Communication.setOrder(Order.DRONE_DEFEND, Order.YES);
+            Communication.setOrder(Order.SPAWN_MORE_SOLDIERS, Order.NO);
+            Communication.setOrder(Order.SPAWN_MORE_BASHERS, Order.YES);
         }
 
-        if (droneCount > 60) {
-            if (droneCount > 80) {
-                Communication.setOrder(Order.DRONE_ATTACK, Order.YES);
-                Communication.setOrder(Order.DRONE_SWARM, Order.NO);
-                MapLocation enemyStructure = getStructureToAttack();
-                rc.broadcast(ChannelList.STRUCTURE_TO_ATTACK_X, enemyStructure.x);
-                rc.broadcast(ChannelList.STRUCTURE_TO_ATTACK_Y, enemyStructure.y);
-            }
-            else {
-                Communication.setOrder(Order.DRONE_ATTACK, Order.NO);
-                Communication.setOrder(Order.DRONE_SWARM, Order.YES);
-            }
-        }
+        Communication.setOrder(Order.SPAWN_MORE_MINERS, Order.YES);
     }
 
     private static void tryToAttack() throws GameActionException {

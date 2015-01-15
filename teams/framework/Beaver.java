@@ -72,6 +72,8 @@ public class Beaver {
                 return build(RobotType.HELIPAD);
             case Building.SUPPLY_DEPOT:
                 return build(RobotType.SUPPLYDEPOT);
+            case Building.BARRACKS:
+                return build(RobotType.BARRACKS);
             default:
                 return false;
         }
