@@ -10,7 +10,7 @@ public class SafeBug {
     private static boolean defaultLeft;
 
     //--Map info, set every call to getDirection()
-    private static MapLocation enemyHqLocations;
+    private static MapLocation enemyHqLocation;
     private static MapLocation[] enemyTowerLocations;
 
     //--Per navigation path, set on setDestination()
@@ -30,6 +30,7 @@ public class SafeBug {
     public static void init(RobotController rcC) {
         rc = rcC;
         defaultLeft = rcC.getID() % 2 == 0;
+        enemyHqLocation = rc.senseEnemyHQLocation();
     }
 
     public static void setDestination(MapLocation destinationC) {
@@ -50,7 +51,6 @@ public class SafeBug {
     public static Direction getDirection(MapLocation currentLocationC, MapLocation ignoreC) {
         currentLocation = currentLocationC;
         ignoreLocation = ignoreC;
-        enemyHqLocations = rc.senseEnemyHQLocation();
         enemyTowerLocations = rc.senseEnemyTowerLocations();
 
         if (previousDirection == null) {
@@ -175,7 +175,7 @@ public class SafeBug {
     }
 
     private static boolean withinHqAttackRange(MapLocation location) {
-        if (enemyHqLocations.equals(ignoreLocation)) {
+        if (enemyHqLocation.equals(ignoreLocation)) {
             return false;
         }
 
@@ -192,6 +192,6 @@ public class SafeBug {
             hqAttackRange = RobotType.HQ.attackRadiusSquared;
         }
 
-        return location.distanceSquaredTo(enemyHqLocations) <= hqAttackRange;
+        return location.distanceSquaredTo(enemyHqLocation) <= hqAttackRange;
     }
 }
