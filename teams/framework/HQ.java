@@ -15,9 +15,7 @@ public class HQ {
     private static MapLocation myHqLocation;
     private static MapLocation enemyHqLocation;
 
-
-    private static final int BEAVER_COUNT = 1;
-    private static final int DO_NOT_ATTACK_BEFORE_ROUND = 40;
+    private static final int HQ_NOT_ATTACK_BEFORE_ROUND = 40;
 
     //--Map analysis data
     private static int distanceBetweenHq;
@@ -113,7 +111,7 @@ public class HQ {
         queueBuildings();
 
         if (rc.isWeaponReady()
-                && Clock.getRoundNum() > DO_NOT_ATTACK_BEFORE_ROUND) {
+                && Clock.getRoundNum() > HQ_NOT_ATTACK_BEFORE_ROUND) {
             tryToAttack();
         }
 
@@ -126,21 +124,51 @@ public class HQ {
 
     private static void queueBuildings() throws GameActionException {
         //--Logic for adding buildings mid-game
+
+        int unitCount = rc.readBroadcast(ChannelList.BASHER_COUNT)
+                + rc.readBroadcast(ChannelList.MINER_COUNT)
+                + rc.readBroadcast(ChannelList.SOLDIER_COUNT);
+
+        if (!trigger1
+            && unitCount > 30) {
+            BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
+            trigger1 = true;
+        }
+
+        if (!trigger2
+                && unitCount > 45) {
+            BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
+            trigger2 = true;
+        }
+
+        if (!trigger2
+                && unitCount > 55) {
+            BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
+            trigger2 = true;
+        }
+
+        int soldierCount = rc.readBroadcast(ChannelList.SOLDIER_COUNT);
+        if (Clock.getRoundNum() > 400
+                && rc.getTeamOre() > RobotType.BARRACKS.oreCost
+                && soldierCount < 50) {
+            BuildingQueue.addBuildingWithPostDelay(Building.BARRACKS, RobotType.BARRACKS.buildTurns * 2);
+        }
+
+        if (rc.getTeamOre() > RobotType.TANKFACTORY.oreCost
+                && soldierCount > 50) {
+            BuildingQueue.addBuildingWithPostDelay(Building.TANK_FACTORY, RobotType.TANKFACTORY.buildTurns * 2);
+        }
     }
 
     private static void setOrders() throws GameActionException {
-        int soldierCount = rc.readBroadcast(ChannelList.SOLDIER_COUNT);
-        int basherCount = rc.readBroadcast(ChannelList.BASHER_COUNT);
-        if (soldierCount > basherCount) {
-            Communication.setOrder(Order.SPAWN_MORE_SOLDIERS, Order.YES);
-            Communication.setOrder(Order.SPAWN_MORE_BASHERS, Order.NO);
-        }
-        else {
-            Communication.setOrder(Order.SPAWN_MORE_SOLDIERS, Order.NO);
-            Communication.setOrder(Order.SPAWN_MORE_BASHERS, Order.YES);
-        }
+        Communication.setOrder(Order.SPAWN_MORE_SOLDIERS, Order.YES);
 
-        Communication.setOrder(Order.SPAWN_MORE_MINERS, Order.YES);
+        int minerCount = rc.readBroadcast(ChannelList.MINER_COUNT);
+        Communication.setOrder(Order.SPAWN_MORE_MINERS, minerCount < 35 ? Order.YES : Order.NO);
+
+        if (rc.getTeam() == Team.A) {
+            Communication.setOrder(Order.SOLDIER_ATTACK_ENEMY_MINERS, Order.YES);
+        }
     }
 
     private static void tryToAttack() throws GameActionException {
@@ -177,13 +205,24 @@ public class HQ {
         }
     }
 
-    private static boolean shouldSpawnBeaver(RobotInfo[] friendlyRobots) {
+    private static boolean shouldSpawnBeaver(RobotInfo[] friendlyRobots) throws GameActionException {
         if (rc.getTeamOre() < RobotType.BEAVER.oreCost) {
             return false;
         }
 
+        //--In early game we want one beaver.
+        //--When we have enough miners, we want two beavers
         int beaverCount = Helper.getRobotsOfType(friendlyRobots, RobotType.BEAVER);
-        return beaverCount < BEAVER_COUNT;
+        if (beaverCount == 0) {
+            return true;
+        }
+
+        if (beaverCount > 1) {
+            return false;
+        }
+
+        int minerCount = rc.readBroadcast(ChannelList.MINER_COUNT);
+        return minerCount > 10;
     }
 
     private static MapLocation getStructureToAttack() {

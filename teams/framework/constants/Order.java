@@ -12,4 +12,6 @@ public class Order {
     public static final int DRONE_SWARM = 2000;
     public static final int DRONE_DEFEND = 2001;
     public static final int DRONE_ATTACK = 2002;
+
+    public static final int SOLDIER_ATTACK_ENEMY_MINERS = 3000;
 }
