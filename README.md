@@ -1,26 +1,15 @@
-### Brainstorming...
-#### Macro Strategy Ideas
-* Waste enemy resources by destroying buildings and pestering miners
-* Build units that best respond to opponents units
-* Use towers for distributed algorithms?
-* Adjust strategy depending on opponents units/buildings?
+### Current strategy idea
 
-#### Micro Strategy Ideas
-* Avoid clustering when facing enemy weapons that have proximity damage
-* Find optimal mixes of robots
-* Attack the enemy robot that will die first (lower HP, less armor, etc...)
-* Transfer supplies from a unit before it dies
+#### Early game
+* Drones try to pick of enemy miners
+* Build a barracks and a team of soldiers
 
-#### Small map vs big map
-* Harder to rush on big map
+#### Middle/End game
+* Convert to heavier units (Launchers or Tanks)
+* Try to take out an enemy tower
 
-#### Tower count
-* Fewer towers will be shorter game
-* Easier to attack HQ
-
-#### Overall Ore Amount in Map
-* Less Ore ---> fewer building and fewer miners
-
-#### Uses for spare bytecodes
-* Broadcast bug paths (towers can potentially do this)
-* Optimize bug paths that have been broadcast
+#### Building order
+* Miner Factory
+* Helipad
+* Barracks
+* Tank Factory or Aerospace lab?
