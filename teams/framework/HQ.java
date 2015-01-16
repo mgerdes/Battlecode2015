@@ -41,8 +41,13 @@ public class HQ {
         MessageBoard.init(rcC);
 
         analyzeMap();
+        initializeChannels();
         setInitialBuildings();
         loop();
+    }
+
+    private static void initializeChannels() throws GameActionException {
+        rc.broadcast(ChannelList.TOWER_VOID_COUNT, 1000000);
     }
 
     private static void analyzeMap() {
@@ -128,9 +133,12 @@ public class HQ {
     private static void updateRallyPoint() throws GameActionException {
         MapLocation currentRallyPoint = Communication.readMapLocationFromChannel(ChannelList.RALLY_POINT);
         if (currentRallyPoint == null) {
-            Communication.setMapLocationOnChannel(
-                    Helper.getMidpoint(myHqLocation, enemyHqLocation),
-                    ChannelList.RALLY_POINT);
+            MapLocation towerWithFewestVoids = Communication.readMapLocationFromChannel(ChannelList.OUR_TOWER_WITH_LOWEST_VOID_COUNT);
+            if (towerWithFewestVoids != null) {
+                Communication.setMapLocationOnChannel(
+                        towerWithFewestVoids.add(towerWithFewestVoids.directionTo(enemyHqLocation), 4),
+                        ChannelList.RALLY_POINT);
+            }
         }
     }
 

@@ -76,6 +76,15 @@ public class Communication {
         rc.broadcast(channel + 1, location.y);
     }
 
+    public static void towerReportVoidSquareCount(MapLocation towerLocation, int count) throws
+            GameActionException {
+        int currentLowCount = rc.readBroadcast(ChannelList.TOWER_VOID_COUNT);
+        if (count < currentLowCount) {
+            rc.broadcast(ChannelList.TOWER_VOID_COUNT, count);
+            setMapLocationOnChannel(towerLocation, ChannelList.OUR_TOWER_WITH_LOWEST_VOID_COUNT);
+        }
+    }
+
     private static boolean isActiveCoordinate(int coordinate) {
         if (coordinate < 0) {
             return coordinate <= MAP_COORDINATE_ACTIVE_FLAG;

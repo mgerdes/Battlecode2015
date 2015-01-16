@@ -4,8 +4,10 @@ public class ChannelList {
     //--Locations
     public static final int STRUCTURE_TO_ATTACK = 0; //--1
     public static final int RALLY_POINT = 2; //--3
+    public static final int OUR_TOWER_WITH_LOWEST_VOID_COUNT = 4; //--5
 
     public static final int MINER_RADIUS_FROM_HQ = 90;
+    public static final int TOWER_VOID_COUNT = 91;
 
     //--Unit counts
     public static final int DRONE_COUNT = 100;
