@@ -7,7 +7,7 @@ public class SupplySharing {
     private static RobotController rc;
     private static Team myTeam;
 
-    private static final int MIN_SHARE_AMOUNT = 300;
+    private static final int MIN_SHARE_AMOUNT = 150;
 
     public static void init(RobotController rcC) {
         rc = rcC;
@@ -18,10 +18,23 @@ public class SupplySharing {
         int initialBytecode = Clock.getBytecodeNum();
         RobotInfo[] teamInTransferRange = rc.senseNearbyRobots(GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, myTeam);
         double mySupply = rc.getSupplyLevel();
+
+        //--Check if any friends have no supply
+        for (RobotInfo robot : teamInTransferRange) {
+            if (robot.type.isBuilding) {
+                continue;
+            }
+
+            if (robot.supplyLevel == 0) {
+                rc.transferSupplies((int) (mySupply / 2), robot.location);
+                return;
+            }
+        }
+
+        //--Otherwise, try to balance supply
         if (mySupply < MIN_SHARE_AMOUNT * 2) {
             return;
         }
-
         for (RobotInfo robot : teamInTransferRange) {
             if (robot.type.isBuilding) {
                 continue;
