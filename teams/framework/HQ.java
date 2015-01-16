@@ -5,7 +5,6 @@ import framework.constants.ChannelList;
 import framework.constants.Order;
 import framework.util.Helper;
 import battlecode.common.*;
-import framework.util.Debug;
 
 public class HQ {
     private static RobotController rc;
@@ -106,6 +105,10 @@ public class HQ {
         setOrders();
         queueBuildings();
 
+        if (Clock.getRoundNum() > 100) {
+            broadcastAttackLocation();
+        }
+
         if (rc.isWeaponReady()
                 && Clock.getRoundNum() > HQ_NOT_ATTACK_BEFORE_ROUND) {
             tryToAttack();
@@ -116,6 +119,12 @@ public class HQ {
                 spawn(RobotType.BEAVER);
             }
         }
+    }
+
+    private static void broadcastAttackLocation() throws GameActionException {
+        MapLocation location = getStructureToAttack();
+        rc.broadcast(ChannelList.STRUCTURE_TO_ATTACK_X, location.x);
+        rc.broadcast(ChannelList.STRUCTURE_TO_ATTACK_Y, location.y);
     }
 
     private static void queueBuildings() throws GameActionException {
@@ -129,11 +138,6 @@ public class HQ {
                 && soldierCount < 40) {
             BuildingQueue.addBuildingWithPostDelay(Building.BARRACKS, RobotType.BARRACKS.buildTurns * 2);
         }
-
-//        if (rc.getTeamOre() > RobotType.TANKFACTORY.oreCost
-//                && soldierCount > 50) {
-//            BuildingQueue.addBuildingWithPostDelay(Building.TANK_FACTORY, RobotType.TANKFACTORY.buildTurns * 2);
-//        }
     }
 
     private static void queueSupplyTowers() throws GameActionException {
@@ -168,8 +172,8 @@ public class HQ {
                 MessageBoard.setPriorityOrder(10, RobotType.SOLDIER, Order.AttackEnemyMiners);
             }
 
-            //--All other soldiers rally
-            MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.Rally);
+            //--All other soldiers rally until we have 60 soldiers
+            MessageBoard.setDefaultOrder(RobotType.SOLDIER, soldierCount < 60 ? Order.Rally : Order.AttackEnemyStructure);
         }
         else {
             MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.DefendMiners);

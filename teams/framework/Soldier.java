@@ -14,6 +14,7 @@ public class Soldier {
     private static MapLocation enemyHqLocation;
     private static Team myTeam;
     private static MapLocation myHqLocation;
+    private static int MAX_DISTANCE_SQUARED_TO_GO_TO_HQ_FOR_SUPPLIES = 49;
 
     public static void run(RobotController rcC) {
         rc = rcC;
@@ -60,8 +61,36 @@ public class Soldier {
             case DefendMiners:
                 defendMiners();
                 break;
+            case AttackEnemyStructure:
+                attackEnemyStructure();
+                break;
             default:
                 goToWayPoint();
+        }
+    }
+
+    private static void attackEnemyStructure() throws GameActionException {
+        MapLocation currentLocation = rc.getLocation();
+        MapLocation attackLocation = Communication.getAttackLocation();
+
+        //--Don't leave home without supplies
+        if (rc.getSupplyLevel() == 0
+                && currentLocation.distanceSquaredTo(myHqLocation) <= MAX_DISTANCE_SQUARED_TO_GO_TO_HQ_FOR_SUPPLIES) {
+            SafeBug.setDestination(myHqLocation);
+        }
+        else {
+            SafeBug.setDestination(attackLocation);
+        }
+
+        RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
+        if (enemiesInAttackRange.length == 0) {
+            if (rc.isCoreReady()) {
+                Direction direction = SafeBug.getDirection(currentLocation, attackLocation);
+                rc.move(direction);
+            }
+        }
+        else if (rc.isWeaponReady()) {
+            rc.attackLocation(enemiesInAttackRange[0].location);
         }
     }
 
