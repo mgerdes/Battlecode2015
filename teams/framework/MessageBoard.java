@@ -103,8 +103,8 @@ public class MessageBoard {
                         ChannelList.BASHER_DEFAULT_ORDERS);
             case DRONE:
                 return getPriorityOrDefaultOrder(
-                        ChannelList.BASHER_PRIORITY_ORDERS,
-                        ChannelList.BASHER_DEFAULT_ORDERS);
+                        ChannelList.DRONE_PRIORITY_ORDERS,
+                        ChannelList.DRONE_DEFAULT_ORDERS);
             case TANK:
                 return getPriorityOrDefaultOrder(
                         ChannelList.TANK_PRIORITY_ORDERS,

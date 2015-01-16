@@ -54,7 +54,9 @@ public class Drone {
 
         Order order = MessageBoard.getOrder(RobotType.DRONE);
         switch (order) {
-            //--Stuff here...
+            case AttackEnemyMiners:
+                swarm();
+                break;
         }
     }
 
@@ -171,10 +173,12 @@ public class Drone {
             SafeBug.setDestination(enemyHqLocation);
         }
 
+        RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.DRONE.sensorRadiusSquared, enemyTeam);
         RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
+        RobotType[] typesToIgnore = new RobotType[] {RobotType.BEAVER, RobotType.MINER};
         if (enemiesInAttackRange.length == 0) {
             if (rc.isCoreReady()) {
-                Direction direction = SafeBug.getDirection(currentLocation);
+                Direction direction = SafeBug.getDirection(currentLocation, null, enemiesInSensorRange, typesToIgnore);
                 rc.move(direction);
             }
         }

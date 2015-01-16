@@ -89,9 +89,16 @@ public class HQ {
     }
 
     private static void setInitialBuildings() throws GameActionException {
-        BuildingQueue.addBuilding(Building.MINER_FACTORY);
-        BuildingQueue.addBuilding(Building.BARRACKS);
-        BuildingQueue.addBuilding(Building.TANK_FACTORY);
+        if (rc.getTeam() == Team.A) {
+            BuildingQueue.addBuilding(Building.MINER_FACTORY);
+            BuildingQueue.addBuilding(Building.BARRACKS);
+            BuildingQueue.addBuilding(Building.TANK_FACTORY);
+        }
+        else {
+            BuildingQueue.addBuilding(Building.MINER_FACTORY);
+            BuildingQueue.addBuilding(Building.HELIPAD);
+            BuildingQueue.addBuilding(Building.HELIPAD);
+        }
     }
 
     private static void loop() {
@@ -166,14 +173,19 @@ public class HQ {
     }
 
     private static void queueBuildings() throws GameActionException {
-        //--Logic for adding buildings mid-game
-
         queueSupplyTowers();
 
-        int soldierCount = rc.readBroadcast(ChannelList.SOLDIER_COUNT);
-        if (Clock.getRoundNum() > 400
-                && rc.getTeamOre() > RobotType.TANK.oreCost) {
-            BuildingQueue.addBuildingWithPostDelay(Building.TANK_FACTORY, RobotType.TANKFACTORY.buildTurns * 2);
+        if (rc.getTeam() == Team.A) {
+            if (Clock.getRoundNum() > 400
+                    && rc.getTeamOre() > RobotType.TANKFACTORY.oreCost) {
+                BuildingQueue.addBuildingWithPostDelay(Building.TANK_FACTORY, RobotType.TANKFACTORY.buildTurns * 2);
+            }
+        }
+        else {
+            if (Clock.getRoundNum() > 300
+                    && rc.getTeamOre() > RobotType.HELIPAD.oreCost) {
+                BuildingQueue.addBuildingWithPostDelay(Building.HELIPAD, RobotType.HELIPAD.buildTurns * 2);
+            }
         }
     }
 
@@ -195,18 +207,30 @@ public class HQ {
     }
 
     private static void setOrders() throws GameActionException {
-        //--Spawn up to 30 soldiers
-        int soldierCount = rc.readBroadcast(ChannelList.SOLDIER_COUNT);
-        MessageBoard.setSpawn(RobotType.SOLDIER, soldierCount < 30 ? SPAWN_ON : SPAWN_OFF);
+        if (rc.getTeam() == Team.A) {
+            //--Spawn up to 30 soldiers
+            int soldierCount = rc.readBroadcast(ChannelList.SOLDIER_COUNT);
+            MessageBoard.setSpawn(RobotType.SOLDIER, soldierCount < 30 ? SPAWN_ON : SPAWN_OFF);
 
-        //--Spawn up to 35 miners
-        int minerCount = rc.readBroadcast(ChannelList.MINER_COUNT);
-        MessageBoard.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
+            //--Spawn up to 35 miners
+            int minerCount = rc.readBroadcast(ChannelList.MINER_COUNT);
+            MessageBoard.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
 
-        MessageBoard.setSpawn(RobotType.TANK, SPAWN_ON);
+            MessageBoard.setSpawn(RobotType.TANK, SPAWN_ON);
 
-        MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.Rally);
-        MessageBoard.setDefaultOrder(RobotType.TANK, Order.Rally);
+            MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.Rally);
+            MessageBoard.setDefaultOrder(RobotType.TANK, Order.Rally);
+        }
+        else {
+            //--Spawn up to 35 miners
+            int minerCount = rc.readBroadcast(ChannelList.MINER_COUNT);
+            MessageBoard.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
+
+            //--Spawn a bunch of drones
+            MessageBoard.setSpawn(RobotType.DRONE, SPAWN_ON);
+
+            MessageBoard.setDefaultOrder(RobotType.DRONE, Order.AttackEnemyMiners);
+        }
     }
 
     private static void tryToAttack() throws GameActionException {

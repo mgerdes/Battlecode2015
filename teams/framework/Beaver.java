@@ -23,6 +23,7 @@ public class Beaver {
 
         BuildingQueue.init(rcC);
         Bug.init(rcC);
+        SupplySharing.init(rcC);
 
         loop();
     }
@@ -39,6 +40,8 @@ public class Beaver {
     }
 
     private static void doYourThing() throws GameActionException {
+        SupplySharing.shareMore();
+        
         if (!rc.isCoreReady()) {
             return;
         }
