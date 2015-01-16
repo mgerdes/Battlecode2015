@@ -156,7 +156,7 @@ public class MessageBoard {
         int unitsNeeded = (value / 100) % 100;
         if (unitsNeeded > unitsActive) {
             //--Add one to the unit count
-            rc.broadcast(channel, value + 1000);
+            rc.broadcast(channel, value + 10000);
             return orders[value % 100];
         }
 
