@@ -171,12 +171,17 @@ public class Tank {
         }
 
         MapLocation currentLocation = rc.getLocation();
-        MapLocation destination = Communication.readMapLocationFromChannel(ChannelList.RALLY_POINT);
-        if (!currentLocation.equals(destination)) {
-            SafeBug.setDestination(destination);
-            Direction direction = SafeBug.getDirection(rc.getLocation());
-            rc.move(direction);
+        MapLocation distressLocation = Communication.getDistressLocation();
+        if (distressLocation != null) {
+            SafeBug.setDestination(distressLocation);
         }
+        else {
+            MapLocation destination = Communication.readMapLocationFromChannel(ChannelList.RALLY_POINT);
+            SafeBug.setDestination(destination);
+        }
+
+        Direction direction = SafeBug.getDirection(currentLocation);
+        rc.move(direction);
     }
 }
 
