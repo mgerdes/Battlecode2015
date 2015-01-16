@@ -10,9 +10,12 @@ public class Communication {
     private static RobotController rc;
 
     private static final int MAP_COORDINATE_ACTIVE_FLAG = 1000000;
+    private static MapLocation myHq;
 
     public static void init(RobotController rcC) {
         rc = rcC;
+
+        myHq = rc.senseHQLocation();
     }
 
     public static MapLocation getDistressLocation() throws GameActionException {
@@ -43,6 +46,18 @@ public class Communication {
             rc.broadcast(ChannelList.DISTRESS_SIGNAL_ROUND_NUMBER, Clock.getRoundNum());
             rc.broadcast(ChannelList.DISTRESS_LOCATION_X, mapLocation.x);
             rc.broadcast(ChannelList.DISTRESS_LOCATION_Y, mapLocation.y);
+            return;
+        }
+
+        //--Or we can update it if this distress location is closer to HQ
+        int x = rc.readBroadcast(ChannelList.DISTRESS_LOCATION_X);
+        int y = rc.readBroadcast(ChannelList.DISTRESS_LOCATION_Y);
+        MapLocation currentLocation = new MapLocation(x, y);
+        if (mapLocation.distanceSquaredTo(myHq) < currentLocation.distanceSquaredTo(myHq)) {
+            rc.broadcast(ChannelList.DISTRESS_SIGNAL_ROUND_NUMBER, Clock.getRoundNum());
+            rc.broadcast(ChannelList.DISTRESS_LOCATION_X, mapLocation.x);
+            rc.broadcast(ChannelList.DISTRESS_LOCATION_Y, mapLocation.y);
+            return;
         }
     }
 

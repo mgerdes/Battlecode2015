@@ -220,6 +220,10 @@ public class HQ {
 
             MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.Rally);
             MessageBoard.setDefaultOrder(RobotType.TANK, Order.Rally);
+
+            if (Clock.getRoundNum() > 400) {
+                MessageBoard.setPriorityOrder(8, RobotType.SOLDIER, Order.AttackEnemyMiners);
+            }
         }
         else {
             //--Spawn up to 35 miners

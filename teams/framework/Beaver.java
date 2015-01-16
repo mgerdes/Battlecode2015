@@ -41,7 +41,7 @@ public class Beaver {
 
     private static void doYourThing() throws GameActionException {
         SupplySharing.shareMore();
-        
+
         if (!rc.isCoreReady()) {
             return;
         }
