@@ -64,7 +64,8 @@ public class SupplySharing {
         }
 
         for (RobotInfo robot : teamInTransferRange) {
-            if (robot.type.isBuilding) {
+            if (robot.type.isBuilding
+                    || robot.type == RobotType.BEAVER) {
                 continue;
             }
 

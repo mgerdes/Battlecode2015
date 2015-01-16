@@ -148,10 +148,8 @@ public class HQ {
                 * (GameConstants.SUPPLY_GEN_MULTIPLIER
                 + Math.pow(numberOfSupplyTowers, GameConstants.SUPPLY_GEN_EXPONENT));
 
-        if (supplyProduction < supplyConsumption * 1.33) {
-            BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
-            BuildingQueue.addBuildingWithPostDelay(Building.SUPPLY_DEPOT,
-                                                   (int) (RobotType.SUPPLYDEPOT.buildTurns * 1.5));
+        if (supplyProduction < supplyConsumption * 1.1) {
+            BuildingQueue.addBuildingWithPostDelay(Building.SUPPLY_DEPOT, RobotType.SUPPLYDEPOT.buildTurns);
         }
     }
 
