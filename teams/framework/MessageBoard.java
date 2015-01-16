@@ -61,6 +61,16 @@ public class MessageBoard {
         switch (type) {
             case SOLDIER:
                 updateChannelIfDifferent(ChannelList.SOLDIER_DEFAULT_ORDER, order.ordinal());
+                break;
+            case DRONE:
+                updateChannelIfDifferent(ChannelList.DRONE_DEFAULT_ORDERS, order.ordinal());
+                break;
+            case BASHER:
+                updateChannelIfDifferent(ChannelList.BASHER_DEFAULT_ORDERS, order.ordinal());
+                break;
+            case TANK:
+                updateChannelIfDifferent(ChannelList.TANK_DEFAULT_ORDERS, order.ordinal());
+                break;
         }
     }
 
@@ -68,6 +78,16 @@ public class MessageBoard {
         switch (type) {
             case SOLDIER:
                 setPriorityOrderForChannel(ChannelList. SOLDIER_PRIORITY_ORDERS, count, order);
+                break;
+            case DRONE:
+                setPriorityOrderForChannel(ChannelList. DRONE_PRIORITY_ORDERS, count, order);
+                break;
+            case BASHER:
+                setPriorityOrderForChannel(ChannelList. BASHER_PRIORITY_ORDERS, count, order);
+                break;
+            case TANK:
+                setPriorityOrderForChannel(ChannelList. TANK_PRIORITY_ORDERS, count, order);
+                break;
         }
     }
 
@@ -77,6 +97,19 @@ public class MessageBoard {
                 return getPriorityOrDefaultOrder(
                         ChannelList.SOLDIER_PRIORITY_ORDERS,
                         ChannelList.SOLDIER_DEFAULT_ORDER);
+            case BASHER:
+                return getPriorityOrDefaultOrder(
+                        ChannelList.BASHER_PRIORITY_ORDERS,
+                        ChannelList.BASHER_DEFAULT_ORDERS);
+            case DRONE:
+                return getPriorityOrDefaultOrder(
+                        ChannelList.BASHER_PRIORITY_ORDERS,
+                        ChannelList.BASHER_DEFAULT_ORDERS);
+            case TANK:
+                return getPriorityOrDefaultOrder(
+                        ChannelList.TANK_PRIORITY_ORDERS,
+                        ChannelList.TANK_DEFAULT_ORDERS);
+
         }
 
         return Order.NoOrder;

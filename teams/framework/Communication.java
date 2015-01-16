@@ -9,14 +9,10 @@ import battlecode.common.RobotController;
 public class Communication {
     private static RobotController rc;
 
+    private static final int MAP_COORDINATE_ACTIVE_FLAG = 1000000;
+
     public static void init(RobotController rcC) {
         rc = rcC;
-    }
-
-    public static MapLocation getAttackLocation() throws GameActionException {
-        int x = rc.readBroadcast(ChannelList.STRUCTURE_TO_ATTACK_X);
-        int y = rc.readBroadcast(ChannelList.STRUCTURE_TO_ATTACK_Y);
-        return new MapLocation(x, y);
     }
 
     public static MapLocation getDistressLocation() throws GameActionException {
@@ -63,5 +59,44 @@ public class Communication {
             int currentCount = rc.readBroadcast(ChannelList.SUPPLY_DEPOT_COUNT);
             rc.broadcast(ChannelList.SUPPLY_DEPOT_COUNT, currentCount + 1);
         }
+    }
+
+    public static MapLocation readMapLocationFromChannel(int channel) throws GameActionException {
+        int x = rc.readBroadcast(channel);
+        int y = rc.readBroadcast(channel + 1);
+        if (!isActiveCoordinate(x)) {
+            return null;
+        }
+
+        return new MapLocation(decodeCoordinate(x), y);
+    }
+
+    public static void setMapLocationOnChannel(MapLocation location, int channel) throws GameActionException {
+        rc.broadcast(channel, encodeCoordinate(location.x));
+        rc.broadcast(channel + 1, location.y);
+    }
+
+    private static boolean isActiveCoordinate(int coordinate) {
+        if (coordinate < 0) {
+            return coordinate <= MAP_COORDINATE_ACTIVE_FLAG;
+        }
+
+        return coordinate >= MAP_COORDINATE_ACTIVE_FLAG;
+    }
+
+    private static int encodeCoordinate(int value) {
+        if (value < 0) {
+            return value - MAP_COORDINATE_ACTIVE_FLAG;
+        }
+
+        return value + MAP_COORDINATE_ACTIVE_FLAG;
+    }
+
+    private static int decodeCoordinate(int value) {
+        if (value < 0) {
+            return value + MAP_COORDINATE_ACTIVE_FLAG;
+        }
+
+        return value - MAP_COORDINATE_ACTIVE_FLAG;
     }
 }

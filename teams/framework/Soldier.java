@@ -1,6 +1,7 @@
 package framework;
 
 import battlecode.common.*;
+import framework.constants.ChannelList;
 import framework.constants.Order;
 import framework.navigation.Bug;
 import framework.navigation.SafeBug;
@@ -64,14 +65,15 @@ public class Soldier {
             case AttackEnemyStructure:
                 attackEnemyStructure();
                 break;
-            default:
-                goToWayPoint();
+            case Rally:
+                goToRallyPoint();
+                break;
         }
     }
 
     private static void attackEnemyStructure() throws GameActionException {
         MapLocation currentLocation = rc.getLocation();
-        MapLocation attackLocation = Communication.getAttackLocation();
+        MapLocation attackLocation = Communication.readMapLocationFromChannel(ChannelList.STRUCTURE_TO_ATTACK);
 
         //--Don't leave home without supplies
         if (rc.getSupplyLevel() == 0
@@ -156,7 +158,7 @@ public class Soldier {
         rc.move(direction);
     }
 
-    private static void goToWayPoint() throws GameActionException {
+    private static void goToRallyPoint() throws GameActionException {
         if (rc.isWeaponReady()) {
             RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.SOLDIER.attackRadiusSquared, enemyTeam);
             if (enemiesInAttackRange.length > 0) {
@@ -169,7 +171,7 @@ public class Soldier {
         }
 
         MapLocation currentLocation = rc.getLocation();
-        MapLocation destination = Helper.getWaypoint(0.7, myHqLocation, enemyHqLocation);
+        MapLocation destination = Communication.readMapLocationFromChannel(ChannelList.RALLY_POINT);
         if (!currentLocation.equals(destination)) {
             SafeBug.setDestination(destination);
             Direction direction = SafeBug.getDirection(rc.getLocation());

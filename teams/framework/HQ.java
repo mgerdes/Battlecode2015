@@ -107,6 +107,7 @@ public class HQ {
 
         setOrders();
         queueBuildings();
+        updateRallyPoint();
 
         if (Clock.getRoundNum() > HQ_BROADCAST_ATTACK_LOCATION_AFTER_ROUND) {
             broadcastAttackLocation();
@@ -124,10 +125,36 @@ public class HQ {
         }
     }
 
+    private static void updateRallyPoint() throws GameActionException {
+        MapLocation currentRallyPoint = Communication.readMapLocationFromChannel(ChannelList.RALLY_POINT);
+        if (currentRallyPoint == null) {
+            Communication.setMapLocationOnChannel(
+                    Helper.getMidpoint(myHqLocation, enemyHqLocation),
+                    ChannelList.RALLY_POINT);
+        }
+    }
+
     private static void broadcastAttackLocation() throws GameActionException {
-        MapLocation location = getStructureToAttack();
-        rc.broadcast(ChannelList.STRUCTURE_TO_ATTACK_X, location.x);
-        rc.broadcast(ChannelList.STRUCTURE_TO_ATTACK_Y, location.y);
+        //--if enemy has towers
+        //    return the closest one to our HQ
+        //--else return enemy HQ
+        MapLocation[] enemyTowerLocations = rc.senseEnemyTowerLocations();
+        if (enemyTowerLocations.length == 0) {
+            Communication.setMapLocationOnChannel(enemyHqLocation, ChannelList.STRUCTURE_TO_ATTACK);
+            return;
+        }
+
+        int index = 0;
+        int minDistance = Integer.MAX_VALUE;
+        for (int i = 0; i < enemyTowerLocations.length; i++) {
+            int thisDistance = myHqLocation.distanceSquaredTo(enemyTowerLocations[i]);
+            if (thisDistance < minDistance) {
+                minDistance = thisDistance;
+                index = i;
+            }
+        }
+
+        Communication.setMapLocationOnChannel(enemyTowerLocations[index], ChannelList.STRUCTURE_TO_ATTACK);
     }
 
     private static void queueBuildings() throws GameActionException {
@@ -226,28 +253,6 @@ public class HQ {
 
         int minerCount = rc.readBroadcast(ChannelList.MINER_COUNT);
         return minerCount > 10;
-    }
-
-    private static MapLocation getStructureToAttack() {
-        //--if enemy has towers
-        //    return the closest one to our HQ
-        //--else return enemy HQ
-        MapLocation[] enemyTowerLocations = rc.senseEnemyTowerLocations();
-        if (enemyTowerLocations.length == 0) {
-            return enemyHqLocation;
-        }
-
-        int index = 0;
-        int minDistance = Integer.MAX_VALUE;
-        for (int i = 0; i < enemyTowerLocations.length; i++) {
-            int thisDistance = myHqLocation.distanceSquaredTo(enemyTowerLocations[i]);
-            if (thisDistance < minDistance) {
-                minDistance = thisDistance;
-                index = i;
-            }
-        }
-
-        return enemyTowerLocations[index];
     }
 
     private static void spawn(RobotType type) throws GameActionException {

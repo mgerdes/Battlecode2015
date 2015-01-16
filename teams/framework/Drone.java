@@ -136,7 +136,7 @@ public class Drone {
 
     private static void attackEnemyStructure() throws GameActionException {
         MapLocation currentLocation = rc.getLocation();
-        MapLocation attackLocation = Communication.getAttackLocation();
+        MapLocation attackLocation = Communication.readMapLocationFromChannel(ChannelList.STRUCTURE_TO_ATTACK);
 
         //--Don't leave home without supplies
         if (rc.getSupplyLevel() == 0
