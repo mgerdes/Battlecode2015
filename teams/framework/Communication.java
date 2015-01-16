@@ -49,4 +49,19 @@ public class Communication {
             rc.broadcast(ChannelList.DISTRESS_LOCATION_Y, mapLocation.y);
         }
     }
+
+    public static void iAmASupplyTower() throws GameActionException {
+        //--If count is expired, set to 1
+        //--Otherwise increment the count by 1
+        int lastUpdated = rc.readBroadcast(ChannelList.SUPPLY_DEPOT_ROUND_UPDATED);
+        int currentRound = Clock.getRoundNum();
+        if (lastUpdated < currentRound) {
+            rc.broadcast(ChannelList.SUPPLY_DEPOT_ROUND_UPDATED, currentRound);
+            rc.broadcast(ChannelList.SUPPLY_DEPOT_COUNT, 1);
+        }
+        else {
+            int currentCount = rc.readBroadcast(ChannelList.SUPPLY_DEPOT_COUNT);
+            rc.broadcast(ChannelList.SUPPLY_DEPOT_COUNT, currentCount + 1);
+        }
+    }
 }

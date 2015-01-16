@@ -26,12 +26,6 @@ public class HQ {
     private static double averageTowerToHqDistance;
     private static double oreNearHq;
 
-    //--One time triggers
-    private static boolean trigger1;
-    private static boolean trigger2;
-    private static boolean trigger3;
-    private static boolean trigger4;
-
     public static void run(RobotController rcC) throws GameActionException {
         rc = rcC;
 
@@ -96,7 +90,6 @@ public class HQ {
     private static void loop() {
         while (true) {
             try {
-                Debug.setString(0, String.format("%f at beginning of round", rc.getTeamOre()), rc);
                 doYourThing();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -128,44 +121,44 @@ public class HQ {
     private static void queueBuildings() throws GameActionException {
         //--Logic for adding buildings mid-game
 
-        int unitCount = rc.readBroadcast(ChannelList.BASHER_COUNT)
-                + rc.readBroadcast(ChannelList.MINER_COUNT)
-                + rc.readBroadcast(ChannelList.SOLDIER_COUNT);
-
-        if (!trigger1
-            && unitCount > 30) {
-            BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
-            trigger1 = true;
-        }
-
-        if (!trigger2
-                && unitCount > 45) {
-            BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
-            trigger2 = true;
-        }
-
-        if (!trigger2
-                && unitCount > 55) {
-            BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
-            trigger2 = true;
-        }
+        queueSupplyTowers();
 
         int soldierCount = rc.readBroadcast(ChannelList.SOLDIER_COUNT);
         if (Clock.getRoundNum() > 400
                 && rc.getTeamOre() > RobotType.BARRACKS.oreCost
-                && soldierCount < 50) {
+                && soldierCount < 40) {
             BuildingQueue.addBuildingWithPostDelay(Building.BARRACKS, RobotType.BARRACKS.buildTurns * 2);
         }
 
-        if (rc.getTeamOre() > RobotType.TANKFACTORY.oreCost
-                && soldierCount > 50) {
-            BuildingQueue.addBuildingWithPostDelay(Building.TANK_FACTORY, RobotType.TANKFACTORY.buildTurns * 2);
+//        if (rc.getTeamOre() > RobotType.TANKFACTORY.oreCost
+//                && soldierCount > 50) {
+//            BuildingQueue.addBuildingWithPostDelay(Building.TANK_FACTORY, RobotType.TANKFACTORY.buildTurns * 2);
+//        }
+    }
+
+    private static void queueSupplyTowers() throws GameActionException {
+        //--Add 2 supply depos if we are not producing enough
+        int supplyConsumption = rc.readBroadcast(ChannelList.BASHER_COUNT) * RobotType.BASHER.supplyUpkeep
+                + rc.readBroadcast(ChannelList.MINER_COUNT) * RobotType.MINER.supplyUpkeep
+                + rc.readBroadcast(ChannelList.SOLDIER_COUNT) * RobotType.SOLDIER.supplyUpkeep;
+
+        int numberOfSupplyTowers = rc.readBroadcast(ChannelList.SUPPLY_DEPOT_COUNT);
+
+        double supplyProduction = GameConstants.SUPPLY_GEN_BASE
+                * (GameConstants.SUPPLY_GEN_MULTIPLIER
+                + Math.pow(numberOfSupplyTowers, GameConstants.SUPPLY_GEN_EXPONENT));
+
+        if (supplyProduction < supplyConsumption * 1.33) {
+            BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
+            BuildingQueue.addBuildingWithPostDelay(Building.SUPPLY_DEPOT,
+                                                   (int) (RobotType.SUPPLYDEPOT.buildTurns * 1.5));
         }
     }
 
     private static void setOrders() throws GameActionException {
-        //--Always spawn soldiers
-        MessageBoard.setSpawn(RobotType.SOLDIER, SPAWN_ON);
+        //--Spawn up to 50 soldiers
+        int soldierCount = rc.readBroadcast(ChannelList.SOLDIER_COUNT);
+        MessageBoard.setSpawn(RobotType.SOLDIER, soldierCount < 100 ? SPAWN_ON : SPAWN_OFF);
 
         //--Spawn up to 35 miners
         int minerCount = rc.readBroadcast(ChannelList.MINER_COUNT);
@@ -181,7 +174,7 @@ public class HQ {
             MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.Rally);
         }
         else {
-            MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.Rally);
+            MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.DefendMiners);
         }
     }
 

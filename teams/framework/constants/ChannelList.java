@@ -13,6 +13,10 @@ public class ChannelList {
     public static final int SOLDIER_COUNT = 103;
     public static final int TANK_COUNT = 104;
 
+    //--Building counts
+    public static final int SUPPLY_DEPOT_COUNT = 200;
+    public static final int SUPPLY_DEPOT_ROUND_UPDATED = 201;
+
     //--Production orders
     public static final int MORE_MINERS = 500;
     public static final int MORE_DRONES = 501;
