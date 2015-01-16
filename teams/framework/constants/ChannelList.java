@@ -1,6 +1,5 @@
 package framework.constants;
 
-//--Enum class
 public class ChannelList {
     public static final int TACTIC = 0;
     public static final int STRUCTURE_TO_ATTACK_X = 1;
@@ -14,19 +13,12 @@ public class ChannelList {
     public static final int SOLDIER_COUNT = 103;
     public static final int TANK_COUNT = 104;
 
-    //--HQ orders
+    //--Production orders
     public static final int MORE_MINERS = 500;
     public static final int MORE_DRONES = 501;
     public static final int MORE_BASHERS = 502;
     public static final int MORE_SOLDIERS = 503;
     public static final int MORE_TANKS = 504;
-
-    public static final int DRONE_SWARM = 600;
-    public static final int DRONE_DEFEND = 601;
-    public static final int DRONE_ATTACK = 602;
-
-    public static final int SOLDIER_ATTACK_ENEMY_MINERS = 700;
-    public static final int SOLDIER_DEFEND_MINERS = 701;
 
     //--Job reporting
     public static final int SUPPLY_MINERS_JOB_IS_NEEDED = 1000;
@@ -42,4 +34,15 @@ public class ChannelList {
     public static final int DISTRESS_SIGNAL_CREATOR = 5001;
     public static final int DISTRESS_LOCATION_X = 5002;
     public static final int DISTRESS_LOCATION_Y = 5003;
+
+    //--Message board
+
+    public static final int SOLDIER_PRIORITY_ORDERS = 6000;
+    public static final int BASHER_PRIORITY_ORDERS = 6010;
+    public static final int DRONE_PRIORITY_ORDERS = 6020;
+
+    public static final int SOLDIER_DEFAULT_ORDER = 7000;
+    public static final int BASHER_DEFAULT_ORDERS = 7001;
+    public static final int DRONE_DEFAULT_ORDERS = 7002;
 }
+

@@ -1,7 +1,6 @@
 package framework;
 
 import framework.constants.ChannelList;
-import framework.constants.Order;
 import framework.util.Debug;
 import framework.util.Helper;
 import battlecode.common.*;
@@ -10,13 +9,14 @@ public class Spawner {
     private static RobotController rc;
     private static RobotType[] typesBuiltHere;
     private static int[] robotCountChannels;
-    private static int[] robotProductionChannels;
     private static Team myTeam;
 
     public static void init(RobotController rcC) {
         rc = rcC;
 
         myTeam = rc.getTeam();
+
+        MessageBoard.init(rcC);
 
         buildUnitData();
 
@@ -50,11 +50,10 @@ public class Spawner {
     }
 
     private static void tryToSpawn() throws GameActionException {
-        for (int i = 0; i < typesBuiltHere.length; i++) {
-            int channel = robotProductionChannels[i];
-            if (rc.readBroadcast(channel) == Order.YES
-                    && rc.getTeamOre() >= typesBuiltHere[i].oreCost) {
-                spawn(typesBuiltHere[i]);
+        for (RobotType type : typesBuiltHere) {
+            if (rc.getTeamOre() >= type.oreCost
+                    && MessageBoard.shouldSpawn(type)) {
+                spawn(type);
                 return;
             }
         }
@@ -76,25 +75,22 @@ public class Spawner {
 
     private static void buildUnitData() {
         RobotType myType = rc.getType();
-        if (myType == RobotType.MINERFACTORY) {
-            typesBuiltHere = new RobotType[]{RobotType.MINER};
-            robotCountChannels = new int[]{ChannelList.MINER_COUNT};
-            robotProductionChannels = new int[]{ChannelList.MORE_MINERS};
-        }
-        else if (myType == RobotType.BARRACKS) {
-            typesBuiltHere = new RobotType[]{RobotType.SOLDIER, RobotType.BASHER};
-            robotCountChannels = new int[]{ChannelList.SOLDIER_COUNT, ChannelList.BASHER_COUNT};
-            robotProductionChannels = new int[]{ChannelList.MORE_SOLDIERS, ChannelList.MORE_BASHERS};
-        }
-        else if (myType == RobotType.HELIPAD) {
-            typesBuiltHere = new RobotType[]{RobotType.DRONE};
-            robotCountChannels = new int[]{ChannelList.DRONE_COUNT};
-            robotProductionChannels = new int[]{ChannelList.MORE_DRONES};
-        }
-        else if (myType == RobotType.TANKFACTORY) {
-            typesBuiltHere = new RobotType[]{RobotType.TANK};
-            robotCountChannels = new int[]{ChannelList.TANK_COUNT};
-            robotProductionChannels = new int[]{ChannelList.MORE_TANKS};
+        switch (myType) {
+            case MINERFACTORY:
+                typesBuiltHere = new RobotType[]{RobotType.MINER};
+                robotCountChannels = new int[]{ChannelList.MINER_COUNT};
+                break;
+            case BARRACKS:
+                typesBuiltHere = new RobotType[]{RobotType.SOLDIER, RobotType.BASHER};
+                robotCountChannels = new int[]{ChannelList.SOLDIER_COUNT, ChannelList.BASHER_COUNT};
+                break;
+            case HELIPAD:
+                typesBuiltHere = new RobotType[]{RobotType.DRONE};
+                robotCountChannels = new int[]{ChannelList.DRONE_COUNT};
+                break;
+            case TANKFACTORY:
+                typesBuiltHere = new RobotType[]{RobotType.TANK};
+                robotCountChannels = new int[]{ChannelList.TANK_COUNT};
         }
     }
 }

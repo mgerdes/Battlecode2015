@@ -1,13 +1,12 @@
 package framework;
 
 import framework.constants.ChannelList;
-import framework.constants.Order;
 import battlecode.common.*;
+import framework.constants.Order;
 import framework.navigation.Bug;
 import framework.navigation.CircleNav;
 import framework.navigation.SafeBug;
 import framework.util.Debug;
-import framework.constants.Job;
 
 public class Drone {
     private static RobotController rc;
@@ -34,6 +33,7 @@ public class Drone {
         CircleNav.init(rcC, myHqLocation, myHqLocation.directionTo(enemyHqLocation));
         SupplySharing.init(rcC);
         Communication.init(rcC);
+        MessageBoard.init(rcC);
 
         loop();
     }
@@ -50,25 +50,11 @@ public class Drone {
     }
 
     private static void doYourThing() throws GameActionException {
-
-        if (Communication.someoneIsNeededFor(Job.SUPPLY_MINERS)) {
-            Debug.setString(1, "doing job", rc);
-            Communication.reportTo(Job.SUPPLY_MINERS);
-            supplyMiners();
-            return;
-        }
-
-        Debug.setString(1, "not doing job", rc);
         SupplySharing.share();
 
-        if (rc.readBroadcast(ChannelList.DRONE_SWARM) == Order.YES) {
-            swarm();
-        }
-        else if (rc.readBroadcast(ChannelList.DRONE_ATTACK) == Order.YES) {
-            attackEnemyStructure();
-        }
-        else if (rc.readBroadcast(ChannelList.DRONE_DEFEND) == Order.YES) {
-            fortify();
+        Order order = MessageBoard.getOrder(RobotType.DRONE);
+        switch (order) {
+            //--Stuff here...
         }
     }
 

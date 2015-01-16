@@ -16,6 +16,8 @@ public class HQ {
     private static MapLocation enemyHqLocation;
 
     private static final int HQ_NOT_ATTACK_BEFORE_ROUND = 40;
+    private static final int SPAWN_ON = 1;
+    private static final int SPAWN_OFF = 0;
 
     //--Map analysis data
     private static int distanceBetweenHq;
@@ -41,6 +43,7 @@ public class HQ {
         BuildingQueue.init(rcC);
         Communication.init(rcC);
         SupplySharing.init(rcC);
+        MessageBoard.init(rcC);
 
         analyzeMap();
         setInitialBuildings();
@@ -161,16 +164,24 @@ public class HQ {
     }
 
     private static void setOrders() throws GameActionException {
-        Communication.setOrder(Order.SPAWN_MORE_SOLDIERS, Order.YES);
+        //--Always spawn soldiers
+        MessageBoard.setSpawn(RobotType.SOLDIER, SPAWN_ON);
 
+        //--Spawn up to 35 miners
         int minerCount = rc.readBroadcast(ChannelList.MINER_COUNT);
-        Communication.setOrder(Order.SPAWN_MORE_MINERS, minerCount < 35 ? Order.YES : Order.NO);
+        MessageBoard.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
 
         if (rc.getTeam() == Team.A) {
-            Communication.setOrder(Order.SOLDIER_ATTACK_ENEMY_MINERS, Order.YES);
+            //--10 soldiers attack enemy miners for first 500 rounds
+            if (Clock.getRoundNum() < 500) {
+                MessageBoard.setPriorityOrder(10, RobotType.SOLDIER, Order.AttackEnemyMiners);
+            }
+
+            //--All other soldiers rally
+            MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.Rally);
         }
         else {
-            Communication.setOrder(Order.SOLDIER_DEFEND_MINERS, Order.YES);
+            MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.Rally);
         }
     }
 

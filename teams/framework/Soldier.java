@@ -1,11 +1,10 @@
 package framework;
 
 import battlecode.common.*;
-import battlecode.world.Robot;
-import framework.constants.ChannelList;
 import framework.constants.Order;
 import framework.navigation.Bug;
 import framework.navigation.SafeBug;
+import framework.util.Debug;
 import framework.util.Helper;
 
 public class Soldier {
@@ -28,6 +27,8 @@ public class Soldier {
         Bug.init(rcC);
         SupplySharing.init(rcC);
         Communication.init(rcC);
+        MessageBoard.init(rcC);
+
         loop();
     }
 
@@ -45,14 +46,22 @@ public class Soldier {
     private static void doYourThing() throws GameActionException {
         SupplySharing.share();
 
-        if (rc.readBroadcast(ChannelList.SOLDIER_ATTACK_ENEMY_MINERS) == Order.YES) {
-            attackEnemyMiners();
-        }
-        else if (rc.readBroadcast(ChannelList.SOLDIER_DEFEND_MINERS) == Order.YES) {
-            defendMiners();
-        }
-        else {
-            goToWayPoint();
+        int initialBytecode = Clock.getBytecodeNum();
+        Order order = MessageBoard.getOrder(rc.getType());
+        Debug.setString(
+                0,
+                String.format("%s bytecodes to get order", Clock.getBytecodeNum() - initialBytecode),
+                rc);
+
+        switch (order) {
+            case AttackEnemyMiners:
+                attackEnemyMiners();
+                break;
+            case DefendMiners:
+                defendMiners();
+                break;
+            default:
+                goToWayPoint();
         }
     }
 
