@@ -34,6 +34,9 @@ public class MessageBoard {
             case SOLDIER:
                 updateChannelIfDifferent(ChannelList.MORE_SOLDIERS, value);
                 break;
+            case TANK:
+                updateChannelIfDifferent(ChannelList.MORE_TANKS, value);
+                break;
         }
     }
 

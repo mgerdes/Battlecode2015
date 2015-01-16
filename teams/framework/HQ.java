@@ -14,7 +14,9 @@ public class HQ {
     private static MapLocation myHqLocation;
     private static MapLocation enemyHqLocation;
 
-    private static final int HQ_NOT_ATTACK_BEFORE_ROUND = 40;
+    private static final int HQ_TRY_ATTACK_AFTER_ROUND = 100;
+    private static final int HQ_BROADCAST_ATTACK_LOCATION_AFTER_ROUND = 100;
+
     private static final int SPAWN_ON = 1;
     private static final int SPAWN_OFF = 0;
 
@@ -84,6 +86,7 @@ public class HQ {
     private static void setInitialBuildings() throws GameActionException {
         BuildingQueue.addBuilding(Building.MINER_FACTORY);
         BuildingQueue.addBuilding(Building.BARRACKS);
+        BuildingQueue.addBuilding(Building.TANK_FACTORY);
     }
 
     private static void loop() {
@@ -105,12 +108,12 @@ public class HQ {
         setOrders();
         queueBuildings();
 
-        if (Clock.getRoundNum() > 100) {
+        if (Clock.getRoundNum() > HQ_BROADCAST_ATTACK_LOCATION_AFTER_ROUND) {
             broadcastAttackLocation();
         }
 
         if (rc.isWeaponReady()
-                && Clock.getRoundNum() > HQ_NOT_ATTACK_BEFORE_ROUND) {
+                && Clock.getRoundNum() > HQ_TRY_ATTACK_AFTER_ROUND) {
             tryToAttack();
         }
 
@@ -134,9 +137,8 @@ public class HQ {
 
         int soldierCount = rc.readBroadcast(ChannelList.SOLDIER_COUNT);
         if (Clock.getRoundNum() > 400
-                && rc.getTeamOre() > RobotType.BARRACKS.oreCost
-                && soldierCount < 40) {
-            BuildingQueue.addBuildingWithPostDelay(Building.BARRACKS, RobotType.BARRACKS.buildTurns * 2);
+                && rc.getTeamOre() > RobotType.TANK.oreCost) {
+            BuildingQueue.addBuildingWithPostDelay(Building.TANK_FACTORY, RobotType.TANKFACTORY.buildTurns * 2);
         }
     }
 
@@ -158,26 +160,18 @@ public class HQ {
     }
 
     private static void setOrders() throws GameActionException {
-        //--Spawn up to 50 soldiers
+        //--Spawn up to 30 soldiers
         int soldierCount = rc.readBroadcast(ChannelList.SOLDIER_COUNT);
-        MessageBoard.setSpawn(RobotType.SOLDIER, soldierCount < 100 ? SPAWN_ON : SPAWN_OFF);
+        MessageBoard.setSpawn(RobotType.SOLDIER, soldierCount < 30 ? SPAWN_ON : SPAWN_OFF);
 
         //--Spawn up to 35 miners
         int minerCount = rc.readBroadcast(ChannelList.MINER_COUNT);
         MessageBoard.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
 
-        if (rc.getTeam() == Team.A) {
-            //--10 soldiers attack enemy miners for first 500 rounds
-            if (Clock.getRoundNum() < 500) {
-                MessageBoard.setPriorityOrder(10, RobotType.SOLDIER, Order.AttackEnemyMiners);
-            }
+        MessageBoard.setSpawn(RobotType.TANK, SPAWN_ON);
 
-            //--All other soldiers rally until we have 60 soldiers
-            MessageBoard.setDefaultOrder(RobotType.SOLDIER, soldierCount < 60 ? Order.Rally : Order.AttackEnemyStructure);
-        }
-        else {
-            MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.DefendMiners);
-        }
+        MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.Rally);
+        MessageBoard.setDefaultOrder(RobotType.TANK, Order.Rally);
     }
 
     private static void tryToAttack() throws GameActionException {

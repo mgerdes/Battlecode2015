@@ -32,6 +32,9 @@ public class RobotPlayer {
         else if (type == RobotType.SOLDIER) {
             Soldier.run(rc);
         }
+        else if (type == RobotType.TANK) {
+            Soldier.run(rc);
+        }
         else {
             Spawner.init(rc);
         }
