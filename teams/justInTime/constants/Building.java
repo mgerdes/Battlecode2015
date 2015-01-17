@@ -8,4 +8,5 @@ public class Building {
     public static final int SUPPLY_DEPOT = 3;
     public static final int BARRACKS = 4;
     public static final int TANK_FACTORY = 5;
+    public static final int AEROSPACE_LAB = 6;
 }

@@ -13,9 +13,8 @@ public class ChannelList {
     //--Unit counts
     public static final int DRONE_COUNT = 100;
     public static final int MINER_COUNT = 101;
-    public static final int BASHER_COUNT = 102;
-    public static final int SOLDIER_COUNT = 103;
-    public static final int TANK_COUNT = 104;
+    public static final int SOLDIER_COUNT = 102;
+    public static final int LAUNCHER_COUNT = 103;
 
     //--Building counts
     public static final int SUPPLY_DEPOT_COUNT = 200;
@@ -24,9 +23,8 @@ public class ChannelList {
     //--Production orders
     public static final int MORE_MINERS = 500;
     public static final int MORE_DRONES = 501;
-    public static final int MORE_BASHERS = 502;
-    public static final int MORE_SOLDIERS = 503;
-    public static final int MORE_TANKS = 504;
+    public static final int MORE_SOLDIERS = 502;
+    public static final int MORE_LAUNCHERS = 503;
 
     //--Building Queue
     public static final int BUILDING_QUEUE_START = 3000;

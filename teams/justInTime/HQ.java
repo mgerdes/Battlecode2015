@@ -92,6 +92,9 @@ public class HQ {
         BuildingQueue.addBuilding(Building.MINER_FACTORY);
         BuildingQueue.addBuilding(Building.HELIPAD);
         BuildingQueue.addBuilding(Building.BARRACKS);
+        BuildingQueue.addBuilding(Building.AEROSPACE_LAB);
+        BuildingQueue.addBuilding(Building.BARRACKS);
+        BuildingQueue.addBuilding(Building.AEROSPACE_LAB);
     }
 
     private static void loop() {
@@ -171,9 +174,10 @@ public class HQ {
 
     private static void queueSupplyTowers() throws GameActionException {
         //--Add 2 supply depos if we are not producing enough
-        int supplyConsumption = rc.readBroadcast(ChannelList.BASHER_COUNT) * RobotType.BASHER.supplyUpkeep
+        int supplyConsumption = rc.readBroadcast(ChannelList.LAUNCHER_COUNT) * RobotType.LAUNCHER.supplyUpkeep
                 + rc.readBroadcast(ChannelList.MINER_COUNT) * RobotType.MINER.supplyUpkeep
-                + rc.readBroadcast(ChannelList.SOLDIER_COUNT) * RobotType.SOLDIER.supplyUpkeep;
+                + rc.readBroadcast(ChannelList.SOLDIER_COUNT) * RobotType.SOLDIER.supplyUpkeep
+                + rc.readBroadcast(ChannelList.DRONE_COUNT) * RobotType.DRONE.supplyUpkeep;
 
         int numberOfSupplyTowers = rc.readBroadcast(ChannelList.SUPPLY_DEPOT_COUNT);
 

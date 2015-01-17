@@ -81,16 +81,16 @@ public class Spawner {
                 robotCountChannels = new int[]{ChannelList.MINER_COUNT};
                 break;
             case BARRACKS:
-                typesBuiltHere = new RobotType[]{RobotType.SOLDIER, RobotType.BASHER};
-                robotCountChannels = new int[]{ChannelList.SOLDIER_COUNT, ChannelList.BASHER_COUNT};
+                typesBuiltHere = new RobotType[]{RobotType.SOLDIER};
+                robotCountChannels = new int[]{ChannelList.SOLDIER_COUNT};
                 break;
             case HELIPAD:
                 typesBuiltHere = new RobotType[]{RobotType.DRONE};
                 robotCountChannels = new int[]{ChannelList.DRONE_COUNT};
                 break;
-            case TANKFACTORY:
-                typesBuiltHere = new RobotType[]{RobotType.TANK};
-                robotCountChannels = new int[]{ChannelList.TANK_COUNT};
+            case AEROSPACELAB:
+                typesBuiltHere = new RobotType[]{RobotType.LAUNCHER};
+                robotCountChannels = new int[]{ChannelList.LAUNCHER_COUNT};
         }
     }
 }

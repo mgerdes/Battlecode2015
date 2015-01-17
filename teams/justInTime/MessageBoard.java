@@ -28,14 +28,11 @@ public class MessageBoard {
             case DRONE:
                 updateChannelIfDifferent(ChannelList.MORE_DRONES, value);
                 break;
-            case BASHER:
-                updateChannelIfDifferent(ChannelList.MORE_BASHERS, value);
-                break;
             case SOLDIER:
                 updateChannelIfDifferent(ChannelList.MORE_SOLDIERS, value);
                 break;
-            case TANK:
-                updateChannelIfDifferent(ChannelList.MORE_TANKS, value);
+            case LAUNCHER:
+                updateChannelIfDifferent(ChannelList.MORE_LAUNCHERS, value);
                 break;
         }
     }
@@ -46,12 +43,10 @@ public class MessageBoard {
                 return rc.readBroadcast(ChannelList.MORE_MINERS) == 1;
             case SOLDIER:
                 return rc.readBroadcast(ChannelList.MORE_SOLDIERS) == 1;
-            case BASHER:
-                return rc.readBroadcast(ChannelList.MORE_BASHERS) == 1;
             case DRONE:
                 return rc.readBroadcast(ChannelList.MORE_DRONES) == 1;
-            case TANK:
-                return rc.readBroadcast(ChannelList.MORE_TANKS) == 1;
+            case LAUNCHER:
+                return rc.readBroadcast(ChannelList.MORE_LAUNCHERS) == 1;
         }
 
         return false;

@@ -79,6 +79,8 @@ public class Beaver {
                 return build(RobotType.BARRACKS);
             case Building.TANK_FACTORY:
                 return build(RobotType.TANKFACTORY);
+            case Building.AEROSPACE_LAB:
+                return build(RobotType.AEROSPACELAB);
             default:
                 return false;
         }
