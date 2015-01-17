@@ -7,6 +7,7 @@ import justInTime.navigation.Bug;
 import justInTime.navigation.CircleNav;
 import justInTime.navigation.SafeBug;
 import justInTime.util.Debug;
+import justInTime.util.Helper;
 
 public class Drone {
     private static RobotController rc;
@@ -19,6 +20,8 @@ public class Drone {
     private static MapLocation myHqLocation;
     private static Team myTeam;
     private static int robotThatNeedsSupplyId;
+
+    private static int[] directions = new int[]{0, -1, 1, -2, 2};
 
     public static void run(RobotController rcC) {
         rc = rcC;
@@ -115,9 +118,8 @@ public class Drone {
     private static void swarm() throws GameActionException {
         MapLocation currentLocation = rc.getLocation();
 
-        //--Don't leave home without supplies
-        if (rc.getSupplyLevel() == 0
-                && currentLocation.distanceSquaredTo(myHqLocation) <= MAX_DISTANCE_TO_GO_TO_HQ_FOR_SUPPLIES) {
+        //--Go home if we run out of supplies
+        if (rc.getSupplyLevel() < 100) {
             SafeBug.setDestination(myHqLocation);
         }
         else {
@@ -125,16 +127,72 @@ public class Drone {
         }
 
         RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.DRONE.sensorRadiusSquared, enemyTeam);
+        RobotType[] typesToIgnore = new RobotType[]{RobotType.BEAVER, RobotType.MINER};
+
+        boolean iAmCoreReady = rc.isCoreReady();
+
+        if (iAmCoreReady) {
+            //--If any fighting units can shoot us, move away
+            for (RobotInfo enemy : enemiesInSensorRange) {
+                if (enemy.type != RobotType.MINER
+                        && enemy.type != RobotType.BEAVER
+                        && enemy.type.attackRadiusSquared >= currentLocation.distanceSquaredTo(enemy.location)) {
+                    Direction runawayDirection = SafeBug.getDirection(
+                            currentLocation,
+                            null,
+                            enemiesInSensorRange,
+                            typesToIgnore);
+                    Debug.setString(0, runawayDirection.toString(), rc);
+                    if (runawayDirection != Direction.NONE) {
+                        rc.move(runawayDirection);
+                        return;
+                    }
+                    else {
+                        //--We could not find a runaway direction... turn around!
+                        runawayDirection = SafeBug.getPreviousDirection().opposite();
+                        if (runawayDirection != Direction.NONE) {
+                            tryMove(runawayDirection);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        //--If I can shoot any units, shoot them or wait until I can shoot them
+        //--Otherwise, continue towards enemy using the awesome safe bug
         RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
-        RobotType[] typesToIgnore = new RobotType[] {RobotType.BEAVER, RobotType.MINER};
-        if (enemiesInAttackRange.length == 0) {
-            if (rc.isCoreReady()) {
-                Direction direction = SafeBug.getDirection(currentLocation, null, enemiesInSensorRange, typesToIgnore);
+        if (enemiesInAttackRange.length > 0) {
+            if (rc.isWeaponReady()) {
+                double lowestHealth = 1000000;
+                int index = 0;
+                for (int i = 0; i < enemiesInAttackRange.length; i++) {
+                    double thisHealth = enemiesInAttackRange[0].health;
+                    if (thisHealth < lowestHealth) {
+                        lowestHealth = thisHealth;
+                        index = i;
+                    }
+                }
+
+                rc.attackLocation(enemiesInAttackRange[index].location);
+            }
+        }
+        else if (iAmCoreReady) {
+            Direction direction = SafeBug.getDirection(currentLocation, null, enemiesInSensorRange, typesToIgnore);
+            if (direction != Direction.NONE) {
                 rc.move(direction);
             }
         }
-        else if (rc.isWeaponReady()) {
-            rc.attackLocation(enemiesInAttackRange[0].location);
+    }
+
+    private static void tryMove(Direction initial) throws GameActionException {
+        int initialDirectionValue = Helper.getInt(initial);
+        for (int i = 0; i < directions.length; i++) {
+            Direction direction = Helper.getDirection(initialDirectionValue + i);
+            if (rc.canMove(direction)) {
+                rc.move(direction);
+                return;
+            }
         }
     }
 }
