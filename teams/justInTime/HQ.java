@@ -3,6 +3,7 @@ package justInTime;
 import justInTime.constants.Building;
 import justInTime.constants.ChannelList;
 import justInTime.constants.Order;
+import justInTime.constants.Symmetry;
 import justInTime.util.Helper;
 import battlecode.common.*;
 
@@ -26,6 +27,8 @@ public class HQ {
     private static double averageTowerToTowerDistance;
     private static double averageTowerToHqDistance;
     private static double oreNearHq;
+    private static MapLocation[] enemyTowers;
+    private static MapLocation[] myTowers;
 
     public static void run(RobotController rcC) throws GameActionException {
         rc = rcC;
@@ -34,6 +37,8 @@ public class HQ {
         enemyTeam = myTeam.opponent();
         myHqLocation = rc.getLocation(); //--This is the HQ!
         enemyHqLocation = rc.senseEnemyHQLocation();
+        enemyTowers = rc.senseEnemyTowerLocations();
+        myTowers = rc.senseTowerLocations();
 
         BuildingQueue.init(rcC);
         Communication.init(rcC);
@@ -50,9 +55,8 @@ public class HQ {
         rc.broadcast(ChannelList.TOWER_VOID_COUNT, 1000000);
     }
 
-    private static void analyzeMap() {
+    private static void analyzeMap() throws GameActionException {
         distanceBetweenHq = myHqLocation.distanceSquaredTo(enemyHqLocation);
-        MapLocation[] enemyTowers = rc.senseEnemyTowerLocations();
         towerCount = enemyTowers.length;
 
         double sumDistance = 0;
@@ -79,13 +83,65 @@ public class HQ {
 
         averageTowerToHqDistance = sumDistance / towerCount;
 
+        int symmetryType = getSymmetryType();
+        rc.broadcast(ChannelList.MAP_SYMMETRY, symmetryType);
+
         System.out.printf(
-                "hqDist: %d\ncount %d\ntower2tower: %f\ntower2Hq: %f\noreNearHQ: %f\n",
+                "hqDist: %d\ncount %d\ntower2tower: %f\ntower2Hq: %f\noreNearHQ: %f\nsymmetryType: %s\n",
                 distanceBetweenHq,
                 towerCount,
                 averageTowerToTowerDistance,
                 averageTowerToHqDistance,
-                oreNearHq);
+                oreNearHq,
+                symmetryType == Symmetry.REFLECTION ? "Reflection" : "Rotation");
+    }
+
+    private static int getSymmetryType() {
+        boolean hqSameX = myHqLocation.x == enemyHqLocation.x;
+        boolean hqSameY = myHqLocation.y == enemyHqLocation.y;
+        if (!hqSameX
+                && !hqSameY) {
+            return Symmetry.ROTATION;
+        }
+
+        if (hqSameX) {
+            //--For all of my towers, enemy must have one with same x value
+            for (MapLocation tower : myTowers) {
+                if (!oneHasMatchingX(enemyTowers, tower.x)) {
+                    return Symmetry.ROTATION;
+                }
+            }
+        }
+        else {
+            //--For all of my towers, enemy must have one with same y value
+            for (MapLocation tower : myTowers) {
+                if (!oneHasMatchingY(enemyTowers, tower.y)) {
+                    return Symmetry.ROTATION;
+                }
+            }
+        }
+
+        return Symmetry.REFLECTION;
+    }
+
+    private static boolean oneHasMatchingX(MapLocation[] locations, int xValue) {
+        for (MapLocation location : locations) {
+            if (location.x == xValue) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean oneHasMatchingY(MapLocation[] locations, int yValue) {
+        for (MapLocation location : locations) {
+            if (location.y == yValue) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static void setInitialBuildings() throws GameActionException {
@@ -210,20 +266,9 @@ public class HQ {
         MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.DefendMiners);
 
         int launcherCount = rc.readBroadcast(ChannelList.LAUNCHER_COUNT);
-        if (launcherCount == 0) {
-            MessageBoard.setDefaultOrder(RobotType.DRONE, Order.AttackEnemyMiners);
-        }
-        else {
-            MessageBoard.setDefaultOrder(RobotType.DRONE, Order.Rally);
-        }
 
-        boolean surveyComplete = rc.readBroadcast(ChannelList.SURVEY_COMPLETE) == 1;
-        if (!surveyComplete) {
-            MessageBoard.setPriorityOrder(1, RobotType.DRONE, Order.SurveyMap);
-        }
-        else {
-            MessageBoard.setPriorityOrder(2, RobotType.DRONE, Order.MoveSupply);
-        }
+        MessageBoard.setPriorityOrder(1, RobotType.DRONE, Order.SurveyMap);
+        MessageBoard.setDefaultOrder(RobotType.DRONE, Order.AttackEnemyMiners);
     }
 
     private static void tryToAttack() throws GameActionException {

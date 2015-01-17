@@ -1,14 +1,21 @@
 package justInTime.constants;
 
 public class ChannelList {
-    //--Locations
-    public static final int STRUCTURE_TO_ATTACK = 0; //--1
-    public static final int RALLY_POINT = 2; //--3
-    public static final int OUR_TOWER_WITH_LOWEST_VOID_COUNT = 4; //--5
+    //--Locations (all need 2 channels)
+    public static final int STRUCTURE_TO_ATTACK = 0;
+    public static final int RALLY_POINT = 2;
+    public static final int OUR_TOWER_WITH_LOWEST_VOID_COUNT = 4;
+    public static final int NE_MAP_CORNER = 6;
+    public static final int SE_MAP_CORNER = 8;
+    public static final int SW_MAP_CORNER = 10;
+    public static final int NW_MAP_CORNER = 12;
 
     public static final int MINER_DISTANCE_SQUARED_TO_HQ = 90;
     public static final int TOWER_VOID_COUNT = 91;
     public static final int SURVEY_COMPLETE = 92;
+    public static final int MAP_WIDTH = 93;
+    public static final int MAP_HEIGHT = 94;
+    public static final int MAP_SYMMETRY = 95;
 
     //--Unit counts
     public static final int DRONE_COUNT = 100;
