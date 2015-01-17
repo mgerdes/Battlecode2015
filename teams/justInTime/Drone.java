@@ -112,55 +112,6 @@ public class Drone {
         }
     }
 
-    private static void fortify() throws GameActionException {
-        MapLocation currentLocation = rc.getLocation();
-        int minerRadius = rc.readBroadcast(ChannelList.MINER_DISTANCE_SQUARED_TO_HQ);
-
-        if (rc.getSupplyLevel() == 0) {
-            Bug.setDestination(myHqLocation);
-        }
-        else {
-            MapLocation circleLocation = CircleNav.getDestination(minerRadius + 3, currentLocation);
-            Bug.setDestination(circleLocation);
-        }
-
-        RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
-        if (enemiesInAttackRange.length == 0) {
-            if (rc.isCoreReady()) {
-                Direction direction = Bug.getDirection(currentLocation);
-                rc.move(direction);
-            }
-        }
-        else if (rc.isWeaponReady()) {
-            rc.attackLocation(enemiesInAttackRange[0].location);
-        }
-    }
-
-    private static void attackEnemyStructure() throws GameActionException {
-        MapLocation currentLocation = rc.getLocation();
-        MapLocation attackLocation = Communication.readMapLocationFromChannel(ChannelList.STRUCTURE_TO_ATTACK);
-
-        //--Don't leave home without supplies
-        if (rc.getSupplyLevel() == 0
-                && currentLocation.distanceSquaredTo(myHqLocation) <= MAX_DISTANCE_TO_GO_TO_HQ_FOR_SUPPLIES) {
-            SafeBug.setDestination(myHqLocation);
-        }
-        else {
-            SafeBug.setDestination(attackLocation);
-        }
-
-        RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
-        if (enemiesInAttackRange.length == 0) {
-            if (rc.isCoreReady()) {
-                Direction direction = SafeBug.getDirection(currentLocation, attackLocation);
-                rc.move(direction);
-            }
-        }
-        else if (rc.isWeaponReady()) {
-            rc.attackLocation(enemiesInAttackRange[0].location);
-        }
-    }
-
     private static void swarm() throws GameActionException {
         MapLocation currentLocation = rc.getLocation();
 
