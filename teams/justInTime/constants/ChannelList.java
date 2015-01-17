@@ -8,6 +8,7 @@ public class ChannelList {
 
     public static final int MINER_RADIUS_FROM_HQ = 90;
     public static final int TOWER_VOID_COUNT = 91;
+    public static final int SURVEY_COMPLETE = 92;
 
     //--Unit counts
     public static final int DRONE_COUNT = 100;
@@ -26,10 +27,6 @@ public class ChannelList {
     public static final int MORE_BASHERS = 502;
     public static final int MORE_SOLDIERS = 503;
     public static final int MORE_TANKS = 504;
-
-    //--Job reporting
-    public static final int SUPPLY_MINERS_JOB_IS_NEEDED = 1000;
-    public static final int SUPPLY_MINERS_JOB_REPORTING = 1001;
 
     //--Building Queue
     public static final int BUILDING_QUEUE_START = 3000;

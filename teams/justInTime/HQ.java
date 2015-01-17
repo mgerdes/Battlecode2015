@@ -207,33 +207,37 @@ public class HQ {
     }
 
     private static void setOrders() throws GameActionException {
-        if (rc.getTeam() == Team.A) {
-            //--Spawn up to 30 soldiers
-            int soldierCount = rc.readBroadcast(ChannelList.SOLDIER_COUNT);
-            MessageBoard.setSpawn(RobotType.SOLDIER, soldierCount < 30 ? SPAWN_ON : SPAWN_OFF);
+        //--Spawn up to 35 miners
+        int minerCount = rc.readBroadcast(ChannelList.MINER_COUNT);
+        MessageBoard.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
 
-            //--Spawn up to 35 miners
-            int minerCount = rc.readBroadcast(ChannelList.MINER_COUNT);
-            MessageBoard.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
+        //--Spawn up to 20 drones
+        int droneCount = rc.readBroadcast(ChannelList.DRONE_COUNT);
+        MessageBoard.setSpawn(RobotType.DRONE, droneCount < 20 ? SPAWN_ON : SPAWN_OFF);
 
-            MessageBoard.setSpawn(RobotType.TANK, SPAWN_ON);
-
-            MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.Rally);
-            MessageBoard.setDefaultOrder(RobotType.TANK, Order.Rally);
-
-            if (Clock.getRoundNum() > 400) {
-                MessageBoard.setPriorityOrder(8, RobotType.SOLDIER, Order.AttackEnemyMiners);
-            }
+        //--Spawn up to 25 soldiers once we have 10 drones
+        int soldierCount = rc.readBroadcast(ChannelList.SOLDIER_COUNT);
+        if (soldierCount < 25
+                && droneCount >= 10) {
+            MessageBoard.setSpawn(RobotType.DRONE, SPAWN_ON);
         }
         else {
-            //--Spawn up to 35 miners
-            int minerCount = rc.readBroadcast(ChannelList.MINER_COUNT);
-            MessageBoard.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
+            MessageBoard.setSpawn(RobotType.DRONE, SPAWN_OFF);
+        }
 
-            //--Spawn a bunch of drones
-            MessageBoard.setSpawn(RobotType.DRONE, SPAWN_ON);
+        //--Spawn launchers!
+        MessageBoard.setSpawn(RobotType.LAUNCHER, SPAWN_ON);
 
-            MessageBoard.setDefaultOrder(RobotType.DRONE, Order.AttackEnemyMiners);
+        //--Orders for early/mid game
+        MessageBoard.setDefaultOrder(RobotType.DRONE, Order.AttackEnemyMiners);
+        MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.DefendMiners);
+
+        boolean surveyComplete = rc.readBroadcast(ChannelList.SURVEY_COMPLETE) == 1;
+        if (!surveyComplete) {
+            MessageBoard.setPriorityOrder(1, RobotType.DRONE, Order.SurveyMap);
+        }
+        else {
+            MessageBoard.setPriorityOrder(2, RobotType.DRONE, Order.MoveSupply);
         }
     }
 
