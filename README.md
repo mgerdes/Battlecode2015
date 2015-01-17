@@ -19,9 +19,11 @@ These are the cheapest and quickest fighting unit. They match the drone's range,
 * Have one drone survey the map
 * Use towers to watch for incoming enemies
 * Build around 20 soldiers to defend the miners
+
 #### Mid Game
 * Build launchers, soldiers, and drones
 * Move units into position
+
 #### End Game
 * Attack with launchers in the front line
 * Use drones for a flank attack. Take out miners or an unguarded tower.
