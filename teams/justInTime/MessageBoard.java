@@ -72,16 +72,16 @@ public class MessageBoard {
     public static void setPriorityOrder(int count, RobotType type, Order order) throws GameActionException {
         switch (type) {
             case SOLDIER:
-                setPriorityOrderForChannel(ChannelList. SOLDIER_PRIORITY_ORDERS, count, order);
+                setPriorityOrderForChannel(ChannelList.SOLDIER_PRIORITY_ORDERS, count, order);
                 break;
             case DRONE:
-                setPriorityOrderForChannel(ChannelList. DRONE_PRIORITY_ORDERS, count, order);
+                setPriorityOrderForChannel(ChannelList.DRONE_PRIORITY_ORDERS, count, order);
                 break;
             case BASHER:
-                setPriorityOrderForChannel(ChannelList. BASHER_PRIORITY_ORDERS, count, order);
+                setPriorityOrderForChannel(ChannelList.BASHER_PRIORITY_ORDERS, count, order);
                 break;
             case TANK:
-                setPriorityOrderForChannel(ChannelList. TANK_PRIORITY_ORDERS, count, order);
+                setPriorityOrderForChannel(ChannelList.TANK_PRIORITY_ORDERS, count, order);
                 break;
         }
     }

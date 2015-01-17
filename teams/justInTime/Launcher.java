@@ -39,12 +39,14 @@ public class Launcher {
     }
 
     private static void doYourThing() throws GameActionException {
+        SupplySharing.share();
+
         MapLocation currentLocation = rc.getLocation();
         RobotInfo[] enemies = rc.senseNearbyRobots(RobotType.MISSILE.sensorRadiusSquared, enemyTeam);
         MapLocation locationToAttack = null;
         int smallestDistance = 10000000;
+        //--Need to check if we are near our own teammates!
         for (RobotInfo robot : enemies) {
-            //--TODO: does this number make sense?
             int distance = robot.location.distanceSquaredTo(currentLocation);
             if (distance < smallestDistance && distance <= 9) {
                 smallestDistance = distance;

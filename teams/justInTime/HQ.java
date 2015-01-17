@@ -207,8 +207,15 @@ public class HQ {
         MessageBoard.setSpawn(RobotType.LAUNCHER, SPAWN_ON);
 
         //--Orders for early/mid game
-        MessageBoard.setDefaultOrder(RobotType.DRONE, Order.AttackEnemyMiners);
         MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.DefendMiners);
+
+        int launcherCount = rc.readBroadcast(ChannelList.LAUNCHER_COUNT);
+        if (launcherCount == 0) {
+            MessageBoard.setDefaultOrder(RobotType.DRONE, Order.AttackEnemyMiners);
+        }
+        else {
+            MessageBoard.setDefaultOrder(RobotType.DRONE, Order.Rally);
+        }
 
         boolean surveyComplete = rc.readBroadcast(ChannelList.SURVEY_COMPLETE) == 1;
         if (!surveyComplete) {

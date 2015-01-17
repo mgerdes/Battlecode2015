@@ -4,7 +4,6 @@ import justInTime.constants.ChannelList;
 import battlecode.common.*;
 import justInTime.constants.Order;
 import justInTime.navigation.Bug;
-import justInTime.navigation.CircleNav;
 import justInTime.navigation.SafeBug;
 import justInTime.util.Debug;
 import justInTime.util.Helper;
@@ -12,7 +11,6 @@ import justInTime.util.Helper;
 public class Drone {
     private static RobotController rc;
 
-    private static final int MAX_DISTANCE_TO_GO_TO_HQ_FOR_SUPPLIES = 25;
     private static final int ROBOT_NOT_SET = -1;
 
     private static Team enemyTeam;
@@ -33,7 +31,6 @@ public class Drone {
 
         Bug.init(rcC);
         SafeBug.init(rcC);
-        CircleNav.init(rcC, myHqLocation, myHqLocation.directionTo(enemyHqLocation));
         SupplySharing.init(rcC);
         Communication.init(rcC);
         MessageBoard.init(rcC);
@@ -60,6 +57,24 @@ public class Drone {
             case AttackEnemyMiners:
                 swarm();
                 break;
+            case Rally:
+                rally();
+                break;
+        }
+    }
+
+    private static void rally() throws GameActionException {
+        if (!rc.isCoreReady()) {
+            return;
+        }
+
+        MapLocation currentLocation = rc.getLocation();
+        MapLocation rallyPoint = Communication.readMapLocationFromChannel(ChannelList.RALLY_POINT);
+        SafeBug.setDestination(rallyPoint);
+        Direction direction = SafeBug.getDirection(currentLocation);
+
+        if (direction != Direction.NONE) {
+            rc.move(direction);
         }
     }
 
@@ -119,7 +134,7 @@ public class Drone {
         MapLocation currentLocation = rc.getLocation();
 
         //--Go home if we run out of supplies
-        if (rc.getSupplyLevel() < 100) {
+        if (rc.getSupplyLevel() < 10) {
             SafeBug.setDestination(myHqLocation);
         }
         else {
