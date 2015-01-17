@@ -54,6 +54,10 @@ public class SafeBug {
                                          MapLocation ignoreC,
                                          RobotInfo[] enemyRobotsC,
                                          RobotType[] typesToIgnoreC) {
+        if (currentLocationC.equals(destination)) {
+            return Direction.NONE;
+        }
+
         currentLocation = currentLocationC;
         ignoreLocation = ignoreC;
         enemyTowerLocations = rc.senseEnemyTowerLocations();
@@ -77,6 +81,10 @@ public class SafeBug {
 
     public static Direction getDirection(MapLocation currentLocation, MapLocation locationToIgnore) {
         return getDirection(currentLocation, locationToIgnore, null, null);
+    }
+
+    public static Direction getPreviousDirection() {
+        return previousDirection;
     }
 
     private static Direction getDirectionFollowingWall() {
@@ -111,7 +119,10 @@ public class SafeBug {
 
         numberOfNinetyDegreeRotations = 0;
         Direction followDirection = getTurnDirection(checkDirection);
-        previousDirection = followDirection;
+        if (followDirection != Direction.NONE) {
+            previousDirection = followDirection;
+        }
+
         return followDirection;
     }
 
@@ -133,7 +144,10 @@ public class SafeBug {
         distanceStartBugging = currentLocation.distanceSquaredTo(destination);
 
         Direction turnDirection = getTurnDirection(direct);
-        previousDirection = turnDirection;
+        if (turnDirection != Direction.NONE) {
+            previousDirection = turnDirection;
+        }
+
         return turnDirection;
     }
 
@@ -148,16 +162,30 @@ public class SafeBug {
     }
 
     private static Direction rotateLeftUntilCanMove(Direction direction) {
-        while (!canMoveSafely(direction)) {
+        int rotationCount = 0;
+        while (!canMoveSafely(direction)
+                && rotationCount < 8) {
             direction = direction.rotateLeft();
+            rotationCount++;
+        }
+
+        if (rotationCount > 7) {
+            return Direction.NONE;
         }
 
         return direction;
     }
 
     private static Direction rotateRightUntilCanMove(Direction direction) {
-        while (!canMoveSafely(direction)) {
+        int rotationCount = 0;
+        while (!canMoveSafely(direction)
+                && rotationCount < 8) {
             direction = direction.rotateRight();
+            rotationCount++;
+        }
+
+        if (rotationCount > 7) {
+            return Direction.NONE;
         }
 
         return direction;
