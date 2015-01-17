@@ -4,9 +4,7 @@ import battlecode.common.*;
 import justInTime.constants.ChannelList;
 import justInTime.constants.Order;
 import justInTime.navigation.Bug;
-import justInTime.navigation.SafeBug;
 import justInTime.util.Debug;
-import justInTime.util.Helper;
 
 public class Soldier {
     private static RobotController rc;
@@ -15,7 +13,6 @@ public class Soldier {
     private static MapLocation enemyHqLocation;
     private static Team myTeam;
     private static MapLocation myHqLocation;
-    private static int MAX_DISTANCE_SQUARED_TO_GO_TO_HQ_FOR_SUPPLIES = 49;
 
     public static void run(RobotController rcC) {
         rc = rcC;
@@ -25,7 +22,6 @@ public class Soldier {
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
 
-        SafeBug.init(rcC);
         Bug.init(rcC);
         SupplySharing.init(rcC);
         Communication.init(rcC);
@@ -48,51 +44,12 @@ public class Soldier {
     private static void doYourThing() throws GameActionException {
         SupplySharing.share();
 
-        int initialBytecode = Clock.getBytecodeNum();
         Order order = MessageBoard.getOrder(rc.getType());
-        Debug.setString(
-                0,
-                String.format("%s bytecodes to get order", Clock.getBytecodeNum() - initialBytecode),
-                rc);
 
         switch (order) {
-            case AttackEnemyMiners:
-                attackEnemyMiners();
-                break;
             case DefendMiners:
                 defendMiners();
                 break;
-            case AttackEnemyStructure:
-                attackEnemyStructure();
-                break;
-            case Rally:
-                goToRallyPoint();
-                break;
-        }
-    }
-
-    private static void attackEnemyStructure() throws GameActionException {
-        MapLocation currentLocation = rc.getLocation();
-        MapLocation attackLocation = Communication.readMapLocationFromChannel(ChannelList.STRUCTURE_TO_ATTACK);
-
-        //--Don't leave home without supplies
-        if (rc.getSupplyLevel() == 0
-                && currentLocation.distanceSquaredTo(myHqLocation) <= MAX_DISTANCE_SQUARED_TO_GO_TO_HQ_FOR_SUPPLIES) {
-            SafeBug.setDestination(myHqLocation);
-        }
-        else {
-            SafeBug.setDestination(attackLocation);
-        }
-
-        RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
-        if (enemiesInAttackRange.length == 0) {
-            if (rc.isCoreReady()) {
-                Direction direction = SafeBug.getDirection(currentLocation, attackLocation);
-                rc.move(direction);
-            }
-        }
-        else if (rc.isWeaponReady()) {
-            rc.attackLocation(enemiesInAttackRange[0].location);
         }
     }
 
@@ -105,67 +62,6 @@ public class Soldier {
             }
         }
 
-        MapLocation currentLocation = rc.getLocation();
-        if (rc.isCoreReady()) {
-            MapLocation distressLocation = Communication.getDistressLocation();
-            if (distressLocation != null) {
-                Bug.setDestination(distressLocation);
-                rc.move(Bug.getDirection(currentLocation));
-                return;
-            }
-
-            //--This code chases down enemies..
-            //--It might be nice for defending, but the defender should probably return to
-            //  its swarm after it gets a certain distance away.
-//            RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.SOLDIER.sensorRadiusSquared, enemyTeam);
-//            if (enemiesInSensorRange.length > 0) {
-//                Bug.setDestination(enemiesInSensorRange[0].location);
-//                rc.move(Bug.getDirection(currentLocation));
-//                return;
-//            }
-
-            MapLocation destination = Helper.getWaypoint(0.7, myHqLocation, enemyHqLocation);
-            if (!currentLocation.equals(destination)) {
-                Bug.setDestination(destination);
-                Direction direction = Bug.getDirection(rc.getLocation());
-                rc.move(direction);
-            }
-        }
-    }
-
-    private static void attackEnemyMiners() throws GameActionException {
-        if (rc.isWeaponReady()) {
-            RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.SOLDIER.attackRadiusSquared, enemyTeam);
-            for (RobotInfo robot : enemiesInAttackRange) {
-                if (robot.type == RobotType.BEAVER
-                        || robot.type == RobotType.MINER) {
-                    rc.attackLocation(robot.location);
-                    return;
-                }
-            }
-        }
-
-        SafeBug.setDestination(enemyHqLocation);
-
-        if (!rc.isCoreReady()) {
-            return;
-        }
-
-        MapLocation currentLocation = rc.getLocation();
-        RobotInfo[] enemies = rc.senseNearbyRobots(RobotType.SOLDIER.sensorRadiusSquared, enemyTeam);
-        RobotType[] enemiesToIgnore = new RobotType[]{RobotType.BEAVER, RobotType.MINER};
-        Direction direction = SafeBug.getDirection(currentLocation, null, enemies, enemiesToIgnore);
-        rc.move(direction);
-    }
-
-    private static void goToRallyPoint() throws GameActionException {
-        if (rc.isWeaponReady()) {
-            RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.SOLDIER.attackRadiusSquared, enemyTeam);
-            if (enemiesInAttackRange.length > 0) {
-                rc.attackLocation(enemiesInAttackRange[0].location);
-            }
-        }
-
         if (!rc.isCoreReady()) {
             return;
         }
@@ -173,14 +69,27 @@ public class Soldier {
         MapLocation currentLocation = rc.getLocation();
         MapLocation distressLocation = Communication.getDistressLocation();
         if (distressLocation != null) {
-            SafeBug.setDestination(distressLocation);
+            Bug.setDestination(distressLocation);
         }
         else {
-            MapLocation destination = Communication.readMapLocationFromChannel(ChannelList.RALLY_POINT);
-            SafeBug.setDestination(destination);
+            RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.SOLDIER.sensorRadiusSquared, enemyTeam);
+            int minerDistance = rc.readBroadcast(ChannelList.MINER_DISTANCE_SQUARED_TO_HQ);
+            int myDistanceToHq = currentLocation.distanceSquaredTo(myHqLocation);
+            //--Go to nearby enemy unless I'm too far from base
+            if (enemiesInSensorRange.length > 0
+                    && myDistanceToHq < minerDistance + 9) {
+                Bug.setDestination(enemiesInSensorRange[0].location);
+            }
+            //--If there are no nearby enemies, make sure that I'm outside the miner circle
+            else if (myDistanceToHq < minerDistance + 2) {
+                Debug.setString(1, "my distance is " + myDistanceToHq, rc);
+                Bug.setDestination(enemyHqLocation);
+            }
+            else {
+                return;
+            }
         }
 
-        Direction direction = SafeBug.getDirection(currentLocation);
-        rc.move(direction);
+        rc.move(Bug.getDirection(currentLocation));
     }
 }

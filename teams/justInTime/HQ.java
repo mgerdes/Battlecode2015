@@ -89,16 +89,9 @@ public class HQ {
     }
 
     private static void setInitialBuildings() throws GameActionException {
-        if (rc.getTeam() == Team.A) {
-            BuildingQueue.addBuilding(Building.MINER_FACTORY);
-            BuildingQueue.addBuilding(Building.BARRACKS);
-            BuildingQueue.addBuilding(Building.TANK_FACTORY);
-        }
-        else {
-            BuildingQueue.addBuilding(Building.MINER_FACTORY);
-            BuildingQueue.addBuilding(Building.HELIPAD);
-            BuildingQueue.addBuilding(Building.HELIPAD);
-        }
+        BuildingQueue.addBuilding(Building.MINER_FACTORY);
+        BuildingQueue.addBuilding(Building.HELIPAD);
+        BuildingQueue.addBuilding(Building.BARRACKS);
     }
 
     private static void loop() {
@@ -174,19 +167,6 @@ public class HQ {
 
     private static void queueBuildings() throws GameActionException {
         queueSupplyTowers();
-
-        if (rc.getTeam() == Team.A) {
-            if (Clock.getRoundNum() > 400
-                    && rc.getTeamOre() > RobotType.TANKFACTORY.oreCost) {
-                BuildingQueue.addBuildingWithPostDelay(Building.TANK_FACTORY, RobotType.TANKFACTORY.buildTurns * 2);
-            }
-        }
-        else {
-            if (Clock.getRoundNum() > 300
-                    && rc.getTeamOre() > RobotType.HELIPAD.oreCost) {
-                BuildingQueue.addBuildingWithPostDelay(Building.HELIPAD, RobotType.HELIPAD.buildTurns * 2);
-            }
-        }
     }
 
     private static void queueSupplyTowers() throws GameActionException {
@@ -215,15 +195,9 @@ public class HQ {
         int droneCount = rc.readBroadcast(ChannelList.DRONE_COUNT);
         MessageBoard.setSpawn(RobotType.DRONE, droneCount < 20 ? SPAWN_ON : SPAWN_OFF);
 
-        //--Spawn up to 25 soldiers once we have 10 drones
+        //--Spawn up to 25 soldiers
         int soldierCount = rc.readBroadcast(ChannelList.SOLDIER_COUNT);
-        if (soldierCount < 25
-                && droneCount >= 10) {
-            MessageBoard.setSpawn(RobotType.DRONE, SPAWN_ON);
-        }
-        else {
-            MessageBoard.setSpawn(RobotType.DRONE, SPAWN_OFF);
-        }
+        MessageBoard.setSpawn(RobotType.SOLDIER, soldierCount < 25 ? SPAWN_ON : SPAWN_OFF);
 
         //--Spawn launchers!
         MessageBoard.setSpawn(RobotType.LAUNCHER, SPAWN_ON);

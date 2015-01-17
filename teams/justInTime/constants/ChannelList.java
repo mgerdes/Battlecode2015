@@ -6,7 +6,7 @@ public class ChannelList {
     public static final int RALLY_POINT = 2; //--3
     public static final int OUR_TOWER_WITH_LOWEST_VOID_COUNT = 4; //--5
 
-    public static final int MINER_RADIUS_FROM_HQ = 90;
+    public static final int MINER_DISTANCE_SQUARED_TO_HQ = 90;
     public static final int TOWER_VOID_COUNT = 91;
     public static final int SURVEY_COMPLETE = 92;
 

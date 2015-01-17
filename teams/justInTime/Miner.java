@@ -1,6 +1,7 @@
 package justInTime;
 
 import justInTime.constants.ChannelList;
+import justInTime.util.Debug;
 import justInTime.util.Helper;
 import battlecode.common.*;
 import justInTime.navigation.Bug;
@@ -76,10 +77,11 @@ public class Miner {
     }
 
     private static void updateMinerRadius(MapLocation currentLocation) throws GameActionException {
-        int currentMinerRadius = rc.readBroadcast(ChannelList.MINER_RADIUS_FROM_HQ);
-        int currentDistanceFromHq = (int) Math.sqrt(currentLocation.distanceSquaredTo(myHqLocation));
+        int currentMinerRadius = rc.readBroadcast(ChannelList.MINER_DISTANCE_SQUARED_TO_HQ);
+        int currentDistanceFromHq = currentLocation.distanceSquaredTo(myHqLocation);
         if (currentDistanceFromHq > currentMinerRadius) {
-            rc.broadcast(ChannelList.MINER_RADIUS_FROM_HQ, currentDistanceFromHq);
+            rc.broadcast(ChannelList.MINER_DISTANCE_SQUARED_TO_HQ, currentDistanceFromHq);
+            Debug.setString(1, "radius is " + currentDistanceFromHq, rc);
         }
     }
 

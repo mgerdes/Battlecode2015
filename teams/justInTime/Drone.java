@@ -114,7 +114,7 @@ public class Drone {
 
     private static void fortify() throws GameActionException {
         MapLocation currentLocation = rc.getLocation();
-        int minerRadius = rc.readBroadcast(ChannelList.MINER_RADIUS_FROM_HQ);
+        int minerRadius = rc.readBroadcast(ChannelList.MINER_DISTANCE_SQUARED_TO_HQ);
 
         if (rc.getSupplyLevel() == 0) {
             Bug.setDestination(myHqLocation);
