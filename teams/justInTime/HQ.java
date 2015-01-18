@@ -241,6 +241,13 @@ public class HQ {
     }
 
     private static void broadcastAttackLocation() throws GameActionException {
+        //--With the navigation code, we will broadcast PointOfInterest value
+        //  instead of a map location
+
+
+
+
+
         //--if enemy has towers
         //    return the closest one to our HQ
         //--else return enemy HQ

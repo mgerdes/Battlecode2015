@@ -10,12 +10,27 @@ public class ChannelList {
     public static final int SW_MAP_CORNER = 10;
     public static final int NW_MAP_CORNER = 12;
 
+    public static final int ENEMY_TOWER_1 = 14;
+    public static final int ENEMY_TOWER_2 = 16;
+    public static final int ENEMY_TOWER_3 = 18;
+    public static final int ENEMY_TOWER_4 = 20;
+    public static final int ENEMY_TOWER_5 = 22;
+    public static final int ENEMY_TOWER_6 = 24;
+    public static final int ENEMY_HQ = 26;
+
+    //--Path building info
+    public static final int CURRENT_POI = 80;
+    public static final int LAST_LOCATION_RELATIVE = 81;
+
+    //--Misc
     public static final int MINER_DISTANCE_SQUARED_TO_HQ = 90;
     public static final int TOWER_VOID_COUNT = 91;
     public static final int SURVEY_COMPLETE = 92;
     public static final int MAP_WIDTH = 93;
     public static final int MAP_HEIGHT = 94;
     public static final int MAP_SYMMETRY = 95;
+
+    public static final int POI_TO_ATTACK = 96;
 
     //--Unit counts
     public static final int DRONE_COUNT = 100;
@@ -53,5 +68,11 @@ public class ChannelList {
     public static final int SOLDIER_DEFAULT_ORDER = 7000;
     public static final int DRONE_DEFAULT_ORDERS = 7002;
     public static final int LAUNCHER_DEFAULT_ORDERS = 7030;
+
+    //--Terrain tile storage
+    public static final int NW_CORNER_TERRAIN_TILE = 20000; //--34400
+
+    //--BFS storage
+    public static final int NW_CORNER_BFS_DIRECTIONS = 40000; //--54400
 }
 
