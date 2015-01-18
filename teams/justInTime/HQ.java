@@ -29,6 +29,7 @@ public class HQ {
     private static double oreNearHq;
     private static MapLocation[] enemyTowers;
     private static MapLocation[] myTowers;
+    private static boolean printedMapDataForDebug;
 
     public static void run(RobotController rcC) throws GameActionException {
         rc = rcC;
@@ -49,6 +50,69 @@ public class HQ {
         initializeChannels();
         setInitialBuildings();
         loop();
+    }
+
+    private static void loop() {
+        while (true) {
+            try {
+                doYourThing();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            rc.yield();
+        }
+    }
+
+    private static void doYourThing() throws GameActionException {
+        SupplySharing.shareMore();
+
+        RobotInfo[] friendlyRobots = rc.senseNearbyRobots(1000000, myTeam);
+
+        setOrders();
+        queueBuildings();
+        moreMapAnalysis();
+
+        updateRallyPoint();
+
+        if (Clock.getRoundNum() > HQ_BROADCAST_ATTACK_LOCATION_AFTER_ROUND) {
+            broadcastAttackLocation();
+        }
+
+        if (rc.isWeaponReady()
+                && Clock.getRoundNum() > HQ_TRY_ATTACK_AFTER_ROUND) {
+            tryToAttack();
+        }
+
+        if (rc.isCoreReady()) {
+            if (shouldSpawnBeaver(friendlyRobots)) {
+                spawn(RobotType.BEAVER);
+            }
+        }
+    }
+
+    private static void moreMapAnalysis() throws GameActionException {
+        if (rc.readBroadcast(ChannelList.SURVEY_COMPLETE) != 1) {
+            return;
+        }
+
+        if (!printedMapDataForDebug) {
+            System.out.printf("\nMapWidth: %d, MapHeight %s\n",
+                              rc.readBroadcast(ChannelList.MAP_WIDTH),
+                              rc.readBroadcast(ChannelList.MAP_HEIGHT));
+            System.out.printf("\nNE %s\nSE %s\nSW %s\nNW %s\n",
+                              Communication.readMapLocationFromChannel(ChannelList.NE_MAP_CORNER),
+                              Communication.readMapLocationFromChannel(ChannelList.SE_MAP_CORNER),
+                              Communication.readMapLocationFromChannel(ChannelList.SW_MAP_CORNER),
+                              Communication.readMapLocationFromChannel(ChannelList.NW_MAP_CORNER));
+            printedMapDataForDebug = true;
+        }
+
+        //--This is where the HQ can call some awesome BFS class
+        //  or other pathfinding algorithm
+        //--The class should take a bytecode limit as a parameter
+        //  so we can limit the number of bytecodes the HQ uses per round
+        //--Ideally we can broadcast paths to all enemy towers
+        //  and a path to the enemy hq.
     }
 
     private static void initializeChannels() throws GameActionException {
@@ -151,42 +215,6 @@ public class HQ {
         BuildingQueue.addBuilding(Building.AEROSPACE_LAB);
         BuildingQueue.addBuilding(Building.BARRACKS);
         BuildingQueue.addBuilding(Building.AEROSPACE_LAB);
-    }
-
-    private static void loop() {
-        while (true) {
-            try {
-                doYourThing();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            rc.yield();
-        }
-    }
-
-    private static void doYourThing() throws GameActionException {
-        SupplySharing.shareMore();
-
-        RobotInfo[] friendlyRobots = rc.senseNearbyRobots(1000000, myTeam);
-
-        setOrders();
-        queueBuildings();
-        updateRallyPoint();
-
-        if (Clock.getRoundNum() > HQ_BROADCAST_ATTACK_LOCATION_AFTER_ROUND) {
-            broadcastAttackLocation();
-        }
-
-        if (rc.isWeaponReady()
-                && Clock.getRoundNum() > HQ_TRY_ATTACK_AFTER_ROUND) {
-            tryToAttack();
-        }
-
-        if (rc.isCoreReady()) {
-            if (shouldSpawnBeaver(friendlyRobots)) {
-                spawn(RobotType.BEAVER);
-            }
-        }
     }
 
     private static void updateRallyPoint() throws GameActionException {
