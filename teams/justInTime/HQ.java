@@ -267,8 +267,11 @@ public class HQ {
 
         int launcherCount = rc.readBroadcast(ChannelList.LAUNCHER_COUNT);
 
-        MessageBoard.setPriorityOrder(1, RobotType.DRONE, Order.SurveyMap);
         MessageBoard.setDefaultOrder(RobotType.DRONE, Order.AttackEnemyMiners);
+
+        if (rc.readBroadcast(ChannelList.SURVEY_COMPLETE) == 0) {
+            MessageBoard.setPriorityOrder(1, RobotType.DRONE, Order.SurveyMap);
+        }
     }
 
     private static void tryToAttack() throws GameActionException {

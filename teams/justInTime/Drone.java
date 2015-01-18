@@ -17,19 +17,34 @@ public class Drone {
     private static Team enemyTeam;
     private static MapLocation enemyHqLocation;
     private static MapLocation myHqLocation;
+    private static Direction awayFromEnemyHq;
     private static Team myTeam;
     private static int robotThatNeedsSupplyId;
 
-    private static int[] directions = new int[]{0, -1, 1, -2, 2};
-    private static boolean sizeAndCornersBroadcasted = false;
+    private static final int[] directions = new int[]{0, -1, 1, -2, 2};
 
     private static int symmetry = 0;
+
+    private static boolean sizeAndCornersBroadcasted = false;
+
+    private static boolean reflectionFoundFirstEdge = false;
+    private static boolean reflectionFoundSegment = false;
+    private static boolean onFullPass = false;
+
+    private static int northEdge = 0;
+    private static int southEdge = 0;
+    private static int eastEdge = 0;
+    private static int westEdge = 0;
+
+    private static int valueAtBeginningOfPass;
+    private static Direction segmentTravelDirection;
 
     public static void run(RobotController rcC) {
         rc = rcC;
 
         myHqLocation = rc.senseHQLocation();
         enemyHqLocation = rc.senseEnemyHQLocation();
+        awayFromEnemyHq = enemyHqLocation.directionTo(myHqLocation);
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
 
@@ -89,15 +104,132 @@ public class Drone {
         }
 
         if (symmetry == Symmetry.REFLECTION) {
-            //--Start at our hq and go away from their hq until we hit a wall
-            //--The distance between our hq and the wall will tell us one of the map dimensions
-            //--Then travel back and forth in the other direction to find the other map dimension
+            surveryAndBroadcastDataForReflectedMap();
         }
         else {
-            //--Symmetry is rotation, so the map must be square
-            //--Start at our hq and move away from their hq until we hit a corner.
-            //--With this corner, we can calculate the map dimensions
             findCornerAndBroadcastMapDataForRotationalSymmetry();
+        }
+    }
+
+    private static void surveryAndBroadcastDataForReflectedMap() throws GameActionException {
+        //--The distance between our hq and the wall will tell us one of the map dimensions
+        //--Then travel back and forth in the other direction to find the other map dimension
+        if (!reflectionFoundFirstEdge) {
+            travelToFirstEdgeAndBroadcastData();
+        }
+
+        if (!reflectionFoundSegment) {
+            travelSegmentAndBroadcastData();
+        }
+
+        if (reflectionFoundFirstEdge
+                && reflectionFoundSegment) {
+            Communication.setMapLocationOnChannel(new MapLocation(eastEdge, northEdge), ChannelList.NE_MAP_CORNER);
+            Communication.setMapLocationOnChannel(new MapLocation(eastEdge, southEdge), ChannelList.SE_MAP_CORNER);
+            Communication.setMapLocationOnChannel(new MapLocation(westEdge, southEdge), ChannelList.SW_MAP_CORNER);
+            Communication.setMapLocationOnChannel(new MapLocation(westEdge, northEdge), ChannelList.NW_MAP_CORNER);
+            rc.broadcast(ChannelList.SURVEY_COMPLETE, 1);
+            sizeAndCornersBroadcasted = true;
+        }
+    }
+
+    private static void travelToFirstEdgeAndBroadcastData() throws GameActionException {
+        MapLocation currentLocation = rc.getLocation();
+
+        //--If we've hit the wall, update the data
+        if (rc.senseTerrainTile(currentLocation.add(awayFromEnemyHq)) == TerrainTile.OFF_MAP) {
+            int segmentLength;
+            //--Were we going N/S or E/W
+            if (awayFromEnemyHq == Direction.NORTH
+                    || awayFromEnemyHq == Direction.SOUTH) {
+                segmentLength = Math.abs(currentLocation.y - myHqLocation.y) * 2
+                        + Math.abs(myHqLocation.y - enemyHqLocation.y);
+                rc.broadcast(ChannelList.MAP_HEIGHT, segmentLength);
+            }
+            else {
+                segmentLength = Math.abs(currentLocation.x - myHqLocation.x) * 2
+                        + Math.abs(myHqLocation.x - enemyHqLocation.x);
+                rc.broadcast(ChannelList.MAP_WIDTH, segmentLength);
+            }
+
+            setTwoMapEdges(awayFromEnemyHq, currentLocation, segmentLength);
+            reflectionFoundFirstEdge = true;
+            return;
+        }
+
+        //--We have not hit the wall. Keep going...
+        if (!rc.isCoreReady()) {
+            return;
+        }
+
+        SafeBug.setDestination(myHqLocation.add(awayFromEnemyHq, 1000));
+        Direction d = SafeBug.getDirection(currentLocation);
+        if (d != Direction.NONE) {
+            rc.move(d);
+        }
+    }
+
+    private static void travelSegmentAndBroadcastData() throws GameActionException {
+        //--We need to traverse the map back and forth in the dimension
+        //  perpendicular to the line that connects the hq
+        MapLocation currentLocation = rc.getLocation();
+
+        //--Have we reached a wall
+        if (segmentTravelDirection != null
+                && rc.senseTerrainTile(currentLocation.add(segmentTravelDirection)) == TerrainTile.OFF_MAP) {
+            boolean goingNorthSouth = segmentTravelDirection == Direction.NORTH
+                    || segmentTravelDirection == Direction.SOUTH;
+            if (onFullPass) {
+                int currentValue = goingNorthSouth ? currentLocation.y : currentLocation.x;
+                int segmentLength = Math.abs(valueAtBeginningOfPass - currentValue);
+                int channelToBroadcast = goingNorthSouth ? ChannelList.MAP_HEIGHT : ChannelList.MAP_WIDTH;
+                rc.broadcast(channelToBroadcast, segmentLength);
+                reflectionFoundSegment = true;
+                setTwoMapEdges(segmentTravelDirection, currentLocation, segmentLength);
+            }
+            else {
+                valueAtBeginningOfPass = goingNorthSouth ? currentLocation.y : currentLocation.x;
+                onFullPass = true;
+                segmentTravelDirection = segmentTravelDirection.opposite();
+            }
+
+            return;
+        }
+
+        //--We have not reached a wall. Keep going...
+        if (!rc.isCoreReady()) {
+            return;
+        }
+
+        if (segmentTravelDirection == null) {
+            segmentTravelDirection = awayFromEnemyHq.rotateLeft().rotateLeft();
+        }
+
+        SafeBug.setDestination(myHqLocation.add(segmentTravelDirection, 1000));
+        Direction d = SafeBug.getDirection(currentLocation);
+        if (d != Direction.NONE) {
+            rc.move(d);
+        }
+    }
+
+    private static void setTwoMapEdges(Direction awayFromEnemyHq, MapLocation currentLocation, int segmentLength) {
+        switch (awayFromEnemyHq) {
+            case NORTH:
+                northEdge = currentLocation.y;
+                southEdge = northEdge + segmentLength;
+                break;
+            case SOUTH:
+                southEdge = currentLocation.y;
+                northEdge = southEdge - segmentLength;
+                break;
+            case EAST:
+                eastEdge = currentLocation.x;
+                westEdge = eastEdge - segmentLength;
+                break;
+            case WEST:
+                westEdge = currentLocation.x;
+                eastEdge = westEdge + segmentLength;
+                break;
         }
     }
 
@@ -131,11 +263,14 @@ public class Drone {
         }
     }
 
-    private static void broadcastFourCorners(MapLocation corner, Direction cornerDirection, int mapWidth, int mapHeight) throws GameActionException {
+    private static void broadcastFourCorners(MapLocation corner,
+                                             Direction cornerDirection,
+                                             int mapWidth,
+                                             int mapHeight) throws GameActionException {
         switch (cornerDirection) {
             case NORTH_EAST:
                 Communication.setMapLocationOnChannel(corner, ChannelList.NE_MAP_CORNER);
-                Communication.setMapLocationOnChannel(corner.add(0 , mapHeight), ChannelList.SE_MAP_CORNER);
+                Communication.setMapLocationOnChannel(corner.add(0, mapHeight), ChannelList.SE_MAP_CORNER);
                 Communication.setMapLocationOnChannel(corner.add(-mapWidth, mapHeight), ChannelList.SW_MAP_CORNER);
                 Communication.setMapLocationOnChannel(corner.add(-mapWidth, 0), ChannelList.NW_MAP_CORNER);
                 break;
@@ -159,13 +294,8 @@ public class Drone {
                 break;
         }
 
+        rc.broadcast(ChannelList.SURVEY_COMPLETE, 1);
         sizeAndCornersBroadcasted = true;
-        System.out.println("from corner " + cornerDirection.toString());
-        System.out.printf("\nNE %s\nSE %s\nSW %s\nNW %s\n",
-                          Communication.readMapLocationFromChannel(ChannelList.NE_MAP_CORNER),
-                          Communication.readMapLocationFromChannel(ChannelList.SE_MAP_CORNER),
-                          Communication.readMapLocationFromChannel(ChannelList.SW_MAP_CORNER),
-                          Communication.readMapLocationFromChannel(ChannelList.NW_MAP_CORNER));
     }
 
     private static Direction getCornerDirection(MapLocation currentLocation) {
