@@ -104,11 +104,11 @@ public class Drone {
             return;
         }
 
-        if (symmetry == Symmetry.REFLECTION) {
-            surveryAndBroadcastDataForReflectedMap();
+        if (symmetry == Symmetry.ROTATION) {
+            findCornerAndBroadcastMapDataForRotationalSymmetry();
         }
         else {
-            findCornerAndBroadcastMapDataForRotationalSymmetry();
+            surveryAndBroadcastDataForReflectedMap();
         }
     }
 

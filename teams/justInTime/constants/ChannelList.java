@@ -18,6 +18,8 @@ public class ChannelList {
     public static final int ENEMY_TOWER_6 = 24;
     public static final int ENEMY_HQ = 26;
 
+    public static final int LOCATION_TO_SURVEY = 28;
+
     //--Path building info
     public static final int CURRENT_POI = 80;
     public static final int LAST_LOCATION_RELATIVE = 81;
@@ -31,6 +33,8 @@ public class ChannelList {
     public static final int MAP_SYMMETRY = 95;
 
     public static final int POI_TO_ATTACK = 96;
+
+    public static final int ALL_TERRAIN_TILES_BROADCASTED = 97;
 
     //--Unit counts
     public static final int DRONE_COUNT = 100;
