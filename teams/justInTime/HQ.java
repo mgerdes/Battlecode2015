@@ -104,19 +104,29 @@ public class HQ {
             MapBuilder.init(rc.readBroadcast(ChannelList.MAP_WIDTH),
                             rc.readBroadcast(ChannelList.MAP_HEIGHT),
                             Communication.readMapLocationFromChannel(ChannelList.NW_MAP_CORNER),
-                            rc.readBroadcast(ChannelList.MAP_SYMMETRY));
+                            rc.readBroadcast(ChannelList.MAP_SYMMETRY),
+                            myHqLocation);
             mapBuilderInitialized = true;
         }
+
 
         if (!printedMapDataForDebug) {
             System.out.printf("\nMapWidth: %d, MapHeight %s\n",
                               rc.readBroadcast(ChannelList.MAP_WIDTH),
                               rc.readBroadcast(ChannelList.MAP_HEIGHT));
+
             System.out.printf("\nNE %s\nSE %s\nSW %s\nNW %s\n",
                               Communication.readMapLocationFromChannel(ChannelList.NE_MAP_CORNER),
                               Communication.readMapLocationFromChannel(ChannelList.SE_MAP_CORNER),
                               Communication.readMapLocationFromChannel(ChannelList.SW_MAP_CORNER),
                               Communication.readMapLocationFromChannel(ChannelList.NW_MAP_CORNER));
+
+            System.out.println("my hq" + myHqLocation);
+            System.out.println("my hq" + MapBuilder.getReflected(enemyHqLocation));
+
+            System.out.println("enemy hq" + enemyHqLocation);
+            System.out.println("enemy hq" + MapBuilder.getReflected(myHqLocation));
+
             printedMapDataForDebug = true;
         }
 
@@ -167,6 +177,17 @@ public class HQ {
         int symmetryType = getSymmetryType();
         rc.broadcast(ChannelList.MAP_SYMMETRY, symmetryType);
 
+        String symmetryString;
+        if (symmetryType == Symmetry.HORIZONTAL) {
+            symmetryString = "Horizontal";
+        }
+        else if (symmetryType == Symmetry.VERTICAL) {
+            symmetryString = "Vertical";
+        }
+        else {
+            symmetryString = "Rotational";
+        }
+
         System.out.printf(
                 "hqDist: %d\ncount %d\ntower2tower: %f\ntower2Hq: %f\noreNearHQ: %f\nsymmetryType: %s\n",
                 distanceBetweenHq,
@@ -174,7 +195,7 @@ public class HQ {
                 averageTowerToTowerDistance,
                 averageTowerToHqDistance,
                 oreNearHq,
-                symmetryType == Symmetry.ROTATION ? "Rotation" : "Reflection");
+                symmetryString);
     }
 
     private static int getSymmetryType() {
@@ -202,7 +223,7 @@ public class HQ {
             }
         }
 
-        return hqSameX ? Symmetry.VERTICAL : Symmetry.HORIZONTAL;
+        return hqSameX ? Symmetry.HORIZONTAL : Symmetry.VERTICAL;
     }
 
     private static boolean oneHasMatchingX(MapLocation[] locations, int xValue) {
