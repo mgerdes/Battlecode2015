@@ -204,8 +204,8 @@ public class SafeBug {
         for (MapLocation towerLocation : enemyTowerLocations) {
             if (towerLocation.equals(ignoreLocation)) {
                 continue;
-
             }
+
             if (location.distanceSquaredTo(towerLocation) <= RobotType.TOWER.attackRadiusSquared) {
                 return true;
             }

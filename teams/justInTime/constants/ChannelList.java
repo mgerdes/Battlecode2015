@@ -47,13 +47,11 @@ public class ChannelList {
     //--Message board
 
     public static final int SOLDIER_PRIORITY_ORDERS = 6000;
-    public static final int BASHER_PRIORITY_ORDERS = 6010;
     public static final int DRONE_PRIORITY_ORDERS = 6020;
-    public static final int TANK_PRIORITY_ORDERS = 6030;
+    public static final int LAUNCHER_PRIORITY_ORDERS = 6030;
 
     public static final int SOLDIER_DEFAULT_ORDER = 7000;
-    public static final int BASHER_DEFAULT_ORDERS = 7001;
     public static final int DRONE_DEFAULT_ORDERS = 7002;
-    public static final int TANK_DEFAULT_ORDERS = 7030;
+    public static final int LAUNCHER_DEFAULT_ORDERS = 7030;
 }
 

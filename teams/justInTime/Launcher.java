@@ -1,7 +1,10 @@
 package justInTime;
 
 import battlecode.common.*;
+import justInTime.constants.ChannelList;
+import justInTime.constants.Order;
 import justInTime.navigation.SafeBug;
+import justInTime.util.Debug;
 import justInTime.util.Helper;
 
 public class Launcher {
@@ -23,6 +26,7 @@ public class Launcher {
         SafeBug.init(rcC);
         SupplySharing.init(rcC);
         Communication.init(rcC);
+        MessageBoard.init(rcC);
 
         loop();
     }
@@ -41,14 +45,59 @@ public class Launcher {
     private static void doYourThing() throws GameActionException {
         SupplySharing.share();
 
+        Order order = MessageBoard.getOrder(RobotType.LAUNCHER);
+        switch (order) {
+            case Rally:
+                rally();
+                break;
+            case AttackEnemyStructure:
+                attackEnemyStructure();
+                break;
+        }
+    }
+
+    private static void rally() throws GameActionException {
         MapLocation currentLocation = rc.getLocation();
+        attackEnemies(currentLocation);
+
+        if (!rc.isCoreReady()) {
+            return;
+        }
+
+        MapLocation rallyPoint = Communication.readMapLocationFromChannel(ChannelList.RALLY_POINT);
+        SafeBug.setDestination(rallyPoint);
+        Direction direction = SafeBug.getDirection(currentLocation);
+        if (direction != Direction.NONE) {
+            rc.move(direction);
+        }
+    }
+
+    private static void attackEnemyStructure() throws GameActionException {
+        MapLocation currentLocation = rc.getLocation();
+        attackEnemies(currentLocation);
+
+        if (!rc.isCoreReady()) {
+            return;
+        }
+
+        MapLocation structureToAttack = Communication.readMapLocationFromChannel(ChannelList.STRUCTURE_TO_ATTACK);
+        SafeBug.setDestination(structureToAttack);
+
+        Direction direction = SafeBug.getDirection(currentLocation, structureToAttack);
+        if (direction != Direction.NONE) {
+            rc.move(direction);
+        }
+    }
+
+    private static void attackEnemies(MapLocation currentLocation) throws GameActionException {
         RobotInfo[] enemies = rc.senseNearbyRobots(RobotType.MISSILE.sensorRadiusSquared, enemyTeam);
         MapLocation locationToAttack = null;
         int smallestDistance = 10000000;
         //--Need to check if we are near our own teammates!
         for (RobotInfo robot : enemies) {
             int distance = robot.location.distanceSquaredTo(currentLocation);
-            if (distance < smallestDistance && distance <= 9) {
+            if (distance < smallestDistance
+                    && distance <= 9) {
                 smallestDistance = distance;
                 locationToAttack = robot.location;
             }
@@ -65,17 +114,6 @@ public class Launcher {
                     }
                 }
             }
-        }
-
-        if (!rc.isCoreReady()) {
-            return;
-        }
-
-        MapLocation destination = Helper.getWaypoint(0.75, myHqLocation, enemyHqLocation);
-        SafeBug.setDestination(destination);
-        Direction direction = SafeBug.getDirection(currentLocation);
-        if (direction != Direction.NONE) {
-            rc.move(SafeBug.getDirection(currentLocation));
         }
     }
 

@@ -60,11 +60,8 @@ public class MessageBoard {
             case DRONE:
                 updateChannelIfDifferent(ChannelList.DRONE_DEFAULT_ORDERS, order.ordinal());
                 break;
-            case BASHER:
-                updateChannelIfDifferent(ChannelList.BASHER_DEFAULT_ORDERS, order.ordinal());
-                break;
-            case TANK:
-                updateChannelIfDifferent(ChannelList.TANK_DEFAULT_ORDERS, order.ordinal());
+            case LAUNCHER:
+                updateChannelIfDifferent(ChannelList.LAUNCHER_DEFAULT_ORDERS, order.ordinal());
                 break;
         }
     }
@@ -77,11 +74,8 @@ public class MessageBoard {
             case DRONE:
                 setPriorityOrderForChannel(ChannelList.DRONE_PRIORITY_ORDERS, count, order);
                 break;
-            case BASHER:
-                setPriorityOrderForChannel(ChannelList.BASHER_PRIORITY_ORDERS, count, order);
-                break;
-            case TANK:
-                setPriorityOrderForChannel(ChannelList.TANK_PRIORITY_ORDERS, count, order);
+            case LAUNCHER:
+                setPriorityOrderForChannel(ChannelList.LAUNCHER_PRIORITY_ORDERS, count, order);
                 break;
         }
     }
@@ -92,18 +86,14 @@ public class MessageBoard {
                 return getPriorityOrDefaultOrder(
                         ChannelList.SOLDIER_PRIORITY_ORDERS,
                         ChannelList.SOLDIER_DEFAULT_ORDER);
-            case BASHER:
-                return getPriorityOrDefaultOrder(
-                        ChannelList.BASHER_PRIORITY_ORDERS,
-                        ChannelList.BASHER_DEFAULT_ORDERS);
             case DRONE:
                 return getPriorityOrDefaultOrder(
                         ChannelList.DRONE_PRIORITY_ORDERS,
                         ChannelList.DRONE_DEFAULT_ORDERS);
-            case TANK:
+            case LAUNCHER:
                 return getPriorityOrDefaultOrder(
-                        ChannelList.TANK_PRIORITY_ORDERS,
-                        ChannelList.TANK_DEFAULT_ORDERS);
+                        ChannelList.LAUNCHER_PRIORITY_ORDERS,
+                        ChannelList.LAUNCHER_DEFAULT_ORDERS);
 
         }
 

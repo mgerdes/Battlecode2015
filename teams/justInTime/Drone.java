@@ -5,6 +5,7 @@ import battlecode.common.*;
 import justInTime.constants.Order;
 import justInTime.constants.Symmetry;
 import justInTime.navigation.Bug;
+import justInTime.navigation.CircleNav;
 import justInTime.navigation.SafeBug;
 import justInTime.util.Debug;
 import justInTime.util.Helper;
@@ -333,13 +334,16 @@ public class Drone {
     }
 
     private static void rally() throws GameActionException {
+        MapLocation rallyPoint = Communication.readMapLocationFromChannel(ChannelList.RALLY_POINT);
+        CircleNav.init(rc, rallyPoint, rallyPoint.directionTo(enemyHqLocation));
+
         if (!rc.isCoreReady()) {
             return;
         }
 
         MapLocation currentLocation = rc.getLocation();
-        MapLocation rallyPoint = Communication.readMapLocationFromChannel(ChannelList.RALLY_POINT);
-        SafeBug.setDestination(rallyPoint);
+        MapLocation circle = CircleNav.getDestination(6, currentLocation);
+        SafeBug.setDestination(circle);
         Direction direction = SafeBug.getDirection(currentLocation);
 
         if (direction != Direction.NONE) {

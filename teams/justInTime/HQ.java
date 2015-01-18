@@ -18,6 +18,9 @@ public class HQ {
     private static final int HQ_TRY_ATTACK_AFTER_ROUND = 100;
     private static final int HQ_BROADCAST_ATTACK_LOCATION_AFTER_ROUND = 100;
 
+    private static final int MIDGAME_ROUND_NUMBER = 600;
+    private static final int LAUNCHER_ATTACK_ROUND_NUMBER = 1200;
+
     private static final int SPAWN_ON = 1;
     private static final int SPAWN_OFF = 0;
 
@@ -68,7 +71,7 @@ public class HQ {
 
         RobotInfo[] friendlyRobots = rc.senseNearbyRobots(1000000, myTeam);
 
-        setOrders();
+        updateSpawningAndOrders();
         queueBuildings();
         moreMapAnalysis();
 
@@ -213,8 +216,16 @@ public class HQ {
         BuildingQueue.addBuilding(Building.HELIPAD);
         BuildingQueue.addBuilding(Building.BARRACKS);
         BuildingQueue.addBuilding(Building.AEROSPACE_LAB);
-        BuildingQueue.addBuilding(Building.BARRACKS);
-        BuildingQueue.addBuilding(Building.AEROSPACE_LAB);
+    }
+
+    private static void queueBuildings() throws GameActionException {
+        queueSupplyTowers();
+
+        if (Clock.getRoundNum() > MIDGAME_ROUND_NUMBER
+                && rc.getTeamOre() > RobotType.AEROSPACELAB.oreCost) {
+            BuildingQueue.addBuildingWithPostDelay(Building.AEROSPACE_LAB,
+                                                   (int) (RobotType.AEROSPACELAB.buildTurns * 1.3));
+        }
     }
 
     private static void updateRallyPoint() throws GameActionException {
@@ -252,10 +263,6 @@ public class HQ {
         Communication.setMapLocationOnChannel(enemyTowerLocations[index], ChannelList.STRUCTURE_TO_ATTACK);
     }
 
-    private static void queueBuildings() throws GameActionException {
-        queueSupplyTowers();
-    }
-
     private static void queueSupplyTowers() throws GameActionException {
         //--Add 2 supply depos if we are not producing enough
         int supplyConsumption = rc.readBroadcast(ChannelList.LAUNCHER_COUNT) * RobotType.LAUNCHER.supplyUpkeep
@@ -274,31 +281,46 @@ public class HQ {
         }
     }
 
-    private static void setOrders() throws GameActionException {
+    private static void updateSpawningAndOrders() throws GameActionException {
+        int currentRound = Clock.getRoundNum();
+
         //--Spawn up to 35 miners
         int minerCount = rc.readBroadcast(ChannelList.MINER_COUNT);
         MessageBoard.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
 
-        //--Spawn up to 20 drones
+        //--Spawn up to 20 drones in early game, 40 in mid-game
         int droneCount = rc.readBroadcast(ChannelList.DRONE_COUNT);
-        MessageBoard.setSpawn(RobotType.DRONE, droneCount < 20 ? SPAWN_ON : SPAWN_OFF);
+        int droneMax = currentRound > MIDGAME_ROUND_NUMBER ? 40 : 20;
+        MessageBoard.setSpawn(RobotType.DRONE, droneCount < droneMax ? SPAWN_ON : SPAWN_OFF);
 
-        //--Spawn up to 25 soldiers
+        //--Spawn up to 25 soldiers in early game, 40 in mid-game
         int soldierCount = rc.readBroadcast(ChannelList.SOLDIER_COUNT);
+        int soldierMax = currentRound > MIDGAME_ROUND_NUMBER ? 40 : 25;
         MessageBoard.setSpawn(RobotType.SOLDIER, soldierCount < 25 ? SPAWN_ON : SPAWN_OFF);
 
         //--Spawn launchers!
         MessageBoard.setSpawn(RobotType.LAUNCHER, SPAWN_ON);
 
-        //--Orders for early/mid game
+        //--Set orders
         MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.DefendMiners);
-
-        int launcherCount = rc.readBroadcast(ChannelList.LAUNCHER_COUNT);
-
-        MessageBoard.setDefaultOrder(RobotType.DRONE, Order.AttackEnemyMiners);
 
         if (rc.readBroadcast(ChannelList.SURVEY_COMPLETE) == 0) {
             MessageBoard.setPriorityOrder(1, RobotType.DRONE, Order.SurveyMap);
+        }
+
+        int launcherCount = rc.readBroadcast(ChannelList.LAUNCHER_COUNT);
+        if (launcherCount > 1) {
+            MessageBoard.setDefaultOrder(RobotType.DRONE, Order.Rally);
+        }
+        else {
+            MessageBoard.setDefaultOrder(RobotType.DRONE, Order.AttackEnemyMiners);
+        }
+
+        if (currentRound < LAUNCHER_ATTACK_ROUND_NUMBER) {
+            MessageBoard.setDefaultOrder(RobotType.LAUNCHER, Order.Rally);
+        }
+        else {
+            MessageBoard.setDefaultOrder(RobotType.LAUNCHER, Order.AttackEnemyStructure);
         }
     }
 
