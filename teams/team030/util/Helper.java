@@ -1,5 +1,6 @@
-package team030;
+package team030.util;
 
+import team030.constants.ChannelList;
 import battlecode.common.Direction;
 import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
@@ -67,5 +68,27 @@ public class Helper {
             default:
                 return -1;
         }
+    }
+
+    public static int getCountChannelFor(RobotType type) {
+        if (type == RobotType.MINER) {
+            return ChannelList.MINER_COUNT;
+        }
+        else if (type == RobotType.DRONE) {
+            return ChannelList.DRONE_COUNT;
+        }
+
+        return -1;
+    }
+
+    public static int getProductionChannelFor(RobotType type) {
+        if (type == RobotType.MINER) {
+            return ChannelList.MORE_MINERS;
+        }
+        else if (type == RobotType.DRONE) {
+            return ChannelList.MORE_DRONES;
+        }
+
+        return -1;
     }
 }

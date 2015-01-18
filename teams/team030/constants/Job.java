@@ -1,4 +1,4 @@
-package team030.util;
+package team030.constants;
 
 //--Enum class
 public class Job {

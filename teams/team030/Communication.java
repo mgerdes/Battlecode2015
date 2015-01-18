@@ -1,11 +1,12 @@
 package team030;
 
+import team030.constants.ChannelList;
+import team030.constants.Order;
 import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
-import team030.util.ChannelList;
-import team030.util.Job;
+import team030.constants.Job;
 
 public class Communication {
     private static RobotController rc;
@@ -41,6 +42,39 @@ public class Communication {
         switch (job) {
             case Job.SUPPLY_MINERS:
                 rc.broadcast(ChannelList.SUPPLY_MINERS_JOB_REPORTING, Clock.getRoundNum());
+        }
+    }
+
+    public static void setOrder(int order, int value) throws GameActionException {
+        switch (order) {
+            case Order.SPAWN_MORE_MINERS:
+                updateOrder(ChannelList.MORE_MINERS, value);
+                break;
+            case Order.SPAWN_MORE_DRONES:
+                updateOrder(ChannelList.MORE_DRONES, value);
+                break;
+            case Order.DRONE_DEFEND:
+                updateOrder(ChannelList.DRONE_DEFEND, value);
+                break;
+            case Order.DRONE_SWARM:
+                updateOrder(ChannelList.DRONE_SWARM, value);
+                break;
+            case Order.DRONE_ATTACK:
+                updateOrder(ChannelList.DRONE_ATTACK, value);
+                break;
+        }
+    }
+
+    private static void updateOrder(int channel, int newValue) throws GameActionException {
+        //--Only broadcast the value if it needs to be changed
+        int currentValue = rc.readBroadcast(channel);
+        if (newValue == Order.YES
+                && currentValue == Order.NO) {
+            rc.broadcast(channel, Order.YES);
+        }
+        else if (newValue == Order.NO
+                && currentValue == Order.YES) {
+            rc.broadcast(channel, Order.NO);
         }
     }
 }

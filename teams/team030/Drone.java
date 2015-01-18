@@ -1,13 +1,13 @@
 package team030;
 
+import team030.constants.ChannelList;
+import team030.constants.Order;
 import battlecode.common.*;
 import team030.navigation.Bug;
 import team030.navigation.CircleNav;
 import team030.navigation.SafeBug;
-import team030.util.ChannelList;
 import team030.util.Debug;
-import team030.util.Job;
-import team030.util.Tactic;
+import team030.constants.Job;
 
 public class Drone {
     private static RobotController rc;
@@ -60,17 +60,15 @@ public class Drone {
 
         Debug.setString(1, "not doing job", rc);
         SupplySharing.share();
-        int tactic = rc.readBroadcast(ChannelList.TACTIC);
-        switch (tactic) {
-            case Tactic.FORTIFY:
-                fortify();
-                break;
-            case Tactic.SWARM:
-                swarm();
-                break;
-            case Tactic.ATTACK_ENEMY_STRUCTURE:
-                attackEnemyStructure();
-                break;
+
+        if (rc.readBroadcast(ChannelList.DRONE_SWARM) == Order.YES) {
+            swarm();
+        }
+        else if (rc.readBroadcast(ChannelList.DRONE_ATTACK) == Order.YES) {
+            attackEnemyStructure();
+        }
+        else if (rc.readBroadcast(ChannelList.DRONE_DEFEND) == Order.YES) {
+            fortify();
         }
     }
 

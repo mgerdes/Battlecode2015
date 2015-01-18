@@ -1,8 +1,9 @@
 package team030;
 
+import team030.constants.ChannelList;
+import team030.util.Helper;
 import battlecode.common.*;
 import team030.navigation.Bug;
-import team030.util.ChannelList;
 
 public class Miner {
     private static RobotController rc;
