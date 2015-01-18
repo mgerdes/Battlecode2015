@@ -57,8 +57,9 @@ public class Launcher {
     }
 
     private static void rally() throws GameActionException {
+        //--TODO: Add some logic to handle nearby enemies
+
         MapLocation currentLocation = rc.getLocation();
-        attackEnemies(currentLocation);
 
         if (!rc.isCoreReady()) {
             return;
@@ -74,67 +75,30 @@ public class Launcher {
 
     private static void attackEnemyStructure() throws GameActionException {
         MapLocation currentLocation = rc.getLocation();
-        attackEnemies(currentLocation);
+        RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.MISSILE.sensorRadiusSquared, enemyTeam);
 
-        if (!rc.isCoreReady()) {
+        //--If there are no nearby enemies, move closer
+        if (enemiesInAttackRange.length == 0) {
+
+            if (!rc.isCoreReady()) {
+                return;
+            }
+
+            MapLocation structureToAttack = Communication.readMapLocationFromChannel(ChannelList.STRUCTURE_TO_ATTACK);
+            SafeBug.setDestination(structureToAttack);
+            Direction direction = SafeBug.getDirection(currentLocation, structureToAttack);
+            if (direction != Direction.NONE) {
+                rc.move(direction);
+            }
+
             return;
         }
 
-        MapLocation structureToAttack = Communication.readMapLocationFromChannel(ChannelList.STRUCTURE_TO_ATTACK);
-        SafeBug.setDestination(structureToAttack);
-
-        Direction direction = SafeBug.getDirection(currentLocation, structureToAttack);
-        if (direction != Direction.NONE) {
-            rc.move(direction);
+        //--There are enemies nearby. Let's attack
+        MapLocation locationToAttack = enemiesInAttackRange[0].location;
+        Direction attackDirection = currentLocation.directionTo(locationToAttack);
+        if (rc.canLaunch(attackDirection)) {
+            rc.launchMissile(attackDirection);
         }
-    }
-
-    private static void attackEnemies(MapLocation currentLocation) throws GameActionException {
-        RobotInfo[] enemies = rc.senseNearbyRobots(RobotType.MISSILE.sensorRadiusSquared, enemyTeam);
-        MapLocation locationToAttack = null;
-        int smallestDistance = 10000000;
-        //--Need to check if we are near our own teammates!
-        for (RobotInfo robot : enemies) {
-            int distance = robot.location.distanceSquaredTo(currentLocation);
-            if (distance < smallestDistance
-                    && distance <= 9) {
-                smallestDistance = distance;
-                locationToAttack = robot.location;
-            }
-        }
-
-        if (locationToAttack != null) {
-            Direction attackDirection = currentLocation.directionTo(locationToAttack);
-            if (rc.canLaunch(attackDirection)) {
-                rc.launchMissile(attackDirection);
-                if (rc.isCoreReady()) {
-                    Direction awayFromMissile = attackDirection.opposite();
-                    if (tryMove(awayFromMissile)) {
-                        return;
-                    }
-                }
-            }
-        }
-    }
-
-    private static boolean tryMove(Direction direction) throws GameActionException {
-        if (rc.canMove(direction)) {
-            rc.move(direction);
-            return true;
-        }
-
-        direction = direction.rotateLeft();
-        if (rc.canMove(direction)) {
-            rc.move(direction);
-            return true;
-        }
-
-        direction = direction.rotateRight().rotateRight();
-        if (rc.canMove(direction)) {
-            rc.move(direction);
-            return true;
-        }
-
-        return false;
     }
 }
