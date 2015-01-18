@@ -76,6 +76,9 @@ public class ChannelList {
     public static final int NW_CORNER_BFS_DIRECTIONS = 30000; //--44400
 
     //--BFS queue
-    public static final int QUEUE_START = 50000;
+    public static final int BFS_LOOP_STATE = 49997;
+    public static final int BFS_QUEUE_FRONT = 49998;
+    public static final int BFS_QUEUE_BACK = 49999;
+    public static final int BFS_QUEUE_START = 50000;
 }
 
