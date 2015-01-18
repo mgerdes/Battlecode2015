@@ -104,11 +104,11 @@ public class Drone {
             return;
         }
 
-        if (symmetry == Symmetry.REFLECTION) {
-            surveryAndBroadcastDataForReflectedMap();
+        if (symmetry == Symmetry.ROTATION) {
+            findCornerAndBroadcastMapDataForRotationalSymmetry();
         }
         else {
-            findCornerAndBroadcastMapDataForRotationalSymmetry();
+            surveryAndBroadcastDataForReflectedMap();
         }
     }
 
@@ -145,12 +145,12 @@ public class Drone {
                     || awayFromEnemyHq == Direction.SOUTH) {
                 segmentLength = Math.abs(currentLocation.y - myHqLocation.y) * 2
                         + Math.abs(myHqLocation.y - enemyHqLocation.y);
-                rc.broadcast(ChannelList.MAP_HEIGHT, segmentLength);
+                rc.broadcast(ChannelList.MAP_HEIGHT, segmentLength + 1);
             }
             else {
                 segmentLength = Math.abs(currentLocation.x - myHqLocation.x) * 2
                         + Math.abs(myHqLocation.x - enemyHqLocation.x);
-                rc.broadcast(ChannelList.MAP_WIDTH, segmentLength);
+                rc.broadcast(ChannelList.MAP_WIDTH, segmentLength + 1);
             }
 
             setTwoMapEdges(awayFromEnemyHq, currentLocation, segmentLength);
@@ -184,7 +184,7 @@ public class Drone {
                 int currentValue = goingNorthSouth ? currentLocation.y : currentLocation.x;
                 int segmentLength = Math.abs(valueAtBeginningOfPass - currentValue);
                 int channelToBroadcast = goingNorthSouth ? ChannelList.MAP_HEIGHT : ChannelList.MAP_WIDTH;
-                rc.broadcast(channelToBroadcast, segmentLength);
+                rc.broadcast(channelToBroadcast, segmentLength + 1);
                 reflectionFoundSegment = true;
                 setTwoMapEdges(segmentTravelDirection, currentLocation, segmentLength);
             }
@@ -242,8 +242,8 @@ public class Drone {
             int mapWidth =
                     Math.abs(currentLocation.x - myHqLocation.x) * 2 + Math.abs(myHqLocation.x - enemyHqLocation.x);
 
-            rc.broadcast(ChannelList.MAP_WIDTH, mapWidth);
-            rc.broadcast(ChannelList.MAP_HEIGHT, mapHeight);
+            rc.broadcast(ChannelList.MAP_WIDTH, mapWidth + 1);
+            rc.broadcast(ChannelList.MAP_HEIGHT, mapHeight + 1);
 
             Direction cornerDirection = getCornerDirection(currentLocation);
             broadcastFourCorners(currentLocation, cornerDirection, mapWidth, mapHeight);

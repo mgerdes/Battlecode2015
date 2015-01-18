@@ -33,6 +33,8 @@ public class HQ {
     private static MapLocation[] enemyTowers;
     private static MapLocation[] myTowers;
     private static boolean printedMapDataForDebug;
+    private static boolean mapBuilderInitialized;
+    private static boolean allTerrainTilesBroadcast;
 
     public static void run(RobotController rcC) throws GameActionException {
         rc = rcC;
@@ -73,7 +75,7 @@ public class HQ {
 
         updateSpawningAndOrders();
         queueBuildings();
-        moreMapAnalysis();
+        broadcastAllTerrainTiles();
 
         updateRallyPoint();
 
@@ -93,9 +95,17 @@ public class HQ {
         }
     }
 
-    private static void moreMapAnalysis() throws GameActionException {
+    private static void broadcastAllTerrainTiles() throws GameActionException {
         if (rc.readBroadcast(ChannelList.SURVEY_COMPLETE) != 1) {
             return;
+        }
+
+        if (!mapBuilderInitialized) {
+            MapBuilder.init(rc.readBroadcast(ChannelList.MAP_WIDTH),
+                            rc.readBroadcast(ChannelList.MAP_HEIGHT),
+                            Communication.readMapLocationFromChannel(ChannelList.NW_MAP_CORNER),
+                            rc.readBroadcast(ChannelList.MAP_SYMMETRY));
+            mapBuilderInitialized = true;
         }
 
         if (!printedMapDataForDebug) {
@@ -110,12 +120,16 @@ public class HQ {
             printedMapDataForDebug = true;
         }
 
-        //--This is where the HQ can call some awesome BFS class
-        //  or other pathfinding algorithm
-        //--The class should take a bytecode limit as a parameter
-        //  so we can limit the number of bytecodes the HQ uses per round
-        //--Ideally we can broadcast paths to all enemy towers
-        //  and a path to the enemy hq.
+        if (!allTerrainTilesBroadcast) {
+            MapLocation unknown = MapBuilder.processAndReturnUnknown(7000);
+            if (unknown == null) {
+                allTerrainTilesBroadcast = true;
+                rc.broadcast(ChannelList.ALL_TERRAIN_TILES_BROADCASTED, 1);
+            }
+            else {
+                Communication.setMapLocationOnChannel(unknown, ChannelList.LOCATION_TO_SURVEY);
+            }
+        }
     }
 
     private static void initializeChannels() throws GameActionException {
@@ -160,7 +174,7 @@ public class HQ {
                 averageTowerToTowerDistance,
                 averageTowerToHqDistance,
                 oreNearHq,
-                symmetryType == Symmetry.REFLECTION ? "Reflection" : "Rotation");
+                symmetryType == Symmetry.ROTATION ? "Rotation" : "Reflection");
     }
 
     private static int getSymmetryType() {
@@ -188,7 +202,7 @@ public class HQ {
             }
         }
 
-        return Symmetry.REFLECTION;
+        return hqSameX ? Symmetry.VERTICAL : Symmetry.HORIZONTAL;
     }
 
     private static boolean oneHasMatchingX(MapLocation[] locations, int xValue) {

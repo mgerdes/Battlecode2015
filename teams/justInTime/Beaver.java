@@ -92,7 +92,8 @@ public class Beaver {
         }
 
         int direction = 0;
-        while (!rc.canBuild(Helper.getDirection(direction), type)) {
+        MapLocation currentLocation = rc.getLocation();
+        while (!canBuildAndValidSquare(currentLocation, Helper.getDirection(direction), type)) {
             direction++;
             if (direction > 7) {
                 return false;
@@ -102,6 +103,13 @@ public class Beaver {
         rc.build(Helper.getDirection(direction), type);
         BuildingQueue.confirmBuildingBegun();
         return true;
+    }
+
+    private static boolean canBuildAndValidSquare(MapLocation currentLocation, Direction direction, RobotType type) {
+        MapLocation proposedSite = currentLocation.add(direction);
+        return proposedSite.x % 2 == 0
+                && proposedSite.y % 2 == 0
+                && rc.canBuild(direction, type);
     }
 
     private static void moveInRandomDirection() throws GameActionException {
