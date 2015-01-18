@@ -70,9 +70,12 @@ public class ChannelList {
     public static final int LAUNCHER_DEFAULT_ORDERS = 7030;
 
     //--Terrain tile storage
-    public static final int NW_CORNER_TERRAIN_TILE = 20000; //--34400
+    public static final int NW_CORNER_TERRAIN_TILE = 10000; //--24400
 
     //--BFS storage
-    public static final int NW_CORNER_BFS_DIRECTIONS = 40000; //--54400
+    public static final int NW_CORNER_BFS_DIRECTIONS = 30000; //--44400
+
+    //--BFS queue
+    public static final int QUEUE_START = 50000;
 }
 
