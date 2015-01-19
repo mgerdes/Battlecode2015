@@ -43,6 +43,12 @@ public class Tower {
     }
 
     private static void doYourThing() throws GameActionException {
+        RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.TOWER.sensorRadiusSquared, enemyTeam);
+        int numberOfEnemies = enemiesInSensorRange.length;
+        if (numberOfEnemies > 0) {
+            Radio.enemiesSpotted(myLocation, numberOfEnemies);
+        }
+
         if (rc.isWeaponReady()) {
             RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.TOWER.attackRadiusSquared, enemyTeam);
             if (enemiesInAttackRange.length > 0) {

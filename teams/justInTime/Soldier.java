@@ -5,7 +5,6 @@ import justInTime.communication.Channel;
 import justInTime.communication.Radio;
 import justInTime.constants.Order;
 import justInTime.navigation.SafeBug;
-import justInTime.util.Debug;
 import justInTime.util.Helper;
 
 public class Soldier {
@@ -15,6 +14,8 @@ public class Soldier {
     private static MapLocation enemyHqLocation;
     private static Team myTeam;
     private static MapLocation myHqLocation;
+
+    private static final int MIN_DISTANCE_SQUARED_AWAY_FROM_HQ = 16;
 
     public static void run(RobotController rcC) {
         rc = rcC;
@@ -77,32 +78,40 @@ public class Soldier {
             return;
         }
 
+        //--Distress locations take priority.
         MapLocation distressLocation = Radio.getDistressLocation();
         if (distressLocation != null) {
             SafeBug.setDestination(distressLocation);
         }
+        //--If there is no distress signal, the priorities are
+        //  1. nearby enemies
+        //  2. enemies near towers
+        //  3. avoid standing next to other soldiers
+        //  4. don't stand too close to our hq
+        //--If none of these three things needs to happen, the soldier sits.
         else {
             RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.SOLDIER.sensorRadiusSquared, enemyTeam);
             RobotInfo[] teamInCloseRange = rc.senseNearbyRobots(2, myTeam);
+            MapLocation towerWhereEnemySpotted = Radio.getTowerLocationWhereEnemySpotted();
             int soldiersInCloseRange = Helper.getRobotsOfType(teamInCloseRange, RobotType.SOLDIER);
 
-            int minerDistance = rc.readBroadcast(Channel.MINER_DISTANCE_SQUARED_TO_HQ);
+            int minerDistanceSquared = rc.readBroadcast(Channel.MINER_DISTANCE_SQUARED_TO_HQ);
             int myDistanceToHq = currentLocation.distanceSquaredTo(myHqLocation);
-            //--Go to nearby enemy unless I'm too far from base
+
             if (enemiesInSensorRange.length > 0
-                    && myDistanceToHq < minerDistance + 4) {
+                    && myDistanceToHq < minerDistanceSquared + 4) {
                 SafeBug.setDestination(enemiesInSensorRange[0].location);
             }
-            //--If I am too close to other soldiers, spread out
+            else if (towerWhereEnemySpotted != null) {
+                SafeBug.setDestination(towerWhereEnemySpotted);
+            }
             else if (soldiersInCloseRange > 2) {
                 Direction direction = getDirectionAwayFrom(currentLocation, teamInCloseRange);
                 if (direction != null) {
                     SafeBug.setDestination(currentLocation.add(direction));
                 }
             }
-            //--If there are no nearby enemies, make sure that I'm outside the miner circle
-            else if (myDistanceToHq < minerDistance + 2) {
-                Debug.setString(1, "my distance is " + myDistanceToHq, rc);
+            else if (myDistanceToHq < MIN_DISTANCE_SQUARED_AWAY_FROM_HQ) {
                 SafeBug.setDestination(enemyHqLocation);
             }
             else {

@@ -66,6 +66,10 @@ public class Channel {
     protected static final int DISTRESS_LOCATION_X = 5002;
     protected static final int DISTRESS_LOCATION_Y = 5003;
 
+    protected static final int ENEMY_SPOTTED_CONTEXT = 5100;
+    protected static final int ENEMY_SPOTTED_LOCATION_X = 5101;
+    protected static final int ENEMY_SPOTTED_LOCATION_Y = 5102;
+
     //--Message board
 
     public static final int SOLDIER_PRIORITY_ORDERS = 6000;
