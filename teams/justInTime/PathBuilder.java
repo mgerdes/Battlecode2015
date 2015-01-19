@@ -9,6 +9,10 @@ public class PathBuilder {
     static int[] xOffsets = {1,0,-1, 0,-1,1,-1, 1};
     static int[] yOffsets = {0,1, 0,-1,-1,1, 1,-1};
 
+    public static void init(RobotController rcin) {
+        rc = rcin;
+    }
+
     public static Direction getDirection(int hashedMapLocation, int poi) throws GameActionException {
         int broadcastedValue = rc.readBroadcast(ChannelList.NW_CORNER_BFS_DIRECTIONS + hashedMapLocation);
         int direction = (int)(broadcastedValue / (Math.pow(10, poi - 1))) % 10 - 1;
