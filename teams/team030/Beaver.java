@@ -14,15 +14,18 @@ public class Beaver {
 
     private static Random random;
     private static MapLocation myHqLocation;
+    private static boolean xyParityMatch;
 
     public static void run(RobotController rcC) throws GameActionException {
         rc = rcC;
 
         myHqLocation = rcC.senseHQLocation();
+        xyParityMatch = xyParityMatch(myHqLocation);
         random = new Random(rcC.getID());
 
         BuildingQueue.init(rcC);
         Bug.init(rcC);
+        SupplySharing.init(rcC);
 
         loop();
     }
@@ -39,6 +42,8 @@ public class Beaver {
     }
 
     private static void doYourThing() throws GameActionException {
+        SupplySharing.shareMore();
+
         if (!rc.isCoreReady()) {
             return;
         }
@@ -72,6 +77,12 @@ public class Beaver {
                 return build(RobotType.HELIPAD);
             case Building.SUPPLY_DEPOT:
                 return build(RobotType.SUPPLYDEPOT);
+            case Building.BARRACKS:
+                return build(RobotType.BARRACKS);
+            case Building.TANK_FACTORY:
+                return build(RobotType.TANKFACTORY);
+            case Building.AEROSPACE_LAB:
+                return build(RobotType.AEROSPACELAB);
             default:
                 return false;
         }
@@ -83,7 +94,8 @@ public class Beaver {
         }
 
         int direction = 0;
-        while (!rc.canBuild(Helper.getDirection(direction), type)) {
+        MapLocation currentLocation = rc.getLocation();
+        while (!canBuildAndValidSquare(currentLocation, Helper.getDirection(direction), type)) {
             direction++;
             if (direction > 7) {
                 return false;
@@ -93,6 +105,16 @@ public class Beaver {
         rc.build(Helper.getDirection(direction), type);
         BuildingQueue.confirmBuildingBegun();
         return true;
+    }
+
+    private static boolean canBuildAndValidSquare(MapLocation currentLocation, Direction direction, RobotType type) {
+        MapLocation proposedSite = currentLocation.add(direction);
+        return rc.canBuild(direction, type)
+                && xyParityMatch == xyParityMatch(proposedSite);
+    }
+
+    private static boolean xyParityMatch(MapLocation location) {
+        return location.x % 2 == location.y % 2;
     }
 
     private static void moveInRandomDirection() throws GameActionException {

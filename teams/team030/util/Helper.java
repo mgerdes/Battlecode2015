@@ -1,6 +1,6 @@
 package team030.util;
 
-import team030.constants.ChannelList;
+import battlecode.common.MapLocation;
 import battlecode.common.Direction;
 import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
@@ -70,25 +70,59 @@ public class Helper {
         }
     }
 
-    public static int getCountChannelFor(RobotType type) {
-        if (type == RobotType.MINER) {
-            return ChannelList.MINER_COUNT;
-        }
-        else if (type == RobotType.DRONE) {
-            return ChannelList.DRONE_COUNT;
-        }
-
-        return -1;
+    public static MapLocation getMidpoint(MapLocation pointA, MapLocation pointB) {
+        int xAve = (pointA.x + pointB.x) / 2;
+        int yAve = (pointA.y + pointB.y) / 2;
+        return new MapLocation(xAve, yAve);
     }
 
-    public static int getProductionChannelFor(RobotType type) {
-        if (type == RobotType.MINER) {
-            return ChannelList.MORE_MINERS;
-        }
-        else if (type == RobotType.DRONE) {
-            return ChannelList.MORE_DRONES;
+    public static MapLocation getWaypoint(double percentage, MapLocation pointA, MapLocation pointB) {
+        int xAve = (int) (pointA.x * percentage + pointB.x * (1 - percentage));
+        int yAve = (int) (pointA.y * percentage + pointB.y * (1 - percentage));
+        return new MapLocation(xAve, yAve);
+    }
+
+    public static Direction getSumOfDirections(Direction[] allDirection) {
+        //--Note: This method will favor diagonal directions
+        int dx = 0;
+        int dy = 0;
+        int length = allDirection.length;
+        for (int i = 0; i < length; i++) {
+            dx = allDirection[i].dx;
+            dy = allDirection[i].dy;
         }
 
-        return -1;
+        if (dx > 0) {
+            if (dy < 0) {
+                return Direction.NORTH_EAST;
+            }
+            else if (dy > 0) {
+                return Direction.SOUTH_EAST;
+            }
+            else {
+                return Direction.EAST;
+            }
+        }
+        else if (dx < 0) {
+            if (dy < 0) {
+                return Direction.NORTH_WEST;
+            }
+            else if (dy > 0) {
+                return Direction.SOUTH_WEST;
+            }
+            else {
+                return Direction.WEST;
+            }
+        }
+        else {
+            if (dy < 0) {
+                return Direction.NORTH;
+            }
+            else if (dy > 0) {
+                return Direction.SOUTH;
+            }
+        }
+
+        return Direction.NONE;
     }
 }

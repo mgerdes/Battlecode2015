@@ -1,11 +1,12 @@
 package team030;
 
+import team030.communication.Radio;
 import team030.constants.Building;
-import team030.constants.ChannelList;
+import team030.communication.Channel;
 import team030.constants.Order;
+import team030.constants.Symmetry;
 import team030.util.Helper;
 import battlecode.common.*;
-import team030.util.Debug;
 
 public class HQ {
     private static RobotController rc;
@@ -15,21 +16,25 @@ public class HQ {
     private static MapLocation myHqLocation;
     private static MapLocation enemyHqLocation;
 
+    private static final int HQ_TRY_ATTACK_AFTER_ROUND = 100;
+    private static final int HQ_BROADCAST_ATTACK_LOCATION_AFTER_ROUND = 100;
 
-    private static final int BEAVER_COUNT = 1;
-    private static final int DO_NOT_ATTACK_BEFORE_ROUND = 40;
+    private static final int LAUNCHERS_REQUIRED_FOR_ATTACK = 3;
+
+    private static final int SPAWN_ON = 1;
+    private static final int SPAWN_OFF = 0;
 
     //--Map analysis data
     private static int distanceBetweenHq;
     private static int towerCount;
     private static double averageTowerToTowerDistance;
     private static double averageTowerToHqDistance;
-
-    //--One time triggers
-    private static boolean trigger1;
-    private static boolean trigger2;
-    private static boolean trigger3;
-    private static boolean trigger4;
+    private static double oreNearHq;
+    private static MapLocation[] enemyTowers;
+    private static MapLocation[] myTowers;
+    private static boolean printedMapDataForDebug;
+    private static boolean mapBuilderInitialized;
+    private static boolean allTerrainTilesBroadcast;
 
     public static void run(RobotController rcC) throws GameActionException {
         rc = rcC;
@@ -38,58 +43,23 @@ public class HQ {
         enemyTeam = myTeam.opponent();
         myHqLocation = rc.getLocation(); //--This is the HQ!
         enemyHqLocation = rc.senseEnemyHQLocation();
+        enemyTowers = rc.senseEnemyTowerLocations();
+        myTowers = rc.senseTowerLocations();
 
         BuildingQueue.init(rcC);
-        Communication.init(rcC);
+        Radio.init(rcC);
         SupplySharing.init(rcC);
+        MessageBoard.init(rcC);
 
         analyzeMap();
+        initializeChannels();
         setInitialBuildings();
         loop();
-    }
-
-    private static void analyzeMap() {
-        distanceBetweenHq = myHqLocation.distanceSquaredTo(enemyHqLocation);
-        MapLocation[] enemyTowers = rc.senseEnemyTowerLocations();
-        towerCount = enemyTowers.length;
-
-        double sumDistance = 0;
-        int numberOfDistances = 0;
-        for (int i = 0; i < towerCount; i++) {
-            for (int j = i; j < towerCount; j++) {
-                sumDistance += enemyTowers[i].distanceSquaredTo(enemyTowers[j]);
-                numberOfDistances++;
-            }
-        }
-
-        averageTowerToTowerDistance = sumDistance / numberOfDistances;
-
-        sumDistance = 0;
-        for (int i = 0; i < towerCount; i++) {
-            sumDistance += enemyTowers[i].distanceSquaredTo(enemyHqLocation);
-        }
-
-        averageTowerToHqDistance = sumDistance / towerCount;
-
-        System.out.printf("hqDist: %d\ncount %d\ntower2tower: %f\ntower2Hq: %f\n", distanceBetweenHq,
-                towerCount, averageTowerToTowerDistance, averageTowerToHqDistance);
-    }
-
-    private static void setInitialBuildings() throws GameActionException {
-        if (distanceBetweenHq < 2000) {
-            BuildingQueue.addBuilding(Building.HELIPAD);
-            BuildingQueue.addBuilding(Building.MINER_FACTORY);
-        }
-        else {
-            BuildingQueue.addBuilding(Building.MINER_FACTORY);
-            BuildingQueue.addBuilding(Building.HELIPAD);
-        }
     }
 
     private static void loop() {
         while (true) {
             try {
-                Debug.setString(0, String.format("%f at beginning of round", rc.getTeamOre()), rc);
                 doYourThing();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -103,11 +73,17 @@ public class HQ {
 
         RobotInfo[] friendlyRobots = rc.senseNearbyRobots(1000000, myTeam);
 
-        setOrders();
+        updateSpawningAndOrders();
         queueBuildings();
 
+        updateRallyPoint();
+
+        if (Clock.getRoundNum() > HQ_BROADCAST_ATTACK_LOCATION_AFTER_ROUND) {
+            broadcastAttackLocation();
+        }
+
         if (rc.isWeaponReady()
-                && Clock.getRoundNum() > DO_NOT_ATTACK_BEFORE_ROUND) {
+                && Clock.getRoundNum() > HQ_TRY_ATTACK_AFTER_ROUND) {
             tryToAttack();
         }
 
@@ -116,79 +92,280 @@ public class HQ {
                 spawn(RobotType.BEAVER);
             }
         }
+
+        broadcastAllTerrainTiles();
     }
 
-    private static void queueBuildings() throws GameActionException {
-        if (Clock.getRoundNum() < 250) {
-            //--Early buildings are handled by the initial buildings method
+    private static void broadcastAllTerrainTiles() throws GameActionException {
+        if (rc.readBroadcast(Channel.PERIMETER_SURVEY_COMPLETE) != 1) {
             return;
         }
 
-        if (rc.getTeamOre() > RobotType.HELIPAD.oreCost) {
-            BuildingQueue.addBuildingWithPostDelay(Building.HELIPAD, RobotType.HELIPAD.buildTurns * 2);
+        if (!mapBuilderInitialized) {
+            MapBuilder.init(rc.readBroadcast(Channel.MAP_WIDTH),
+                            rc.readBroadcast(Channel.MAP_HEIGHT),
+                            Radio.readMapLocationFromChannel(Channel.NW_MAP_CORNER),
+                            rc.readBroadcast(Channel.MAP_SYMMETRY),
+                            myHqLocation,
+                            rc);
+            mapBuilderInitialized = true;
         }
 
-        int unitCount = rc.readBroadcast(ChannelList.MINER_COUNT) + rc.readBroadcast(ChannelList.DRONE_COUNT);
-        if (!trigger1
-                && unitCount > 40) {
-            BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
-            trigger1 = true;
+
+        if (!printedMapDataForDebug) {
+            System.out.printf("\nMapWidth: %d, MapHeight %s\n",
+                              rc.readBroadcast(Channel.MAP_WIDTH),
+                              rc.readBroadcast(Channel.MAP_HEIGHT));
+
+            System.out.printf("\nNE %s\nSE %s\nSW %s\nNW %s\n",
+                              Radio.readMapLocationFromChannel(Channel.NE_MAP_CORNER),
+                              Radio.readMapLocationFromChannel(Channel.SE_MAP_CORNER),
+                              Radio.readMapLocationFromChannel(Channel.SW_MAP_CORNER),
+                              Radio.readMapLocationFromChannel(Channel.NW_MAP_CORNER));
+
+            System.out.println("my hq" + myHqLocation);
+            System.out.println("my hq" + MapBuilder.getReflectedMapLocation(enemyHqLocation));
+
+            System.out.println("enemy hq" + enemyHqLocation);
+            System.out.println("enemy hq" + MapBuilder.getReflectedMapLocation(myHqLocation));
+
+            printedMapDataForDebug = true;
         }
 
-        if (!trigger2
-                && unitCount > 60) {
-            BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
-            trigger2 = true;
-        }
-
-        if (!trigger3
-                && unitCount > 70) {
-            BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
-            trigger3 = true;
-        }
-
-        if (!trigger4
-                && unitCount > 80) {
-            BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
-            trigger4 = true;
+        if (!allTerrainTilesBroadcast) {
+            allTerrainTilesBroadcast = MapBuilder.processUntilComplete(Clock.getBytecodesLeft() - 30);
+            if (Clock.getBytecodeNum() < 1000) {
+                System.out.println("bytecodes exceeded?");
+            }
         }
     }
 
-    private static void setOrders() throws GameActionException {
-        int minerCount = rc.readBroadcast(ChannelList.MINER_COUNT);
-        int droneCount = rc.readBroadcast(ChannelList.DRONE_COUNT);
+    private static void initializeChannels() throws GameActionException {
+        rc.broadcast(Channel.TOWER_VOID_COUNT, 1000000);
+    }
 
-        Communication.setOrder(Order.SPAWN_MORE_DRONES, Order.YES);
+    private static void analyzeMap() throws GameActionException {
+        distanceBetweenHq = myHqLocation.distanceSquaredTo(enemyHqLocation);
+        towerCount = enemyTowers.length;
 
-        if (distanceBetweenHq < 2000) {
-            Communication.setOrder(Order.SPAWN_MORE_MINERS, minerCount < 20 ? Order.YES : Order.NO);
-            Communication.setOrder(Order.DRONE_SWARM, Order.YES);
+        double sumDistance = 0;
+        int numberOfDistances = 0;
+        for (int i = 0; i < towerCount; i++) {
+            for (int j = i; j < towerCount; j++) {
+                sumDistance += enemyTowers[i].distanceSquaredTo(enemyTowers[j]);
+                numberOfDistances++;
+            }
+        }
+
+        MapLocation[] mapLocationsCloseToHq =
+                MapLocation.getAllMapLocationsWithinRadiusSq(myHqLocation, RobotType.HQ.sensorRadiusSquared);
+        for (MapLocation location : mapLocationsCloseToHq) {
+            oreNearHq += rc.senseOre(location);
+        }
+
+        averageTowerToTowerDistance = sumDistance / numberOfDistances;
+
+        sumDistance = 0;
+        for (int i = 0; i < towerCount; i++) {
+            sumDistance += enemyTowers[i].distanceSquaredTo(enemyHqLocation);
+        }
+
+        averageTowerToHqDistance = sumDistance / towerCount;
+
+        int symmetryType = getSymmetryType();
+        rc.broadcast(Channel.MAP_SYMMETRY, symmetryType);
+
+        String symmetryString;
+        if (symmetryType == Symmetry.HORIZONTAL) {
+            symmetryString = "Horizontal";
+        }
+        else if (symmetryType == Symmetry.VERTICAL) {
+            symmetryString = "Vertical";
         }
         else {
-            Communication.setOrder(Order.SPAWN_MORE_MINERS, minerCount < 30 ? Order.YES : Order.NO);
-            Communication.setOrder(Order.DRONE_DEFEND, Order.YES);
+            symmetryString = "Rotational";
         }
 
-        if (droneCount > 60) {
-            if (droneCount > 80) {
-                Communication.setOrder(Order.DRONE_ATTACK, Order.YES);
-                Communication.setOrder(Order.DRONE_SWARM, Order.NO);
-                MapLocation enemyStructure = getStructureToAttack();
-                rc.broadcast(ChannelList.STRUCTURE_TO_ATTACK_X, enemyStructure.x);
-                rc.broadcast(ChannelList.STRUCTURE_TO_ATTACK_Y, enemyStructure.y);
-            }
-            else {
-                Communication.setOrder(Order.DRONE_ATTACK, Order.NO);
-                Communication.setOrder(Order.DRONE_SWARM, Order.YES);
+        System.out.printf(
+                "hqDist: %d\ncount %d\ntower2tower: %f\ntower2Hq: %f\noreNearHQ: %f\nsymmetryType: %s\n",
+                distanceBetweenHq,
+                towerCount,
+                averageTowerToTowerDistance,
+                averageTowerToHqDistance,
+                oreNearHq,
+                symmetryString);
+    }
+
+    private static int getSymmetryType() {
+        boolean hqSameX = myHqLocation.x == enemyHqLocation.x;
+        boolean hqSameY = myHqLocation.y == enemyHqLocation.y;
+        if (!hqSameX
+                && !hqSameY) {
+            return Symmetry.ROTATION;
+        }
+
+        if (hqSameX) {
+            //--For all of my towers, enemy must have one with same x value
+            for (MapLocation tower : myTowers) {
+                if (!oneHasMatchingX(enemyTowers, tower.x)) {
+                    return Symmetry.ROTATION;
+                }
             }
         }
+        else {
+            //--For all of my towers, enemy must have one with same y value
+            for (MapLocation tower : myTowers) {
+                if (!oneHasMatchingY(enemyTowers, tower.y)) {
+                    return Symmetry.ROTATION;
+                }
+            }
+        }
+
+        return hqSameX ? Symmetry.HORIZONTAL : Symmetry.VERTICAL;
+    }
+
+    private static boolean oneHasMatchingX(MapLocation[] locations, int xValue) {
+        for (MapLocation location : locations) {
+            if (location.x == xValue) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean oneHasMatchingY(MapLocation[] locations, int yValue) {
+        for (MapLocation location : locations) {
+            if (location.y == yValue) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static void setInitialBuildings() throws GameActionException {
+        BuildingQueue.addBuilding(Building.MINER_FACTORY);
+        BuildingQueue.addBuilding(Building.HELIPAD);
+        BuildingQueue.addBuilding(Building.BARRACKS);
+        BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
+        BuildingQueue.addBuilding(Building.AEROSPACE_LAB);
+    }
+
+    private static void queueBuildings() throws GameActionException {
+        queueSupplyTowers();
+
+        if (rc.getTeamOre() > RobotType.AEROSPACELAB.oreCost) {
+            BuildingQueue.addBuildingWithPostDelay(
+                    Building.AEROSPACE_LAB,
+                    (int) (RobotType.AEROSPACELAB.buildTurns * 1.3));
+        }
+    }
+
+    private static void updateRallyPoint() throws GameActionException {
+        MapLocation currentRallyPoint = Radio.readMapLocationFromChannel(Channel.RALLY_POINT);
+        if (currentRallyPoint == null) {
+            MapLocation towerWithFewestVoids = Radio.readMapLocationFromChannel(
+                    Channel
+                                                                                        .OUR_TOWER_WITH_LOWEST_VOID_COUNT);
+            if (towerWithFewestVoids != null) {
+                Radio.setMapLocationOnChannel(
+                        towerWithFewestVoids.add(towerWithFewestVoids.directionTo(enemyHqLocation), 4),
+                        Channel.RALLY_POINT);
+            }
+        }
+    }
+
+    private static void broadcastAttackLocation() throws GameActionException {
+        //--With the navigation code, we will broadcast PointOfInterest value
+        //  instead of a map location
+
+
+
+
+
+        //--if enemy has towers
+        //    return the closest one to our HQ
+        //--else return enemy HQ
+        MapLocation[] enemyTowerLocations = rc.senseEnemyTowerLocations();
+        if (enemyTowerLocations.length == 0) {
+            Radio.setMapLocationOnChannel(enemyHqLocation, Channel.STRUCTURE_TO_ATTACK);
+            return;
+        }
+
+        int index = 0;
+        int minDistance = Integer.MAX_VALUE;
+        for (int i = 0; i < enemyTowerLocations.length; i++) {
+            int thisDistance = myHqLocation.distanceSquaredTo(enemyTowerLocations[i]);
+            if (thisDistance < minDistance) {
+                minDistance = thisDistance;
+                index = i;
+            }
+        }
+
+        Radio.setMapLocationOnChannel(enemyTowerLocations[index], Channel.STRUCTURE_TO_ATTACK);
+    }
+
+    private static void queueSupplyTowers() throws GameActionException {
+        //--Add 2 supply depos if we are not producing enough
+        int supplyConsumption = rc.readBroadcast(Channel.LAUNCHER_COUNT) * RobotType.LAUNCHER.supplyUpkeep
+                + rc.readBroadcast(Channel.MINER_COUNT) * RobotType.MINER.supplyUpkeep
+                + rc.readBroadcast(Channel.SOLDIER_COUNT) * RobotType.SOLDIER.supplyUpkeep
+                + rc.readBroadcast(Channel.DRONE_COUNT) * RobotType.DRONE.supplyUpkeep;
+
+        int numberOfSupplyTowers = rc.readBroadcast(Channel.SUPPLY_DEPOT_COUNT);
+
+        double supplyProduction = GameConstants.SUPPLY_GEN_BASE
+                * (GameConstants.SUPPLY_GEN_MULTIPLIER
+                + Math.pow(numberOfSupplyTowers, GameConstants.SUPPLY_GEN_EXPONENT));
+
+        if (supplyProduction < supplyConsumption * 1.1) {
+            BuildingQueue.addBuildingWithPostDelay(Building.SUPPLY_DEPOT, RobotType.SUPPLYDEPOT.buildTurns);
+        }
+    }
+
+    private static void updateSpawningAndOrders() throws GameActionException {
+        int currentRound = Clock.getRoundNum();
+
+        int launcherCount = rc.readBroadcast(Channel.LAUNCHER_COUNT);
+        boolean doTheBigAttack = launcherCount >= LAUNCHERS_REQUIRED_FOR_ATTACK;
+
+        //--Spawn up to 35 miners
+        int minerCount = rc.readBroadcast(Channel.MINER_COUNT);
+        MessageBoard.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
+
+        //--Spawn up to 20 drones
+        int droneCount = rc.readBroadcast(Channel.DRONE_COUNT);
+        int droneMax = 20;
+        MessageBoard.setSpawn(RobotType.DRONE, droneCount < droneMax ? SPAWN_ON : SPAWN_OFF);
+
+        //--Spawn up to 20 soldiers
+        int soldierCount = rc.readBroadcast(Channel.SOLDIER_COUNT);
+        int soldierMax = 20;
+        MessageBoard.setSpawn(RobotType.SOLDIER, soldierCount < soldierMax ? SPAWN_ON : SPAWN_OFF);
+
+        //--Spawn launchers!
+        MessageBoard.setSpawn(RobotType.LAUNCHER, SPAWN_ON);
+
+        //--Set orders
+        if (doTheBigAttack) {
+            MessageBoard.setDefaultOrder(RobotType.LAUNCHER, Order.AttackEnemyStructure);
+        }
+        else {
+            MessageBoard.setDefaultOrder(RobotType.LAUNCHER, Order.Rally);
+        }
+
+        MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.DefendMiners);
+
+        MessageBoard.setPriorityOrder(1, RobotType.DRONE, Order.MoveSupply);
+        MessageBoard.setDefaultOrder(RobotType.DRONE, Order.AttackEnemyMiners);
     }
 
     private static void tryToAttack() throws GameActionException {
         int myTowerCount = rc.senseTowerLocations().length;
         int attackRadiusSquared = myTowerCount > 1 ?
-                GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED
-                : RobotType.HQ.attackRadiusSquared;
+                                  GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED
+                                                   : RobotType.HQ.attackRadiusSquared;
 
         RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(attackRadiusSquared, enemyTeam);
         if (enemiesInAttackRange.length > 0) {
@@ -198,8 +375,9 @@ public class HQ {
 
         //--Try splash attack!
         if (myTowerCount > 4) {
-            RobotInfo[] enemiesInSplashRange = rc.senseNearbyRobots(attackRadiusSquared + GameConstants
-                    .HQ_BUFFED_SPLASH_RADIUS_SQUARED, enemyTeam);
+            RobotInfo[] enemiesInSplashRange = rc.senseNearbyRobots(
+                    attackRadiusSquared + GameConstants
+                            .HQ_BUFFED_SPLASH_RADIUS_SQUARED, enemyTeam);
             if (enemiesInSplashRange.length == 0) {
                 return;
             }
@@ -217,42 +395,32 @@ public class HQ {
         }
     }
 
-    private static boolean shouldSpawnBeaver(RobotInfo[] friendlyRobots) {
+    private static boolean shouldSpawnBeaver(RobotInfo[] friendlyRobots) throws GameActionException {
         if (rc.getTeamOre() < RobotType.BEAVER.oreCost) {
             return false;
         }
 
+        //--In early game we want one beaver.
+        //--When we have enough miners, we want two beavers
         int beaverCount = Helper.getRobotsOfType(friendlyRobots, RobotType.BEAVER);
-        return beaverCount < BEAVER_COUNT;
-    }
-
-    private static MapLocation getStructureToAttack() {
-        //--if enemy has towers
-        //    return the closest one to our HQ
-        //--else return enemy HQ
-        MapLocation[] enemyTowerLocations = rc.senseEnemyTowerLocations();
-        if (enemyTowerLocations.length == 0) {
-            return enemyHqLocation;
+        if (beaverCount == 0) {
+            return true;
         }
 
-        int index = 0;
-        int minDistance = Integer.MAX_VALUE;
-        for (int i = 0; i < enemyTowerLocations.length; i++) {
-            int thisDistance = myHqLocation.distanceSquaredTo(enemyTowerLocations[i]);
-            if (thisDistance < minDistance) {
-                minDistance = thisDistance;
-                index = i;
-            }
+        if (beaverCount > 1) {
+            return false;
         }
 
-        return enemyTowerLocations[index];
+        int minerCount = rc.readBroadcast(Channel.MINER_COUNT);
+        return minerCount > 10;
     }
 
     private static void spawn(RobotType type) throws GameActionException {
-        int direction = 0;
+        int startingDirection = Helper.getInt(enemyHqLocation.directionTo(myHqLocation));
+        int direction = startingDirection;
         while (!rc.canSpawn(directions[direction], type)) {
-            direction++;
-            if (direction > 7) {
+            direction = (direction + 1) % 8;
+            if (direction == startingDirection) {
                 return;
             }
         }

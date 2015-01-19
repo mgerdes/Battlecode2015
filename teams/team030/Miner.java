@@ -1,6 +1,8 @@
 package team030;
 
-import team030.constants.ChannelList;
+import team030.communication.Channel;
+import team030.communication.Radio;
+import team030.util.Debug;
 import team030.util.Helper;
 import battlecode.common.*;
 import team030.navigation.Bug;
@@ -12,6 +14,7 @@ public class Miner {
     //--where to go when we run out of ore
     private static MapLocation defaultLocation;
     private static MapLocation enemyHqLocation;
+    private static Team myTeam;
     private static Team enemyTeam;
 
     public static void run(RobotController rcC) {
@@ -19,12 +22,14 @@ public class Miner {
 
         myHqLocation = rc.senseHQLocation();
         enemyHqLocation = rc.senseEnemyHQLocation();
-        enemyTeam = rc.getTeam().opponent();
+        myTeam = rc.getTeam();
+        enemyTeam = myTeam.opponent();
         Direction toEnemyHq = myHqLocation.directionTo(enemyHqLocation);
         defaultLocation = getDefaultLocation(toEnemyHq);
 
         Bug.init(rcC);
         SupplySharing.init(rcC);
+        Radio.init(rcC);
 
         loop();
     }
@@ -43,8 +48,17 @@ public class Miner {
     private static void doYourThing() throws GameActionException {
         SupplySharing.share();
 
+        if (rc.getSupplyLevel() < 200) {
+            Radio.iNeedSupply();
+        }
+
         MapLocation currentLocation = rc.getLocation();
         updateMinerRadius(currentLocation);
+
+        RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.MINER.sensorRadiusSquared, enemyTeam);
+        if (enemiesInSensorRange.length > 0) {
+            Radio.setDistressLocation(enemiesInSensorRange[0].location);
+        }
 
         if (rc.isWeaponReady()) {
             RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.MINER.attackRadiusSquared, enemyTeam);
@@ -54,26 +68,55 @@ public class Miner {
         }
 
         if (rc.isCoreReady()) {
-            if (rc.senseOre(currentLocation) > 0) {
-                rc.mine();
-            }
-            else {
-                Direction direction = findDirectionClosestToHqWithOre(currentLocation);
+            RobotInfo[] teammatesThatAreVeryClose = rc.senseNearbyRobots(2, myTeam);
+            int minersThatAreVeryClose = Helper.getRobotsOfType(teammatesThatAreVeryClose, RobotType.MINER);
+            if (minersThatAreVeryClose > 2) {
+                Direction direction = findDirectionMostAwayFromOurHqWithOre(currentLocation);
                 if (direction == null) {
                     Bug.setDestination(defaultLocation);
                     direction = Bug.getDirection(currentLocation);
                 }
 
                 rc.move(direction);
+                return;
+            }
+            else if (rc.senseOre(currentLocation) == 0) {
+                Direction direction = findDirectionMostAwayFromEnemyHqWithOre(currentLocation);
+                if (direction == null) {
+                    Bug.setDestination(defaultLocation);
+                    direction = Bug.getDirection(currentLocation);
+                }
+
+                rc.move(direction);
+                return;
+            }
+            else {
+                rc.mine();
             }
         }
     }
 
+    private static Direction findDirectionMostAwayFromOurHqWithOre(MapLocation currentLocation) {
+        int directionAwayFromOurHq = Helper.getInt(myHqLocation.directionTo(currentLocation));
+        int[] directions = new int[]{0, -1, 1, -2, 2, -3, 3, -4};
+        for (int n : directions) {
+            Direction direction = Helper.getDirection(directionAwayFromOurHq + n);
+            MapLocation nextLocation = currentLocation.add(direction);
+            if (rc.senseOre(nextLocation) > 0
+                    && rc.canMove(direction)) {
+                return direction;
+            }
+        }
+
+        return null;
+    }
+
     private static void updateMinerRadius(MapLocation currentLocation) throws GameActionException {
-        int currentMinerRadius = rc.readBroadcast(ChannelList.MINER_RADIUS_FROM_HQ);
-        int currentDistanceFromHq = (int) Math.sqrt(currentLocation.distanceSquaredTo(myHqLocation));
+        int currentMinerRadius = rc.readBroadcast(Channel.MINER_DISTANCE_SQUARED_TO_HQ);
+        int currentDistanceFromHq = currentLocation.distanceSquaredTo(myHqLocation);
         if (currentDistanceFromHq > currentMinerRadius) {
-            rc.broadcast(ChannelList.MINER_RADIUS_FROM_HQ, currentDistanceFromHq);
+            rc.broadcast(Channel.MINER_DISTANCE_SQUARED_TO_HQ, currentDistanceFromHq);
+            Debug.setString(1, "radius is " + currentDistanceFromHq, rc);
         }
     }
 
@@ -90,11 +133,11 @@ public class Miner {
         }
     }
 
-    private static Direction findDirectionClosestToHqWithOre(MapLocation currentLocation) {
-        int directionToHq = Helper.getInt(currentLocation.directionTo(myHqLocation));
+    private static Direction findDirectionMostAwayFromEnemyHqWithOre(MapLocation currentLocation) {
+        int directionAwayFromHq = Helper.getInt(enemyHqLocation.directionTo(myHqLocation));
         int[] directions = new int[]{0, -1, 1, -2, 2, -3, 3, -4};
         for (int n : directions) {
-            Direction direction = Helper.getDirection(directionToHq + n);
+            Direction direction = Helper.getDirection(directionAwayFromHq + n);
             MapLocation nextLocation = currentLocation.add(direction);
             if (rc.senseOre(nextLocation) > 0
                     && rc.canMove(direction)) {

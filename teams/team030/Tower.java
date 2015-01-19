@@ -1,14 +1,21 @@
 package team030;
 
 import battlecode.common.*;
+import team030.communication.Radio;
 
 public class Tower {
     private static RobotController rc;
     private static Team enemyTeam;
+    private static MapLocation myLocation;
 
-    public static void run(RobotController rcC) {
+    public static void run(RobotController rcC) throws GameActionException {
         rc = rcC;
         enemyTeam = rc.getTeam().opponent();
+        myLocation = rc.getLocation();
+
+        Radio.init(rcC);
+        checkNearbySquares();
+
         loop();
     }
 
@@ -21,6 +28,18 @@ public class Tower {
             }
             rc.yield();
         }
+    }
+
+    private static void checkNearbySquares() throws GameActionException {
+        MapLocation[] nearbySquares = MapLocation.getAllMapLocationsWithinRadiusSq(myLocation, RobotType.TOWER.sensorRadiusSquared);
+        int voidCount = 0;
+        for (MapLocation location : nearbySquares) {
+            if (rc.senseTerrainTile(location) == TerrainTile.VOID) {
+                voidCount++;
+            }
+        }
+
+        Radio.towerReportVoidSquareCount(myLocation, voidCount);
     }
 
     private static void doYourThing() throws GameActionException {

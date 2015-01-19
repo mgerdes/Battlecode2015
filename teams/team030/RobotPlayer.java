@@ -26,6 +26,15 @@ public class RobotPlayer {
         else if (type == RobotType.DRONE) {
             Drone.run(rc);
         }
+        else if (type == RobotType.SOLDIER) {
+            Soldier.run(rc);
+        }
+        else if (type == RobotType.LAUNCHER) {
+            Launcher.run(rc);
+        }
+        else if (type == RobotType.MISSILE) {
+            Missile.run(rc);
+        }
         else {
             Spawner.init(rc);
         }
