@@ -360,9 +360,9 @@ public class HQ {
             MessageBoard.setDefaultOrder(RobotType.DRONE, Order.Rally);
         }
         else {
-            if (!allTerrainTilesBroadcast) {
-                MessageBoard.setPriorityOrder(1, RobotType.DRONE, Order.SurveyMap);
-            }
+//            if (!allTerrainTilesBroadcast) {
+//                MessageBoard.setPriorityOrder(1, RobotType.DRONE, Order.SurveyMap);
+//            }
 
             MessageBoard.setDefaultOrder(RobotType.DRONE, Order.AttackEnemyMiners);
         }
