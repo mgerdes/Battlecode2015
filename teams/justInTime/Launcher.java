@@ -45,7 +45,7 @@ public class Launcher {
     }
 
     private static void doYourThing() throws GameActionException {
-        SupplySharing.share();
+        SupplySharing.shareOnlyWithType(RobotType.LAUNCHER);
 
         Order order = MessageBoard.getOrder(RobotType.LAUNCHER);
         switch (order) {
