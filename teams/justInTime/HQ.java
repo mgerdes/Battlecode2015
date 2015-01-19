@@ -18,7 +18,6 @@ public class HQ {
     private static final int HQ_TRY_ATTACK_AFTER_ROUND = 100;
     private static final int HQ_BROADCAST_ATTACK_LOCATION_AFTER_ROUND = 100;
 
-    private static final int MIDGAME_ROUND_NUMBER = 700;
     private static final int LAUNCHERS_REQUIRED_FOR_ATTACK = 3;
 
     private static final int SPAWN_ON = 1;
@@ -248,16 +247,17 @@ public class HQ {
         BuildingQueue.addBuilding(Building.MINER_FACTORY);
         BuildingQueue.addBuilding(Building.HELIPAD);
         BuildingQueue.addBuilding(Building.BARRACKS);
+        BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
         BuildingQueue.addBuilding(Building.AEROSPACE_LAB);
     }
 
     private static void queueBuildings() throws GameActionException {
         queueSupplyTowers();
 
-        if (Clock.getRoundNum() > MIDGAME_ROUND_NUMBER
-                && rc.getTeamOre() > RobotType.AEROSPACELAB.oreCost) {
-            BuildingQueue.addBuildingWithPostDelay(Building.AEROSPACE_LAB,
-                                                   (int) (RobotType.AEROSPACELAB.buildTurns * 1.3));
+        if (rc.getTeamOre() > RobotType.AEROSPACELAB.oreCost) {
+            BuildingQueue.addBuildingWithPostDelay(
+                    Building.AEROSPACE_LAB,
+                    (int) (RobotType.AEROSPACELAB.buildTurns * 1.3));
         }
     }
 
@@ -331,14 +331,14 @@ public class HQ {
         int minerCount = rc.readBroadcast(ChannelList.MINER_COUNT);
         MessageBoard.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
 
-        //--Spawn up to 20 drones in early game, 40 in mid-game
+        //--Spawn up to 20 drones
         int droneCount = rc.readBroadcast(ChannelList.DRONE_COUNT);
-        int droneMax = currentRound > MIDGAME_ROUND_NUMBER ? 40 : 20;
+        int droneMax = 20;
         MessageBoard.setSpawn(RobotType.DRONE, droneCount < droneMax ? SPAWN_ON : SPAWN_OFF);
 
-        //--Spawn up to 25 soldiers in early game, 40 in mid-game
+        //--Spawn up to 20 soldiers
         int soldierCount = rc.readBroadcast(ChannelList.SOLDIER_COUNT);
-        int soldierMax = currentRound > MIDGAME_ROUND_NUMBER ? 40 : 20;
+        int soldierMax = 20;
         MessageBoard.setSpawn(RobotType.SOLDIER, soldierCount < soldierMax ? SPAWN_ON : SPAWN_OFF);
 
         //--Spawn launchers!
@@ -354,18 +354,8 @@ public class HQ {
 
         MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.DefendMiners);
 
-
-        if (launcherCount > 1) {
-            MessageBoard.setPriorityOrder(1, RobotType.DRONE, Order.MoveSupply);
-            MessageBoard.setDefaultOrder(RobotType.DRONE, Order.Rally);
-        }
-        else {
-//            if (!allTerrainTilesBroadcast) {
-//                MessageBoard.setPriorityOrder(1, RobotType.DRONE, Order.SurveyMap);
-//            }
-
-            MessageBoard.setDefaultOrder(RobotType.DRONE, Order.AttackEnemyMiners);
-        }
+        MessageBoard.setPriorityOrder(1, RobotType.DRONE, Order.MoveSupply);
+        MessageBoard.setDefaultOrder(RobotType.DRONE, Order.AttackEnemyMiners);
     }
 
     private static void tryToAttack() throws GameActionException {

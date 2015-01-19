@@ -20,11 +20,13 @@ public class Drone {
     private static MapLocation myHqLocation;
     private static Direction awayFromEnemyHq;
     private static Team myTeam;
-    private static int robotThatNeedsSupplyId;
+    private static int myId;
 
     private static final int[] directions = new int[]{0, -1, 1, -2, 2};
 
     private static int symmetry = 0;
+
+    private static boolean deliveringSupply = false;
 
     private static boolean sizeAndCornersBroadcasted = false;
 
@@ -48,6 +50,7 @@ public class Drone {
         awayFromEnemyHq = enemyHqLocation.directionTo(myHqLocation);
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
+        myId = rc.getID();
 
         Bug.init(rcC);
         SafeBug.init(rcC);
@@ -79,7 +82,7 @@ public class Drone {
                 break;
             case AttackEnemyMiners:
                 Debug.setString(0, "attack miners...", rc);
-                SupplySharing.share();
+                SupplySharing.shareOnlyWithType(RobotType.DRONE);
                 swarm();
                 break;
             case Rally:
@@ -103,7 +106,15 @@ public class Drone {
         RobotInfo[] enemiesInSensor = rc.senseNearbyRobots(RobotType.DRONE.sensorRadiusSquared, enemyTeam);
         RobotType[] enemiesToIgnore = new RobotType[] {RobotType.BEAVER, RobotType.DRONE};
 
-        if (rc.getSupplyLevel() < 1000) {
+        double currentSupply = rc.getSupplyLevel();
+        //--Go back to HQ if we are delivering supply and we have less than 1000
+        //--If we are not delivering supply, then we are going to the hq for supply,
+        //  and we should keep going until we get 3000 supply
+        if (deliveringSupply
+                && currentSupply < 1000
+                || !deliveringSupply
+                && currentSupply < 5000) {
+            deliveringSupply = false;
             SafeBug.setDestination(myHqLocation);
             Direction direction = SafeBug.getDirection(currentLocation, null, enemiesInSensor, enemiesToIgnore);
             if (direction != Direction.NONE) {
@@ -113,8 +124,14 @@ public class Drone {
             return;
         }
 
+        if (currentSupply >= 5000) {
+            deliveringSupply = true;
+        }
+
         int robotID = rc.readBroadcast(ChannelList.NEED_SUPPLY);
         if (robotID == 0) {
+            //--There is no robot to supply, we call this method to get the default order.
+            doYourThing();
             return;
         }
 
@@ -421,67 +438,12 @@ public class Drone {
         }
     }
 
-    private static void supplyMiners() throws GameActionException {
-        if (!rc.isCoreReady()) {
-            return;
-        }
-
-        MapLocation currentLocation = rc.getLocation();
-        if (rc.getSupplyLevel() < 1000) {
-            SafeBug.setDestination(myHqLocation);
-            Direction direction = SafeBug.getDirection(currentLocation);
-            rc.move(direction);
-            Debug.setString(0, "going back home", rc);
-            return;
-        }
-
-        MapLocation destination = null;
-        if (robotThatNeedsSupplyId != ROBOT_NOT_SET) {
-            //--Find the location of specific robot
-            RobotInfo[] friendlies = rc.senseNearbyRobots(1000000, myTeam);
-            for (RobotInfo robot : friendlies) {
-                if (robot.ID == robotThatNeedsSupplyId) {
-                    destination = robot.location;
-                    break;
-                }
-            }
-        }
-
-        //--Find any miner with no supply and save the ID for next round
-        if (destination == null) {
-            RobotInfo[] friendlies = rc.senseNearbyRobots(1000000, myTeam);
-            for (RobotInfo robot : friendlies) {
-                if (robot.type == RobotType.MINER
-                        && robot.supplyLevel == 0) {
-                    destination = robot.location;
-                    robotThatNeedsSupplyId = robot.ID;
-                    break;
-                }
-            }
-        }
-
-        Debug.setString(0, String.format("going to robot %d at %s", robotThatNeedsSupplyId, destination), rc);
-
-        if (currentLocation.distanceSquaredTo(destination) > GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED) {
-            SafeBug.setDestination(destination);
-            Direction direction = SafeBug.getDirection(currentLocation);
-            rc.move(direction);
-        }
-        else {
-            rc.transferSupplies((int) rc.getSupplyLevel(), destination);
-            robotThatNeedsSupplyId = ROBOT_NOT_SET;
-        }
-    }
-
     private static void swarm() throws GameActionException {
         MapLocation currentLocation = rc.getLocation();
+        SafeBug.setDestination(enemyHqLocation);
 
-        //--Go home if we run out of supplies
-        if (rc.getSupplyLevel() < 10) {
-            SafeBug.setDestination(myHqLocation);
-        }
-        else {
-            SafeBug.setDestination(enemyHqLocation);
+        if (rc.getSupplyLevel() < 500) {
+            rc.broadcast(ChannelList.NEED_SUPPLY, myId);
         }
 
         RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.DRONE.sensorRadiusSquared, enemyTeam);
