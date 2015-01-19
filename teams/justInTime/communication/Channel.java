@@ -1,6 +1,6 @@
-package justInTime.constants;
+package justInTime.communication;
 
-public class ChannelList {
+public class Channel {
     //--Locations (all need 2 channels)
     public static final int STRUCTURE_TO_ATTACK = 0;
     public static final int RALLY_POINT = 2;

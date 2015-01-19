@@ -1,6 +1,7 @@
 package justInTime;
 
 import battlecode.common.*;
+import justInTime.communication.Radio;
 
 public class Tower {
     private static RobotController rc;
@@ -12,7 +13,7 @@ public class Tower {
         enemyTeam = rc.getTeam().opponent();
         myLocation = rc.getLocation();
 
-        Communication.init(rcC);
+        Radio.init(rcC);
         checkNearbySquares();
 
         loop();
@@ -38,7 +39,7 @@ public class Tower {
             }
         }
 
-        Communication.towerReportVoidSquareCount(myLocation, voidCount);
+        Radio.towerReportVoidSquareCount(myLocation, voidCount);
     }
 
     private static void doYourThing() throws GameActionException {

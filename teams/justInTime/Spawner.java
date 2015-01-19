@@ -1,6 +1,6 @@
 package justInTime;
 
-import justInTime.constants.ChannelList;
+import justInTime.communication.Channel;
 import justInTime.util.Debug;
 import justInTime.util.Helper;
 import battlecode.common.*;
@@ -78,19 +78,19 @@ public class Spawner {
         switch (myType) {
             case MINERFACTORY:
                 typesBuiltHere = new RobotType[]{RobotType.MINER};
-                robotCountChannels = new int[]{ChannelList.MINER_COUNT};
+                robotCountChannels = new int[]{Channel.MINER_COUNT};
                 break;
             case BARRACKS:
                 typesBuiltHere = new RobotType[]{RobotType.SOLDIER};
-                robotCountChannels = new int[]{ChannelList.SOLDIER_COUNT};
+                robotCountChannels = new int[]{Channel.SOLDIER_COUNT};
                 break;
             case HELIPAD:
                 typesBuiltHere = new RobotType[]{RobotType.DRONE};
-                robotCountChannels = new int[]{ChannelList.DRONE_COUNT};
+                robotCountChannels = new int[]{Channel.DRONE_COUNT};
                 break;
             case AEROSPACELAB:
                 typesBuiltHere = new RobotType[]{RobotType.LAUNCHER};
-                robotCountChannels = new int[]{ChannelList.LAUNCHER_COUNT};
+                robotCountChannels = new int[]{Channel.LAUNCHER_COUNT};
         }
     }
 }

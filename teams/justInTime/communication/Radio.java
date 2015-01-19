@@ -1,9 +1,9 @@
-package justInTime;
+package justInTime.communication;
 
 import battlecode.common.*;
-import justInTime.constants.ChannelList;
+import justInTime.communication.Channel;
 
-public class Communication {
+public class Radio {
     private static RobotController rc;
 
     private static final int MAP_COORDINATE_ACTIVE_FLAG = 1000000;
@@ -28,19 +28,21 @@ public class Communication {
 
         //--If I made the request, update it
         int currentRound = Clock.getRoundNum();
-        int requestId = rc.readBroadcast(ChannelList.NEED_SUPPLY_ROBOT_ID);
+        int requestId = rc.readBroadcast(Channel.NEED_SUPPLY_ROBOT_ID);
         if (myId == requestId) {
-            rc.broadcast(ChannelList.NEED_SUPPLY_CONTEXT,
+            rc.broadcast(
+                    Channel.NEED_SUPPLY_CONTEXT,
                          myType * 10000 + currentRound);
             return;
         }
 
         //--If the request is expired, I can overwrite it
-        int supplyContextValue = rc.readBroadcast(ChannelList.NEED_SUPPLY_CONTEXT);
+        int supplyContextValue = rc.readBroadcast(Channel.NEED_SUPPLY_CONTEXT);
         int supplyRound = supplyContextValue % 10000;
         if (supplyRound < currentRound - 1) {
-            rc.broadcast(ChannelList.NEED_SUPPLY_ROBOT_ID, myId);
-            rc.broadcast(ChannelList.NEED_SUPPLY_CONTEXT,
+            rc.broadcast(Channel.NEED_SUPPLY_ROBOT_ID, myId);
+            rc.broadcast(
+                    Channel.NEED_SUPPLY_CONTEXT,
                          myType * 10000 + currentRound);
             return;
         }
@@ -48,15 +50,16 @@ public class Communication {
         //--If my type is a higher priority, I can overwrite it
         int currentType = supplyContextValue / 10000;
         if (myType > currentType) {
-            rc.broadcast(ChannelList.NEED_SUPPLY_ROBOT_ID, myId);
-            rc.broadcast(ChannelList.NEED_SUPPLY_CONTEXT,
+            rc.broadcast(Channel.NEED_SUPPLY_ROBOT_ID, myId);
+            rc.broadcast(
+                    Channel.NEED_SUPPLY_CONTEXT,
                          myType * 10000 + currentRound);
             return;
         }
     }
 
     public static int getRobotIdThatNeedsSupply() throws GameActionException {
-        int supplyContextValue = rc.readBroadcast(ChannelList.NEED_SUPPLY_CONTEXT);
+        int supplyContextValue = rc.readBroadcast(Channel.NEED_SUPPLY_CONTEXT);
         int supplyRound = supplyContextValue % 10000;
         int currentRound = Clock.getRoundNum();
 
@@ -65,48 +68,48 @@ public class Communication {
             return 0;
         }
 
-        return rc.readBroadcast(ChannelList.NEED_SUPPLY_ROBOT_ID);
+        return rc.readBroadcast(Channel.NEED_SUPPLY_ROBOT_ID);
     }
 
     public static MapLocation getDistressLocation() throws GameActionException {
         //--Ignore old signals
-        if (rc.readBroadcast(ChannelList.DISTRESS_SIGNAL_ROUND_NUMBER) < Clock.getRoundNum() - 2) {
+        if (rc.readBroadcast(Channel.DISTRESS_SIGNAL_ROUND_NUMBER) < Clock.getRoundNum() - 2) {
             return null;
         }
 
-        int x = rc.readBroadcast(ChannelList.DISTRESS_LOCATION_X);
-        int y = rc.readBroadcast(ChannelList.DISTRESS_LOCATION_Y);
+        int x = rc.readBroadcast(Channel.DISTRESS_LOCATION_X);
+        int y = rc.readBroadcast(Channel.DISTRESS_LOCATION_Y);
         return new MapLocation(x, y);
     }
 
     public static void setDistressLocation(MapLocation mapLocation) throws GameActionException {
         //--We can override the signal if it is old
-        int roundSet = rc.readBroadcast(ChannelList.DISTRESS_SIGNAL_ROUND_NUMBER);
+        int roundSet = rc.readBroadcast(Channel.DISTRESS_SIGNAL_ROUND_NUMBER);
         if (roundSet < Clock.getRoundNum() - 3) {
-            rc.broadcast(ChannelList.DISTRESS_SIGNAL_ROUND_NUMBER, Clock.getRoundNum());
-            rc.broadcast(ChannelList.DISTRESS_SIGNAL_CREATOR, rc.getID());
-            rc.broadcast(ChannelList.DISTRESS_LOCATION_X, mapLocation.x);
-            rc.broadcast(ChannelList.DISTRESS_LOCATION_Y, mapLocation.y);
+            rc.broadcast(Channel.DISTRESS_SIGNAL_ROUND_NUMBER, Clock.getRoundNum());
+            rc.broadcast(Channel.DISTRESS_SIGNAL_CREATOR, rc.getID());
+            rc.broadcast(Channel.DISTRESS_LOCATION_X, mapLocation.x);
+            rc.broadcast(Channel.DISTRESS_LOCATION_Y, mapLocation.y);
             return;
         }
 
         //--We can update the signal if we set it
-        int distressOriginator = rc.readBroadcast(ChannelList.DISTRESS_SIGNAL_CREATOR);
+        int distressOriginator = rc.readBroadcast(Channel.DISTRESS_SIGNAL_CREATOR);
         if (rc.getID() == distressOriginator) {
-            rc.broadcast(ChannelList.DISTRESS_SIGNAL_ROUND_NUMBER, Clock.getRoundNum());
-            rc.broadcast(ChannelList.DISTRESS_LOCATION_X, mapLocation.x);
-            rc.broadcast(ChannelList.DISTRESS_LOCATION_Y, mapLocation.y);
+            rc.broadcast(Channel.DISTRESS_SIGNAL_ROUND_NUMBER, Clock.getRoundNum());
+            rc.broadcast(Channel.DISTRESS_LOCATION_X, mapLocation.x);
+            rc.broadcast(Channel.DISTRESS_LOCATION_Y, mapLocation.y);
             return;
         }
 
         //--Or we can update it if this distress location is closer to HQ
-        int x = rc.readBroadcast(ChannelList.DISTRESS_LOCATION_X);
-        int y = rc.readBroadcast(ChannelList.DISTRESS_LOCATION_Y);
+        int x = rc.readBroadcast(Channel.DISTRESS_LOCATION_X);
+        int y = rc.readBroadcast(Channel.DISTRESS_LOCATION_Y);
         MapLocation currentLocation = new MapLocation(x, y);
         if (mapLocation.distanceSquaredTo(myHq) < currentLocation.distanceSquaredTo(myHq)) {
-            rc.broadcast(ChannelList.DISTRESS_SIGNAL_ROUND_NUMBER, Clock.getRoundNum());
-            rc.broadcast(ChannelList.DISTRESS_LOCATION_X, mapLocation.x);
-            rc.broadcast(ChannelList.DISTRESS_LOCATION_Y, mapLocation.y);
+            rc.broadcast(Channel.DISTRESS_SIGNAL_ROUND_NUMBER, Clock.getRoundNum());
+            rc.broadcast(Channel.DISTRESS_LOCATION_X, mapLocation.x);
+            rc.broadcast(Channel.DISTRESS_LOCATION_Y, mapLocation.y);
             return;
         }
     }
@@ -114,15 +117,15 @@ public class Communication {
     public static void iAmASupplyTower() throws GameActionException {
         //--If count is expired, set to 1
         //--Otherwise increment the count by 1
-        int lastUpdated = rc.readBroadcast(ChannelList.SUPPLY_DEPOT_ROUND_UPDATED);
+        int lastUpdated = rc.readBroadcast(Channel.SUPPLY_DEPOT_ROUND_UPDATED);
         int currentRound = Clock.getRoundNum();
         if (lastUpdated < currentRound) {
-            rc.broadcast(ChannelList.SUPPLY_DEPOT_ROUND_UPDATED, currentRound);
-            rc.broadcast(ChannelList.SUPPLY_DEPOT_COUNT, 1);
+            rc.broadcast(Channel.SUPPLY_DEPOT_ROUND_UPDATED, currentRound);
+            rc.broadcast(Channel.SUPPLY_DEPOT_COUNT, 1);
         }
         else {
-            int currentCount = rc.readBroadcast(ChannelList.SUPPLY_DEPOT_COUNT);
-            rc.broadcast(ChannelList.SUPPLY_DEPOT_COUNT, currentCount + 1);
+            int currentCount = rc.readBroadcast(Channel.SUPPLY_DEPOT_COUNT);
+            rc.broadcast(Channel.SUPPLY_DEPOT_COUNT, currentCount + 1);
         }
     }
 
@@ -143,10 +146,10 @@ public class Communication {
 
     public static void towerReportVoidSquareCount(MapLocation towerLocation, int count) throws
             GameActionException {
-        int currentLowCount = rc.readBroadcast(ChannelList.TOWER_VOID_COUNT);
+        int currentLowCount = rc.readBroadcast(Channel.TOWER_VOID_COUNT);
         if (count < currentLowCount) {
-            rc.broadcast(ChannelList.TOWER_VOID_COUNT, count);
-            setMapLocationOnChannel(towerLocation, ChannelList.OUR_TOWER_WITH_LOWEST_VOID_COUNT);
+            rc.broadcast(Channel.TOWER_VOID_COUNT, count);
+            setMapLocationOnChannel(towerLocation, Channel.OUR_TOWER_WITH_LOWEST_VOID_COUNT);
         }
     }
 

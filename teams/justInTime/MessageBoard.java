@@ -4,7 +4,7 @@ import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
-import justInTime.constants.ChannelList;
+import justInTime.communication.Channel;
 import justInTime.constants.Config;
 import justInTime.constants.Order;
 
@@ -23,16 +23,16 @@ public class MessageBoard {
     public static void setSpawn(RobotType type, int value) throws GameActionException {
         switch (type) {
             case MINER:
-                updateChannelIfDifferent(ChannelList.MORE_MINERS, value);
+                updateChannelIfDifferent(Channel.MORE_MINERS, value);
                 break;
             case DRONE:
-                updateChannelIfDifferent(ChannelList.MORE_DRONES, value);
+                updateChannelIfDifferent(Channel.MORE_DRONES, value);
                 break;
             case SOLDIER:
-                updateChannelIfDifferent(ChannelList.MORE_SOLDIERS, value);
+                updateChannelIfDifferent(Channel.MORE_SOLDIERS, value);
                 break;
             case LAUNCHER:
-                updateChannelIfDifferent(ChannelList.MORE_LAUNCHERS, value);
+                updateChannelIfDifferent(Channel.MORE_LAUNCHERS, value);
                 break;
         }
     }
@@ -40,13 +40,13 @@ public class MessageBoard {
     public static boolean shouldSpawn(RobotType type) throws GameActionException {
         switch (type) {
             case MINER:
-                return rc.readBroadcast(ChannelList.MORE_MINERS) == 1;
+                return rc.readBroadcast(Channel.MORE_MINERS) == 1;
             case SOLDIER:
-                return rc.readBroadcast(ChannelList.MORE_SOLDIERS) == 1;
+                return rc.readBroadcast(Channel.MORE_SOLDIERS) == 1;
             case DRONE:
-                return rc.readBroadcast(ChannelList.MORE_DRONES) == 1;
+                return rc.readBroadcast(Channel.MORE_DRONES) == 1;
             case LAUNCHER:
-                return rc.readBroadcast(ChannelList.MORE_LAUNCHERS) == 1;
+                return rc.readBroadcast(Channel.MORE_LAUNCHERS) == 1;
         }
 
         return false;
@@ -55,13 +55,13 @@ public class MessageBoard {
     public static void setDefaultOrder(RobotType type, Order order) throws GameActionException {
         switch (type) {
             case SOLDIER:
-                updateChannelIfDifferent(ChannelList.SOLDIER_DEFAULT_ORDER, order.ordinal());
+                updateChannelIfDifferent(Channel.SOLDIER_DEFAULT_ORDER, order.ordinal());
                 break;
             case DRONE:
-                updateChannelIfDifferent(ChannelList.DRONE_DEFAULT_ORDERS, order.ordinal());
+                updateChannelIfDifferent(Channel.DRONE_DEFAULT_ORDERS, order.ordinal());
                 break;
             case LAUNCHER:
-                updateChannelIfDifferent(ChannelList.LAUNCHER_DEFAULT_ORDERS, order.ordinal());
+                updateChannelIfDifferent(Channel.LAUNCHER_DEFAULT_ORDERS, order.ordinal());
                 break;
         }
     }
@@ -69,13 +69,13 @@ public class MessageBoard {
     public static void setPriorityOrder(int count, RobotType type, Order order) throws GameActionException {
         switch (type) {
             case SOLDIER:
-                setPriorityOrderForChannel(ChannelList.SOLDIER_PRIORITY_ORDERS, count, order);
+                setPriorityOrderForChannel(Channel.SOLDIER_PRIORITY_ORDERS, count, order);
                 break;
             case DRONE:
-                setPriorityOrderForChannel(ChannelList.DRONE_PRIORITY_ORDERS, count, order);
+                setPriorityOrderForChannel(Channel.DRONE_PRIORITY_ORDERS, count, order);
                 break;
             case LAUNCHER:
-                setPriorityOrderForChannel(ChannelList.LAUNCHER_PRIORITY_ORDERS, count, order);
+                setPriorityOrderForChannel(Channel.LAUNCHER_PRIORITY_ORDERS, count, order);
                 break;
         }
     }
@@ -84,16 +84,16 @@ public class MessageBoard {
         switch (type) {
             case SOLDIER:
                 return getPriorityOrDefaultOrder(
-                        ChannelList.SOLDIER_PRIORITY_ORDERS,
-                        ChannelList.SOLDIER_DEFAULT_ORDER);
+                        Channel.SOLDIER_PRIORITY_ORDERS,
+                        Channel.SOLDIER_DEFAULT_ORDER);
             case DRONE:
                 return getPriorityOrDefaultOrder(
-                        ChannelList.DRONE_PRIORITY_ORDERS,
-                        ChannelList.DRONE_DEFAULT_ORDERS);
+                        Channel.DRONE_PRIORITY_ORDERS,
+                        Channel.DRONE_DEFAULT_ORDERS);
             case LAUNCHER:
                 return getPriorityOrDefaultOrder(
-                        ChannelList.LAUNCHER_PRIORITY_ORDERS,
-                        ChannelList.LAUNCHER_DEFAULT_ORDERS);
+                        Channel.LAUNCHER_PRIORITY_ORDERS,
+                        Channel.LAUNCHER_DEFAULT_ORDERS);
 
         }
 

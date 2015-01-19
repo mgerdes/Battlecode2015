@@ -1,7 +1,8 @@
 package justInTime;
 
 import battlecode.common.*;
-import justInTime.constants.ChannelList;
+import justInTime.communication.Channel;
+import justInTime.communication.Radio;
 
 public class PathBuilder {
     static RobotController rc;
@@ -14,7 +15,7 @@ public class PathBuilder {
     }
 
     public static Direction getDirection(int hashedMapLocation, int poi) throws GameActionException {
-        int broadcastedValue = rc.readBroadcast(ChannelList.NW_CORNER_BFS_DIRECTIONS + hashedMapLocation);
+        int broadcastedValue = rc.readBroadcast(Channel.NW_CORNER_BFS_DIRECTIONS + hashedMapLocation);
         int direction = (int)(broadcastedValue / (Math.pow(10, poi - 1))) % 10 - 1;
         return Direction.values()[direction];
     }
@@ -28,21 +29,21 @@ public class PathBuilder {
         for (int i = 0; i < towerList.length; i++) {
             int relativeX = getRelativeMapLocationX(towerList[i].x);
             int relativeY = getRelativeMapLocationY(towerList[i].y);
-            rc.broadcast(ChannelList.POI[i], getHashedLocation(relativeX, relativeY));
+            rc.broadcast(Channel.POI[i], getHashedLocation(relativeX, relativeY));
         }
         int relativeX = getRelativeMapLocationX(enemyHq.x);
         int relativeY = getRelativeMapLocationY(enemyHq.y);
-        rc.broadcast(ChannelList.POI[towerList.length], getHashedLocation(relativeX, relativeY));
-        rc.broadcast(ChannelList.NUMBER_OF_POIS, towerList.length);
+        rc.broadcast(Channel.POI[towerList.length], getHashedLocation(relativeX, relativeY));
+        rc.broadcast(Channel.NUMBER_OF_POIS, towerList.length);
 
         beginBuild(1);
 
-        rc.broadcast(ChannelList.BFS_LOOP_STATE, -1);
+        rc.broadcast(Channel.BFS_LOOP_STATE, -1);
     }
 
     public static void build(int bytecodeLimit) throws GameActionException {
-        int currentPOI = rc.readBroadcast(ChannelList.CURRENT_POI);
-        int loopState = rc.readBroadcast(ChannelList.BFS_LOOP_STATE);
+        int currentPOI = rc.readBroadcast(Channel.CURRENT_POI);
+        int loopState = rc.readBroadcast(Channel.BFS_LOOP_STATE);
 
         while (!isQueueEmpty() || loopState != -1 /* not sure if this is needed */) {
 
@@ -78,11 +79,11 @@ public class PathBuilder {
                 }
                 else {
                     int loopStateToBroadcast = getLoopState(i, currentLocationHashed);
-                    rc.broadcast(ChannelList.BFS_LOOP_STATE, loopStateToBroadcast); // cost ~ 25
+                    rc.broadcast(Channel.BFS_LOOP_STATE, loopStateToBroadcast); // cost ~ 25
                     return;
                 }
                 if (loopState != -1) {
-                    rc.broadcast(ChannelList.BFS_LOOP_STATE, -1); // cost ~ 25
+                    rc.broadcast(Channel.BFS_LOOP_STATE, -1); // cost ~ 25
                 }
             }
         }
@@ -92,22 +93,22 @@ public class PathBuilder {
 
     private static void beginBuild(int poi) throws GameActionException {
         resetQueue();
-        rc.broadcast(ChannelList.CURRENT_POI, poi);
-        enqueue(rc.readBroadcast(ChannelList.POI[poi - 1]));
+        rc.broadcast(Channel.CURRENT_POI, poi);
+        enqueue(rc.readBroadcast(Channel.POI[poi - 1]));
     }
 
     private static void endBuild(int poi) throws GameActionException {
-        if (poi + 1 < rc.readBroadcast(ChannelList.NUMBER_OF_POIS)) {
+        if (poi + 1 < rc.readBroadcast(Channel.NUMBER_OF_POIS)) {
             beginBuild(poi + 1);
         } else {
             // Having a current POI of 1 higher then the number of POIs signifies building is complete.
-            rc.broadcast(ChannelList.CURRENT_POI, poi + 1);
+            rc.broadcast(Channel.CURRENT_POI, poi + 1);
         }
     }
 
     public static boolean isComplete() throws GameActionException {
         //--Returns true when all paths are done and broadcast
-        return rc.readBroadcast(ChannelList.CURRENT_POI) == rc.readBroadcast(ChannelList.NUMBER_OF_POIS);
+        return rc.readBroadcast(Channel.CURRENT_POI) == rc.readBroadcast(Channel.NUMBER_OF_POIS);
     }
 
     private static int getLoopState(int i, int currentLocationHashed) {
@@ -123,18 +124,18 @@ public class PathBuilder {
     }
 
     private static int getRelativeMapLocationX(int absoluteX) throws GameActionException {
-        MapLocation NWCorner = Communication.readMapLocationFromChannel(ChannelList.NW_MAP_CORNER);
+        MapLocation NWCorner = Radio.readMapLocationFromChannel(Channel.NW_MAP_CORNER);
         return absoluteX - NWCorner.x;
     }
 
     private static int getRelativeMapLocationY(int absoluteY) throws GameActionException {
-        MapLocation NWCorner = Communication.readMapLocationFromChannel(ChannelList.NW_MAP_CORNER);
+        MapLocation NWCorner = Radio.readMapLocationFromChannel(Channel.NW_MAP_CORNER);
         return absoluteY - NWCorner.y;
     }
 
     //--TODO NWCorner should be saved somewhere to avoid same readBroadcast call.
     private static MapLocation getAbsoluteMapLocation(int x, int y) throws GameActionException {
-        MapLocation NWCorner = Communication.readMapLocationFromChannel(ChannelList.NW_MAP_CORNER);
+        MapLocation NWCorner = Radio.readMapLocationFromChannel(Channel.NW_MAP_CORNER);
         int xOffset = NWCorner.x;
         int yOffset = NWCorner.y;
         return new MapLocation(x + xOffset, y + yOffset);
@@ -142,18 +143,18 @@ public class PathBuilder {
 
     //--TODO store TerrainTile.values().
     private static TerrainTile getTerrainTile(int hashedMapLocation) throws GameActionException {
-        int tileNumber = rc.readBroadcast(ChannelList.NW_CORNER_TERRAIN_TILE + hashedMapLocation);
+        int tileNumber = rc.readBroadcast(Channel.NW_CORNER_TERRAIN_TILE + hashedMapLocation);
         return TerrainTile.values()[tileNumber];
     }
 
     private static boolean wasVisited(int hashedMapLocation, int poi) throws GameActionException {
-        int value = rc.readBroadcast(ChannelList.NW_CORNER_BFS_DIRECTIONS + hashedMapLocation);
+        int value = rc.readBroadcast(Channel.NW_CORNER_BFS_DIRECTIONS + hashedMapLocation);
         int direction = (int)(value / (Math.pow(10, poi - 1))) % 10;
         return direction != 0;
     }
 
     private static void broadcastDirection(int direction, int hashedMapLocation, int currentPOI) throws GameActionException {
-        int channelToBroadcastTo = ChannelList.NW_CORNER_BFS_DIRECTIONS + hashedMapLocation;
+        int channelToBroadcastTo = Channel.NW_CORNER_BFS_DIRECTIONS + hashedMapLocation;
         int currentValue = rc.readBroadcast(channelToBroadcastTo);
         int valueToBroadcast = currentValue + (direction + 1) * (int)Math.pow(10, (currentPOI - 1));
         rc.broadcast(channelToBroadcastTo, valueToBroadcast);
@@ -173,24 +174,24 @@ public class PathBuilder {
 
     // Queue for BFS
     private static void enqueue(int value) throws GameActionException {
-        int backOfQueue = rc.readBroadcast(ChannelList.BFS_QUEUE_BACK);
+        int backOfQueue = rc.readBroadcast(Channel.BFS_QUEUE_BACK);
         rc.broadcast(backOfQueue + 1, value);
-        rc.broadcast(ChannelList.BFS_QUEUE_BACK, backOfQueue + 1);
+        rc.broadcast(Channel.BFS_QUEUE_BACK, backOfQueue + 1);
     }
 
     private static int dequeue() throws GameActionException {
-        int frontOfQueue = rc.readBroadcast(ChannelList.BFS_QUEUE_FRONT);
+        int frontOfQueue = rc.readBroadcast(Channel.BFS_QUEUE_FRONT);
         int returnValue = rc.readBroadcast(frontOfQueue);
-        rc.broadcast(ChannelList.BFS_QUEUE_FRONT, frontOfQueue + 1);
+        rc.broadcast(Channel.BFS_QUEUE_FRONT, frontOfQueue + 1);
         return returnValue;
     }
 
     private static boolean isQueueEmpty() throws GameActionException {
-        return rc.readBroadcast(ChannelList.BFS_QUEUE_BACK) == rc.readBroadcast(ChannelList.BFS_QUEUE_FRONT);
+        return rc.readBroadcast(Channel.BFS_QUEUE_BACK) == rc.readBroadcast(Channel.BFS_QUEUE_FRONT);
     }
 
     private static void resetQueue() throws GameActionException {
-        rc.broadcast(ChannelList.BFS_QUEUE_BACK, ChannelList.BFS_QUEUE_START);
-        rc.broadcast(ChannelList.BFS_QUEUE_FRONT, ChannelList.BFS_QUEUE_START);
+        rc.broadcast(Channel.BFS_QUEUE_BACK, Channel.BFS_QUEUE_START);
+        rc.broadcast(Channel.BFS_QUEUE_FRONT, Channel.BFS_QUEUE_START);
     }
 }

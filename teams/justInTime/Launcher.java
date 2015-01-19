@@ -1,7 +1,8 @@
 package justInTime;
 
 import battlecode.common.*;
-import justInTime.constants.ChannelList;
+import justInTime.communication.Channel;
+import justInTime.communication.Radio;
 import justInTime.constants.Order;
 import justInTime.navigation.SafeBug;
 
@@ -25,7 +26,7 @@ public class Launcher {
 
         SafeBug.init(rcC);
         SupplySharing.init(rcC);
-        Communication.init(rcC);
+        Radio.init(rcC);
         MessageBoard.init(rcC);
 
         loop();
@@ -65,7 +66,7 @@ public class Launcher {
             return;
         }
 
-        MapLocation rallyPoint = Communication.readMapLocationFromChannel(ChannelList.RALLY_POINT);
+        MapLocation rallyPoint = Radio.readMapLocationFromChannel(Channel.RALLY_POINT);
         SafeBug.setDestination(rallyPoint);
         Direction direction = SafeBug.getDirection(currentLocation);
         if (direction != Direction.NONE) {
@@ -88,7 +89,7 @@ public class Launcher {
                 return;
             }
             else {
-                Communication.iNeedSupply();
+                Radio.iNeedSupply();
             }
         }
 
@@ -96,7 +97,7 @@ public class Launcher {
 
         //--If there are no nearby enemies, move closer
         if (enemiesInSensorRange.length == 0) {
-            MapLocation structureToAttack = Communication.readMapLocationFromChannel(ChannelList.STRUCTURE_TO_ATTACK);
+            MapLocation structureToAttack = Radio.readMapLocationFromChannel(Channel.STRUCTURE_TO_ATTACK);
             SafeBug.setDestination(structureToAttack);
             Direction direction = SafeBug.getDirection(currentLocation, structureToAttack);
 

@@ -1,7 +1,8 @@
 package justInTime;
 
 import battlecode.common.*;
-import justInTime.constants.ChannelList;
+import justInTime.communication.Channel;
+import justInTime.communication.Radio;
 import justInTime.constants.Symmetry;
 
 public class MapBuilder {
@@ -73,7 +74,7 @@ public class MapBuilder {
                             myHq.distanceSquaredTo(locationToCheck) < myHq.distanceSquaredTo(reflected) ?
                             locationToCheck
                             : reflected;
-                    Communication.setMapLocationOnChannel(closerToOurHq, ChannelList.LOCATION_TO_SURVEY);
+                    Radio.setMapLocationOnChannel(closerToOurHq, Channel.LOCATION_TO_SURVEY);
 
 //                    System.out.println("need location original " + locationToCheck);
 //                    System.out.println("need location reflected " + closerToOurHq);
@@ -84,10 +85,10 @@ public class MapBuilder {
                     int offsetForFirstLocation = getHashForRelativeCoordinates(xLoop, yLoop);
                     int offsetForReflectedLocation = getReflectedChannelOffset(offsetForFirstLocation);
                     rc.broadcast(
-                            ChannelList.NW_CORNER_TERRAIN_TILE + offsetForFirstLocation,
+                            Channel.NW_CORNER_TERRAIN_TILE + offsetForFirstLocation,
                             tile.ordinal());
                     rc.broadcast(
-                            ChannelList.NW_CORNER_TERRAIN_TILE + offsetForReflectedLocation,
+                            Channel.NW_CORNER_TERRAIN_TILE + offsetForReflectedLocation,
                             tile.ordinal());
                     wasBroadcast[getXValue(offsetForFirstLocation)][getYValue(offsetForFirstLocation)] = true;
                     wasBroadcast[getXValue(offsetForReflectedLocation)][getYValue(offsetForReflectedLocation)] = true;

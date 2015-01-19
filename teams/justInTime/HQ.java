@@ -1,7 +1,8 @@
 package justInTime;
 
+import justInTime.communication.Radio;
 import justInTime.constants.Building;
-import justInTime.constants.ChannelList;
+import justInTime.communication.Channel;
 import justInTime.constants.Order;
 import justInTime.constants.Symmetry;
 import justInTime.util.Helper;
@@ -46,7 +47,7 @@ public class HQ {
         myTowers = rc.senseTowerLocations();
 
         BuildingQueue.init(rcC);
-        Communication.init(rcC);
+        Radio.init(rcC);
         SupplySharing.init(rcC);
         MessageBoard.init(rcC);
 
@@ -96,15 +97,15 @@ public class HQ {
     }
 
     private static void broadcastAllTerrainTiles() throws GameActionException {
-        if (rc.readBroadcast(ChannelList.PERIMETER_SURVEY_COMPLETE) != 1) {
+        if (rc.readBroadcast(Channel.PERIMETER_SURVEY_COMPLETE) != 1) {
             return;
         }
 
         if (!mapBuilderInitialized) {
-            MapBuilder.init(rc.readBroadcast(ChannelList.MAP_WIDTH),
-                            rc.readBroadcast(ChannelList.MAP_HEIGHT),
-                            Communication.readMapLocationFromChannel(ChannelList.NW_MAP_CORNER),
-                            rc.readBroadcast(ChannelList.MAP_SYMMETRY),
+            MapBuilder.init(rc.readBroadcast(Channel.MAP_WIDTH),
+                            rc.readBroadcast(Channel.MAP_HEIGHT),
+                            Radio.readMapLocationFromChannel(Channel.NW_MAP_CORNER),
+                            rc.readBroadcast(Channel.MAP_SYMMETRY),
                             myHqLocation,
                             rc);
             mapBuilderInitialized = true;
@@ -113,14 +114,14 @@ public class HQ {
 
         if (!printedMapDataForDebug) {
             System.out.printf("\nMapWidth: %d, MapHeight %s\n",
-                              rc.readBroadcast(ChannelList.MAP_WIDTH),
-                              rc.readBroadcast(ChannelList.MAP_HEIGHT));
+                              rc.readBroadcast(Channel.MAP_WIDTH),
+                              rc.readBroadcast(Channel.MAP_HEIGHT));
 
             System.out.printf("\nNE %s\nSE %s\nSW %s\nNW %s\n",
-                              Communication.readMapLocationFromChannel(ChannelList.NE_MAP_CORNER),
-                              Communication.readMapLocationFromChannel(ChannelList.SE_MAP_CORNER),
-                              Communication.readMapLocationFromChannel(ChannelList.SW_MAP_CORNER),
-                              Communication.readMapLocationFromChannel(ChannelList.NW_MAP_CORNER));
+                              Radio.readMapLocationFromChannel(Channel.NE_MAP_CORNER),
+                              Radio.readMapLocationFromChannel(Channel.SE_MAP_CORNER),
+                              Radio.readMapLocationFromChannel(Channel.SW_MAP_CORNER),
+                              Radio.readMapLocationFromChannel(Channel.NW_MAP_CORNER));
 
             System.out.println("my hq" + myHqLocation);
             System.out.println("my hq" + MapBuilder.getReflectedMapLocation(enemyHqLocation));
@@ -140,7 +141,7 @@ public class HQ {
     }
 
     private static void initializeChannels() throws GameActionException {
-        rc.broadcast(ChannelList.TOWER_VOID_COUNT, 1000000);
+        rc.broadcast(Channel.TOWER_VOID_COUNT, 1000000);
     }
 
     private static void analyzeMap() throws GameActionException {
@@ -172,7 +173,7 @@ public class HQ {
         averageTowerToHqDistance = sumDistance / towerCount;
 
         int symmetryType = getSymmetryType();
-        rc.broadcast(ChannelList.MAP_SYMMETRY, symmetryType);
+        rc.broadcast(Channel.MAP_SYMMETRY, symmetryType);
 
         String symmetryString;
         if (symmetryType == Symmetry.HORIZONTAL) {
@@ -262,13 +263,15 @@ public class HQ {
     }
 
     private static void updateRallyPoint() throws GameActionException {
-        MapLocation currentRallyPoint = Communication.readMapLocationFromChannel(ChannelList.RALLY_POINT);
+        MapLocation currentRallyPoint = Radio.readMapLocationFromChannel(Channel.RALLY_POINT);
         if (currentRallyPoint == null) {
-            MapLocation towerWithFewestVoids = Communication.readMapLocationFromChannel(ChannelList.OUR_TOWER_WITH_LOWEST_VOID_COUNT);
+            MapLocation towerWithFewestVoids = Radio.readMapLocationFromChannel(
+                    Channel
+                                                                                        .OUR_TOWER_WITH_LOWEST_VOID_COUNT);
             if (towerWithFewestVoids != null) {
-                Communication.setMapLocationOnChannel(
+                Radio.setMapLocationOnChannel(
                         towerWithFewestVoids.add(towerWithFewestVoids.directionTo(enemyHqLocation), 4),
-                        ChannelList.RALLY_POINT);
+                        Channel.RALLY_POINT);
             }
         }
     }
@@ -286,7 +289,7 @@ public class HQ {
         //--else return enemy HQ
         MapLocation[] enemyTowerLocations = rc.senseEnemyTowerLocations();
         if (enemyTowerLocations.length == 0) {
-            Communication.setMapLocationOnChannel(enemyHqLocation, ChannelList.STRUCTURE_TO_ATTACK);
+            Radio.setMapLocationOnChannel(enemyHqLocation, Channel.STRUCTURE_TO_ATTACK);
             return;
         }
 
@@ -300,17 +303,17 @@ public class HQ {
             }
         }
 
-        Communication.setMapLocationOnChannel(enemyTowerLocations[index], ChannelList.STRUCTURE_TO_ATTACK);
+        Radio.setMapLocationOnChannel(enemyTowerLocations[index], Channel.STRUCTURE_TO_ATTACK);
     }
 
     private static void queueSupplyTowers() throws GameActionException {
         //--Add 2 supply depos if we are not producing enough
-        int supplyConsumption = rc.readBroadcast(ChannelList.LAUNCHER_COUNT) * RobotType.LAUNCHER.supplyUpkeep
-                + rc.readBroadcast(ChannelList.MINER_COUNT) * RobotType.MINER.supplyUpkeep
-                + rc.readBroadcast(ChannelList.SOLDIER_COUNT) * RobotType.SOLDIER.supplyUpkeep
-                + rc.readBroadcast(ChannelList.DRONE_COUNT) * RobotType.DRONE.supplyUpkeep;
+        int supplyConsumption = rc.readBroadcast(Channel.LAUNCHER_COUNT) * RobotType.LAUNCHER.supplyUpkeep
+                + rc.readBroadcast(Channel.MINER_COUNT) * RobotType.MINER.supplyUpkeep
+                + rc.readBroadcast(Channel.SOLDIER_COUNT) * RobotType.SOLDIER.supplyUpkeep
+                + rc.readBroadcast(Channel.DRONE_COUNT) * RobotType.DRONE.supplyUpkeep;
 
-        int numberOfSupplyTowers = rc.readBroadcast(ChannelList.SUPPLY_DEPOT_COUNT);
+        int numberOfSupplyTowers = rc.readBroadcast(Channel.SUPPLY_DEPOT_COUNT);
 
         double supplyProduction = GameConstants.SUPPLY_GEN_BASE
                 * (GameConstants.SUPPLY_GEN_MULTIPLIER
@@ -324,20 +327,20 @@ public class HQ {
     private static void updateSpawningAndOrders() throws GameActionException {
         int currentRound = Clock.getRoundNum();
 
-        int launcherCount = rc.readBroadcast(ChannelList.LAUNCHER_COUNT);
+        int launcherCount = rc.readBroadcast(Channel.LAUNCHER_COUNT);
         boolean doTheBigAttack = launcherCount >= LAUNCHERS_REQUIRED_FOR_ATTACK;
 
         //--Spawn up to 35 miners
-        int minerCount = rc.readBroadcast(ChannelList.MINER_COUNT);
+        int minerCount = rc.readBroadcast(Channel.MINER_COUNT);
         MessageBoard.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
 
         //--Spawn up to 20 drones
-        int droneCount = rc.readBroadcast(ChannelList.DRONE_COUNT);
+        int droneCount = rc.readBroadcast(Channel.DRONE_COUNT);
         int droneMax = 20;
         MessageBoard.setSpawn(RobotType.DRONE, droneCount < droneMax ? SPAWN_ON : SPAWN_OFF);
 
         //--Spawn up to 20 soldiers
-        int soldierCount = rc.readBroadcast(ChannelList.SOLDIER_COUNT);
+        int soldierCount = rc.readBroadcast(Channel.SOLDIER_COUNT);
         int soldierMax = 20;
         MessageBoard.setSpawn(RobotType.SOLDIER, soldierCount < soldierMax ? SPAWN_ON : SPAWN_OFF);
 
@@ -408,7 +411,7 @@ public class HQ {
             return false;
         }
 
-        int minerCount = rc.readBroadcast(ChannelList.MINER_COUNT);
+        int minerCount = rc.readBroadcast(Channel.MINER_COUNT);
         return minerCount > 10;
     }
 

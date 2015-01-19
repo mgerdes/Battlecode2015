@@ -1,7 +1,8 @@
 package justInTime;
 
-import justInTime.constants.ChannelList;
+import justInTime.communication.Channel;
 import battlecode.common.*;
+import justInTime.communication.Radio;
 import justInTime.constants.Order;
 import justInTime.constants.Symmetry;
 import justInTime.navigation.Bug;
@@ -51,7 +52,7 @@ public class Drone {
         Bug.init(rcC);
         SafeBug.init(rcC);
         SupplySharing.init(rcC);
-        Communication.init(rcC);
+        Radio.init(rcC);
         MessageBoard.init(rcC);
 
         loop();
@@ -124,7 +125,7 @@ public class Drone {
             deliveringSupply = true;
         }
 
-        int robotID = Communication.getRobotIdThatNeedsSupply();
+        int robotID = Radio.getRobotIdThatNeedsSupply();
         if (robotID == 0) {
             //--There is no robot to supply, we call this method to get the default order.
             doYourThing();
@@ -157,7 +158,7 @@ public class Drone {
         }
 
         if (sizeAndCornersBroadcasted) {
-            MapLocation destination = Communication.readMapLocationFromChannel(ChannelList.LOCATION_TO_SURVEY);
+            MapLocation destination = Radio.readMapLocationFromChannel(Channel.LOCATION_TO_SURVEY);
             if (destination == null) {
                 return;
             }
@@ -173,7 +174,7 @@ public class Drone {
         }
 
         if (symmetry == Symmetry.UNKNOWN) {
-            symmetry = rc.readBroadcast(ChannelList.MAP_SYMMETRY);
+            symmetry = rc.readBroadcast(Channel.MAP_SYMMETRY);
         }
 
         if (symmetry == Symmetry.UNKNOWN) {
@@ -201,11 +202,11 @@ public class Drone {
 
         if (reflectionFoundFirstEdge
                 && reflectionFoundSegment) {
-            Communication.setMapLocationOnChannel(new MapLocation(eastEdge, northEdge), ChannelList.NE_MAP_CORNER);
-            Communication.setMapLocationOnChannel(new MapLocation(eastEdge, southEdge), ChannelList.SE_MAP_CORNER);
-            Communication.setMapLocationOnChannel(new MapLocation(westEdge, southEdge), ChannelList.SW_MAP_CORNER);
-            Communication.setMapLocationOnChannel(new MapLocation(westEdge, northEdge), ChannelList.NW_MAP_CORNER);
-            rc.broadcast(ChannelList.PERIMETER_SURVEY_COMPLETE, 1);
+            Radio.setMapLocationOnChannel(new MapLocation(eastEdge, northEdge), Channel.NE_MAP_CORNER);
+            Radio.setMapLocationOnChannel(new MapLocation(eastEdge, southEdge), Channel.SE_MAP_CORNER);
+            Radio.setMapLocationOnChannel(new MapLocation(westEdge, southEdge), Channel.SW_MAP_CORNER);
+            Radio.setMapLocationOnChannel(new MapLocation(westEdge, northEdge), Channel.NW_MAP_CORNER);
+            rc.broadcast(Channel.PERIMETER_SURVEY_COMPLETE, 1);
             sizeAndCornersBroadcasted = true;
         }
     }
@@ -221,12 +222,12 @@ public class Drone {
                     || awayFromEnemyHq == Direction.SOUTH) {
                 segmentLength = Math.abs(currentLocation.y - myHqLocation.y) * 2
                         + Math.abs(myHqLocation.y - enemyHqLocation.y);
-                rc.broadcast(ChannelList.MAP_HEIGHT, segmentLength + 1);
+                rc.broadcast(Channel.MAP_HEIGHT, segmentLength + 1);
             }
             else {
                 segmentLength = Math.abs(currentLocation.x - myHqLocation.x) * 2
                         + Math.abs(myHqLocation.x - enemyHqLocation.x);
-                rc.broadcast(ChannelList.MAP_WIDTH, segmentLength + 1);
+                rc.broadcast(Channel.MAP_WIDTH, segmentLength + 1);
             }
 
             setTwoMapEdges(awayFromEnemyHq, currentLocation, segmentLength);
@@ -259,7 +260,7 @@ public class Drone {
             if (onFullPass) {
                 int currentValue = goingNorthSouth ? currentLocation.y : currentLocation.x;
                 int segmentLength = Math.abs(valueAtBeginningOfPass - currentValue);
-                int channelToBroadcast = goingNorthSouth ? ChannelList.MAP_HEIGHT : ChannelList.MAP_WIDTH;
+                int channelToBroadcast = goingNorthSouth ? Channel.MAP_HEIGHT : Channel.MAP_WIDTH;
                 rc.broadcast(channelToBroadcast, segmentLength + 1);
                 reflectionFoundSegment = true;
                 setTwoMapEdges(segmentTravelDirection, currentLocation, segmentLength);
@@ -320,8 +321,8 @@ public class Drone {
             int mapWidth =
                     Math.abs(currentLocation.x - myHqLocation.x) * 2 + Math.abs(myHqLocation.x - enemyHqLocation.x);
 
-            rc.broadcast(ChannelList.MAP_WIDTH, mapWidth + 1);
-            rc.broadcast(ChannelList.MAP_HEIGHT, mapHeight + 1);
+            rc.broadcast(Channel.MAP_WIDTH, mapWidth + 1);
+            rc.broadcast(Channel.MAP_HEIGHT, mapHeight + 1);
 
             Direction cornerDirection = getCornerDirection(currentLocation);
             broadcastFourCorners(currentLocation, cornerDirection, mapWidth, mapHeight);
@@ -354,32 +355,32 @@ public class Drone {
                                              int mapHeight) throws GameActionException {
         switch (cornerDirection) {
             case NORTH_EAST:
-                Communication.setMapLocationOnChannel(corner, ChannelList.NE_MAP_CORNER);
-                Communication.setMapLocationOnChannel(corner.add(0, mapHeight), ChannelList.SE_MAP_CORNER);
-                Communication.setMapLocationOnChannel(corner.add(-mapWidth, mapHeight), ChannelList.SW_MAP_CORNER);
-                Communication.setMapLocationOnChannel(corner.add(-mapWidth, 0), ChannelList.NW_MAP_CORNER);
+                Radio.setMapLocationOnChannel(corner, Channel.NE_MAP_CORNER);
+                Radio.setMapLocationOnChannel(corner.add(0, mapHeight), Channel.SE_MAP_CORNER);
+                Radio.setMapLocationOnChannel(corner.add(-mapWidth, mapHeight), Channel.SW_MAP_CORNER);
+                Radio.setMapLocationOnChannel(corner.add(-mapWidth, 0), Channel.NW_MAP_CORNER);
                 break;
             case SOUTH_EAST:
-                Communication.setMapLocationOnChannel(corner.add(0, -mapHeight), ChannelList.NE_MAP_CORNER);
-                Communication.setMapLocationOnChannel(corner, ChannelList.SE_MAP_CORNER);
-                Communication.setMapLocationOnChannel(corner.add(-mapWidth, 0), ChannelList.SW_MAP_CORNER);
-                Communication.setMapLocationOnChannel(corner.add(-mapWidth, -mapHeight), ChannelList.NW_MAP_CORNER);
+                Radio.setMapLocationOnChannel(corner.add(0, -mapHeight), Channel.NE_MAP_CORNER);
+                Radio.setMapLocationOnChannel(corner, Channel.SE_MAP_CORNER);
+                Radio.setMapLocationOnChannel(corner.add(-mapWidth, 0), Channel.SW_MAP_CORNER);
+                Radio.setMapLocationOnChannel(corner.add(-mapWidth, -mapHeight), Channel.NW_MAP_CORNER);
                 break;
             case SOUTH_WEST:
-                Communication.setMapLocationOnChannel(corner.add(mapWidth, -mapHeight), ChannelList.NE_MAP_CORNER);
-                Communication.setMapLocationOnChannel(corner.add(mapWidth, 0), ChannelList.SE_MAP_CORNER);
-                Communication.setMapLocationOnChannel(corner, ChannelList.SW_MAP_CORNER);
-                Communication.setMapLocationOnChannel(corner.add(0, -mapHeight), ChannelList.NW_MAP_CORNER);
+                Radio.setMapLocationOnChannel(corner.add(mapWidth, -mapHeight), Channel.NE_MAP_CORNER);
+                Radio.setMapLocationOnChannel(corner.add(mapWidth, 0), Channel.SE_MAP_CORNER);
+                Radio.setMapLocationOnChannel(corner, Channel.SW_MAP_CORNER);
+                Radio.setMapLocationOnChannel(corner.add(0, -mapHeight), Channel.NW_MAP_CORNER);
                 break;
             case NORTH_WEST:
-                Communication.setMapLocationOnChannel(corner.add(mapWidth, 0), ChannelList.NE_MAP_CORNER);
-                Communication.setMapLocationOnChannel(corner.add(mapWidth, mapHeight), ChannelList.SE_MAP_CORNER);
-                Communication.setMapLocationOnChannel(corner.add(0, mapHeight), ChannelList.SW_MAP_CORNER);
-                Communication.setMapLocationOnChannel(corner, ChannelList.NW_MAP_CORNER);
+                Radio.setMapLocationOnChannel(corner.add(mapWidth, 0), Channel.NE_MAP_CORNER);
+                Radio.setMapLocationOnChannel(corner.add(mapWidth, mapHeight), Channel.SE_MAP_CORNER);
+                Radio.setMapLocationOnChannel(corner.add(0, mapHeight), Channel.SW_MAP_CORNER);
+                Radio.setMapLocationOnChannel(corner, Channel.NW_MAP_CORNER);
                 break;
         }
 
-        rc.broadcast(ChannelList.PERIMETER_SURVEY_COMPLETE, 1);
+        rc.broadcast(Channel.PERIMETER_SURVEY_COMPLETE, 1);
     }
 
     private static Direction getCornerDirection(MapLocation currentLocation) {
@@ -417,7 +418,7 @@ public class Drone {
     }
 
     private static void rally() throws GameActionException {
-        MapLocation rallyPoint = Communication.readMapLocationFromChannel(ChannelList.RALLY_POINT);
+        MapLocation rallyPoint = Radio.readMapLocationFromChannel(Channel.RALLY_POINT);
         CircleNav.init(rc, rallyPoint, rallyPoint.directionTo(enemyHqLocation));
 
         if (!rc.isCoreReady()) {
@@ -439,7 +440,7 @@ public class Drone {
         SafeBug.setDestination(enemyHqLocation);
 
         if (rc.getSupplyLevel() < 500) {
-            Communication.iNeedSupply();
+            Radio.iNeedSupply();
         }
 
         RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.DRONE.sensorRadiusSquared, enemyTeam);

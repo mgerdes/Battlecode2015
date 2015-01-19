@@ -1,6 +1,7 @@
 package justInTime;
 
-import justInTime.constants.ChannelList;
+import justInTime.communication.Channel;
+import justInTime.communication.Radio;
 import justInTime.util.Debug;
 import justInTime.util.Helper;
 import battlecode.common.*;
@@ -28,7 +29,7 @@ public class Miner {
 
         Bug.init(rcC);
         SupplySharing.init(rcC);
-        Communication.init(rcC);
+        Radio.init(rcC);
 
         loop();
     }
@@ -52,7 +53,7 @@ public class Miner {
 
         RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.MINER.sensorRadiusSquared, enemyTeam);
         if (enemiesInSensorRange.length > 0) {
-            Communication.setDistressLocation(enemiesInSensorRange[0].location);
+            Radio.setDistressLocation(enemiesInSensorRange[0].location);
         }
 
         if (rc.isWeaponReady()) {
@@ -107,10 +108,10 @@ public class Miner {
     }
 
     private static void updateMinerRadius(MapLocation currentLocation) throws GameActionException {
-        int currentMinerRadius = rc.readBroadcast(ChannelList.MINER_DISTANCE_SQUARED_TO_HQ);
+        int currentMinerRadius = rc.readBroadcast(Channel.MINER_DISTANCE_SQUARED_TO_HQ);
         int currentDistanceFromHq = currentLocation.distanceSquaredTo(myHqLocation);
         if (currentDistanceFromHq > currentMinerRadius) {
-            rc.broadcast(ChannelList.MINER_DISTANCE_SQUARED_TO_HQ, currentDistanceFromHq);
+            rc.broadcast(Channel.MINER_DISTANCE_SQUARED_TO_HQ, currentDistanceFromHq);
             Debug.setString(1, "radius is " + currentDistanceFromHq, rc);
         }
     }

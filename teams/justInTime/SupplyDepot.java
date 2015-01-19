@@ -1,6 +1,7 @@
 package justInTime;
 
 import battlecode.common.RobotController;
+import justInTime.communication.Radio;
 
 public class SupplyDepot {
     private static RobotController rc;
@@ -8,7 +9,7 @@ public class SupplyDepot {
     public static void run(RobotController rcC) {
         rc = rcC;
 
-        Communication.init(rcC);
+        Radio.init(rcC);
 
         loop();
     }
@@ -16,7 +17,7 @@ public class SupplyDepot {
     private static void loop() {
         while (true) {
             try {
-                Communication.iAmASupplyTower();
+                Radio.iAmASupplyTower();
             } catch (Exception e) {
                 e.printStackTrace();
             }

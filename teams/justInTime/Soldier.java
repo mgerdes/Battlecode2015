@@ -1,7 +1,8 @@
 package justInTime;
 
 import battlecode.common.*;
-import justInTime.constants.ChannelList;
+import justInTime.communication.Channel;
+import justInTime.communication.Radio;
 import justInTime.constants.Order;
 import justInTime.navigation.SafeBug;
 import justInTime.util.Debug;
@@ -25,7 +26,7 @@ public class Soldier {
 
         SafeBug.init(rcC);
         SupplySharing.init(rcC);
-        Communication.init(rcC);
+        Radio.init(rcC);
         MessageBoard.init(rcC);
 
         loop();
@@ -58,7 +59,7 @@ public class Soldier {
         MapLocation currentLocation = rc.getLocation();
         RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.SOLDIER.attackRadiusSquared, enemyTeam);
         if (enemiesInAttackRange.length > 0) {
-            Communication.setDistressLocation(currentLocation);
+            Radio.setDistressLocation(currentLocation);
         }
 
         if (rc.isWeaponReady()) {
@@ -72,7 +73,7 @@ public class Soldier {
             return;
         }
 
-        MapLocation distressLocation = Communication.getDistressLocation();
+        MapLocation distressLocation = Radio.getDistressLocation();
         if (distressLocation != null) {
             SafeBug.setDestination(distressLocation);
         }
@@ -81,7 +82,7 @@ public class Soldier {
             RobotInfo[] teamInCloseRange = rc.senseNearbyRobots(2, myTeam);
             int soldiersInCloseRange = Helper.getRobotsOfType(teamInCloseRange, RobotType.SOLDIER);
 
-            int minerDistance = rc.readBroadcast(ChannelList.MINER_DISTANCE_SQUARED_TO_HQ);
+            int minerDistance = rc.readBroadcast(Channel.MINER_DISTANCE_SQUARED_TO_HQ);
             int myDistanceToHq = currentLocation.distanceSquaredTo(myHqLocation);
             //--Go to nearby enemy unless I'm too far from base
             if (enemiesInSensorRange.length > 0
