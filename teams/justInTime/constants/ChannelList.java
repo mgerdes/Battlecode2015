@@ -20,6 +20,9 @@ public class ChannelList {
 
     public static final int LOCATION_TO_SURVEY = 28;
 
+    public static final int[] POI = {30,31,32,33,34,35,36};
+    public static final int NUMBER_OF_POIS = 37;
+
     //--Path building info
     public static final int CURRENT_POI = 80;
     public static final int LAST_LOCATION_RELATIVE = 81;
@@ -79,6 +82,9 @@ public class ChannelList {
     public static final int NW_CORNER_BFS_DIRECTIONS = 30000; //--44400
 
     //--BFS queue
-    public static final int QUEUE_START = 50000;
+    public static final int BFS_LOOP_STATE = 49997;
+    public static final int BFS_QUEUE_FRONT = 49998;
+    public static final int BFS_QUEUE_BACK = 49999;
+    public static final int BFS_QUEUE_START = 50000;
 }
 
