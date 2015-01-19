@@ -16,4 +16,5 @@ lib/*
 music/*
 sound/*
 replays/*.rms
+replays/*.rms.analyzed
 version.txt

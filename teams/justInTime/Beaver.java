@@ -14,11 +14,13 @@ public class Beaver {
 
     private static Random random;
     private static MapLocation myHqLocation;
+    private static boolean xyParityMatch;
 
     public static void run(RobotController rcC) throws GameActionException {
         rc = rcC;
 
         myHqLocation = rcC.senseHQLocation();
+        xyParityMatch = xyParityMatch(myHqLocation);
         random = new Random(rcC.getID());
 
         BuildingQueue.init(rcC);
@@ -107,9 +109,12 @@ public class Beaver {
 
     private static boolean canBuildAndValidSquare(MapLocation currentLocation, Direction direction, RobotType type) {
         MapLocation proposedSite = currentLocation.add(direction);
-        return proposedSite.x % 2 == 0
-                && proposedSite.y % 2 == 0
-                && rc.canBuild(direction, type);
+        return rc.canBuild(direction, type)
+                && xyParityMatch == xyParityMatch(proposedSite);
+    }
+
+    private static boolean xyParityMatch(MapLocation location) {
+        return location.x % 2 == location.y % 2;
     }
 
     private static void moveInRandomDirection() throws GameActionException {
