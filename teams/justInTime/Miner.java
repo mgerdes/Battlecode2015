@@ -13,6 +13,7 @@ public class Miner {
     //--where to go when we run out of ore
     private static MapLocation defaultLocation;
     private static MapLocation enemyHqLocation;
+    private static Team myTeam;
     private static Team enemyTeam;
 
     public static void run(RobotController rcC) {
@@ -20,7 +21,8 @@ public class Miner {
 
         myHqLocation = rc.senseHQLocation();
         enemyHqLocation = rc.senseEnemyHQLocation();
-        enemyTeam = rc.getTeam().opponent();
+        myTeam = rc.getTeam();
+        enemyTeam = myTeam.opponent();
         Direction toEnemyHq = myHqLocation.directionTo(enemyHqLocation);
         defaultLocation = getDefaultLocation(toEnemyHq);
 
@@ -61,10 +63,19 @@ public class Miner {
         }
 
         if (rc.isCoreReady()) {
-            if (rc.senseOre(currentLocation) > 0) {
-                rc.mine();
+            RobotInfo[] teammatesThatAreVeryClose = rc.senseNearbyRobots(2, myTeam);
+            int minersThatAreVeryClose = Helper.getRobotsOfType(teammatesThatAreVeryClose, RobotType.MINER);
+            if (minersThatAreVeryClose > 2) {
+                Direction direction = findDirectionMostAwayFromOurHqWithOre(currentLocation);
+                if (direction == null) {
+                    Bug.setDestination(defaultLocation);
+                    direction = Bug.getDirection(currentLocation);
+                }
+
+                rc.move(direction);
+                return;
             }
-            else {
+            else if (rc.senseOre(currentLocation) == 0) {
                 Direction direction = findDirectionMostAwayFromEnemyHqWithOre(currentLocation);
                 if (direction == null) {
                     Bug.setDestination(defaultLocation);
@@ -72,8 +83,27 @@ public class Miner {
                 }
 
                 rc.move(direction);
+                return;
+            }
+            else {
+                rc.mine();
             }
         }
+    }
+
+    private static Direction findDirectionMostAwayFromOurHqWithOre(MapLocation currentLocation) {
+        int directionAwayFromOurHq = Helper.getInt(myHqLocation.directionTo(currentLocation));
+        int[] directions = new int[]{0, -1, 1, -2, 2, -3, 3, -4};
+        for (int n : directions) {
+            Direction direction = Helper.getDirection(directionAwayFromOurHq + n);
+            MapLocation nextLocation = currentLocation.add(direction);
+            if (rc.senseOre(nextLocation) > 0
+                    && rc.canMove(direction)) {
+                return direction;
+            }
+        }
+
+        return null;
     }
 
     private static void updateMinerRadius(MapLocation currentLocation) throws GameActionException {

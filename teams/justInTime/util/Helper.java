@@ -81,4 +81,48 @@ public class Helper {
         int yAve = (int) (pointA.y * percentage + pointB.y * (1 - percentage));
         return new MapLocation(xAve, yAve);
     }
+
+    public static Direction getSumOfDirections(Direction[] allDirection) {
+        //--Note: This method will favor diagonal directions
+        int dx = 0;
+        int dy = 0;
+        int length = allDirection.length;
+        for (int i = 0; i < length; i++) {
+            dx = allDirection[i].dx;
+            dy = allDirection[i].dy;
+        }
+
+        if (dx > 0) {
+            if (dy < 0) {
+                return Direction.NORTH_EAST;
+            }
+            else if (dy > 0) {
+                return Direction.SOUTH_EAST;
+            }
+            else {
+                return Direction.EAST;
+            }
+        }
+        else if (dx < 0) {
+            if (dy < 0) {
+                return Direction.NORTH_WEST;
+            }
+            else if (dy > 0) {
+                return Direction.SOUTH_WEST;
+            }
+            else {
+                return Direction.WEST;
+            }
+        }
+        else {
+            if (dy < 0) {
+                return Direction.NORTH;
+            }
+            else if (dy > 0) {
+                return Direction.SOUTH;
+            }
+        }
+
+        return Direction.NONE;
+    }
 }

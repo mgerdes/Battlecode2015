@@ -5,6 +5,7 @@ import justInTime.constants.ChannelList;
 import justInTime.constants.Order;
 import justInTime.navigation.SafeBug;
 import justInTime.util.Debug;
+import justInTime.util.Helper;
 
 public class Soldier {
     private static RobotController rc;
@@ -77,6 +78,8 @@ public class Soldier {
         }
         else {
             RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.SOLDIER.sensorRadiusSquared, enemyTeam);
+            RobotInfo[] teamInCloseRange = rc.senseNearbyRobots(2, myTeam);
+            int soldiersInCloseRange = Helper.getRobotsOfType(teamInCloseRange, RobotType.SOLDIER);
 
             int minerDistance = rc.readBroadcast(ChannelList.MINER_DISTANCE_SQUARED_TO_HQ);
             int myDistanceToHq = currentLocation.distanceSquaredTo(myHqLocation);
@@ -84,6 +87,13 @@ public class Soldier {
             if (enemiesInSensorRange.length > 0
                     && myDistanceToHq < minerDistance + 4) {
                 SafeBug.setDestination(enemiesInSensorRange[0].location);
+            }
+            //--If I am too close to other soldiers, spread out
+            else if (soldiersInCloseRange > 2) {
+                Direction direction = getDirectionAwayFrom(currentLocation, teamInCloseRange);
+                if (direction != null) {
+                    SafeBug.setDestination(currentLocation.add(direction));
+                }
             }
             //--If there are no nearby enemies, make sure that I'm outside the miner circle
             else if (myDistanceToHq < minerDistance + 2) {
@@ -99,5 +109,20 @@ public class Soldier {
         if (direction != Direction.NONE) {
             rc.move(direction);
         }
+    }
+
+    private static Direction getDirectionAwayFrom(MapLocation currentLocation, RobotInfo[] teamInCloseRange) {
+        int length = teamInCloseRange.length;
+        Direction[] allDirection = new Direction[length];
+        for (int i = 0; i < length; i++) {
+            allDirection[i] = currentLocation.directionTo(teamInCloseRange[i].location);
+        }
+
+        Direction sum = Helper.getSumOfDirections(allDirection);
+        if (sum != Direction.NONE) {
+            return sum.opposite();
+        }
+
+        return null;
     }
 }
