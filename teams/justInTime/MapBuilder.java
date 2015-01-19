@@ -12,22 +12,30 @@ public class MapBuilder {
     private static int minX;
     private static int minY;
 
+    private static MapLocation myHq;
+
     private static int symmetryType;
 
     private static int xLoop = 0;
     private static int yLoop = 0;
+
+    private static int debugWaitingForLocation = 0;
+    private static int debugStopForBytecodes = 0;
+
     private static boolean[][] wasBroadcast;
 
     public static void init(int mapWidthC,
                             int mapHeightC,
                             MapLocation nwCornerC,
                             int symmetryTypeC,
+                            MapLocation myHqC,
                             RobotController rcC) {
         mapWidth = mapWidthC;
         mapHeight = mapHeightC;
         minX = nwCornerC.x;
         minY = nwCornerC.y;
         symmetryType = symmetryTypeC;
+        myHq = myHqC;
         rc = rcC;
 
         wasBroadcast = new boolean[mapWidth][mapHeight];
@@ -42,8 +50,9 @@ public class MapBuilder {
         int finalBytecodeValue = initialBytecodeValue + bytecodeLimit;
         for (; xLoop < mapWidth; xLoop++) {
             for (; yLoop < mapHeight; yLoop++) {
-                System.out.println(xLoop + " " + yLoop);
+//                System.out.println(xLoop + " " + yLoop);
                 if (Clock.getBytecodeNum() > finalBytecodeValue) {
+                    debugStopForBytecodes++;
                     System.out.println("stopping due to bytecodes");
                     return false;
                 }
@@ -55,15 +64,20 @@ public class MapBuilder {
                 MapLocation locationToCheck = getAbsoluteMapLocationForRelativeCoordinates(xLoop, yLoop);
                 MapLocation reflected = getReflectedMapLocation(locationToCheck);
                 TerrainTile tile = rc.senseTerrainTile(locationToCheck);
-                System.out.printf("sensed %s : %s\n", locationToCheck, tile);
+//                System.out.printf("sensed %s : %s\n", locationToCheck, tile);
                 if (tile == TerrainTile.UNKNOWN) {
                     tile = rc.senseTerrainTile(reflected);
-                    System.out.printf("reflected %s : %s\n", reflected, tile);
+//                    System.out.printf("reflected %s : %s\n", reflected, tile);
                 }
 
                 if (tile == TerrainTile.UNKNOWN) {
-                    System.out.println("need location " + locationToCheck);
-                    Communication.setMapLocationOnChannel(locationToCheck, ChannelList.LOCATION_TO_SURVEY);
+//                    System.out.println("need location " + locationToCheck);
+                    MapLocation closerToOurHq =
+                            myHq.distanceSquaredTo(locationToCheck) < myHq.distanceSquaredTo(reflected) ?
+                            locationToCheck
+                            : reflected;
+                    Communication.setMapLocationOnChannel(closerToOurHq, ChannelList.LOCATION_TO_SURVEY);
+                    debugWaitingForLocation++;
                     return false;
                 }
                 else {
@@ -85,14 +99,23 @@ public class MapBuilder {
             }
         }
 
-        System.out.printf("\nxLoop:%d\nmapWidth:%s\nyLoop:%s\nmapHeight:%s\n",
-                          xLoop,
-                          mapWidth,
-                          yLoop,
-                          mapHeight);
+//        System.out.printf("\nxLoop:%d\nmapWidth:%s\nyLoop:%s\nmapHeight:%s\n",
+//                          xLoop,
+//                          mapWidth,
+//                          yLoop,
+//                          mapHeight);
 
-        return xLoop == mapWidth
+        boolean mapIsComplete = xLoop == mapWidth
                 && yLoop == mapHeight;
+        if (mapIsComplete) {
+            System.out.printf(
+                    "Waited for location %d times\nBytecode break %d times",
+                    debugWaitingForLocation,
+                    debugStopForBytecodes);
+
+        }
+
+        return mapIsComplete;
     }
 
     private static MapLocation getAbsoluteMapLocationForRelativeCoordinates(int x, int y) {

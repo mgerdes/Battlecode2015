@@ -246,6 +246,8 @@ public class Drone {
 
     private static void findCornerAndBroadcastMapDataForRotationalSymmetry() throws GameActionException {
         MapLocation currentLocation = rc.getLocation();
+
+        //--If we are on a corner broadcast all the data
         if (isMapCorner(currentLocation)) {
             int mapHeight =
                     Math.abs(currentLocation.y - myHqLocation.y) * 2 + Math.abs(myHqLocation.y - enemyHqLocation.y);
@@ -257,20 +259,26 @@ public class Drone {
 
             Direction cornerDirection = getCornerDirection(currentLocation);
             broadcastFourCorners(currentLocation, cornerDirection, mapWidth, mapHeight);
+            sizeAndCornersBroadcasted = true;
+            return;
         }
-        else {
-            int dx = myHqLocation.x - enemyHqLocation.x;
-            int dy = myHqLocation.y - enemyHqLocation.y;
-            MapLocation destination = myHqLocation.add(dx * 1000, dy * 1000);
-            SafeBug.setDestination(destination);
 
-            //--Need to pass in enemies for extra safety
-            Direction directionTowardsCorner = SafeBug.getDirection(currentLocation);
-            Debug.setString(2, "direction is " + directionTowardsCorner.toString(), rc);
+        //--Go to the corner
+        if (!rc.isCoreReady()) {
+            return;
+        }
 
-            if (directionTowardsCorner != Direction.NONE) {
-                rc.move(directionTowardsCorner);
-            }
+        int dx = myHqLocation.x - enemyHqLocation.x;
+        int dy = myHqLocation.y - enemyHqLocation.y;
+        MapLocation destination = myHqLocation.add(dx * 1000, dy * 1000);
+        SafeBug.setDestination(destination);
+
+        //--Need to pass in enemies for extra safety
+        Direction directionTowardsCorner = SafeBug.getDirection(currentLocation);
+        Debug.setString(2, "direction is " + directionTowardsCorner.toString(), rc);
+
+        if (directionTowardsCorner != Direction.NONE) {
+            rc.move(directionTowardsCorner);
         }
     }
 
@@ -306,7 +314,6 @@ public class Drone {
         }
 
         rc.broadcast(ChannelList.PERIMETER_SURVEY_COMPLETE, 1);
-        sizeAndCornersBroadcasted = true;
     }
 
     private static Direction getCornerDirection(MapLocation currentLocation) {

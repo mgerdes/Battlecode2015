@@ -105,6 +105,7 @@ public class HQ {
                             rc.readBroadcast(ChannelList.MAP_HEIGHT),
                             Communication.readMapLocationFromChannel(ChannelList.NW_MAP_CORNER),
                             rc.readBroadcast(ChannelList.MAP_SYMMETRY),
+                            myHqLocation,
                             rc);
             mapBuilderInitialized = true;
         }
