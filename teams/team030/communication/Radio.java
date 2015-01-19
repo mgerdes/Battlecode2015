@@ -175,4 +175,42 @@ public class Radio {
 
         return value - MAP_COORDINATE_ACTIVE_FLAG;
     }
+
+    public static void enemiesSpotted(MapLocation myLocation, int enemyCount) throws GameActionException {
+        int currentRound = Clock.getRoundNum();
+
+        //--Context is (Enemy Count, Round Number) CCC-RRRR
+        int currentChannelValue = rc.readBroadcast(Channel.ENEMY_SPOTTED_CONTEXT);
+
+        //--Can overwrite is broadcast is expired
+        int roundWritten = currentChannelValue % 10000;
+        if (roundWritten < currentRound - 1) {
+            rc.broadcast(Channel.ENEMY_SPOTTED_CONTEXT, enemyCount * 10000 + currentRound);
+            rc.broadcast(Channel.ENEMY_SPOTTED_LOCATION_X, myLocation.x);
+            rc.broadcast(Channel.ENEMY_SPOTTED_LOCATION_Y, myLocation.y);
+            return;
+        }
+
+        //--Can overwrite if we are seeing more enemies
+        int enemiesSpotted = currentChannelValue / 10000;
+        if (enemyCount > enemiesSpotted) {
+            rc.broadcast(Channel.ENEMY_SPOTTED_CONTEXT, enemyCount * 10000 + currentRound);
+            rc.broadcast(Channel.ENEMY_SPOTTED_LOCATION_X, myLocation.x);
+            rc.broadcast(Channel.ENEMY_SPOTTED_LOCATION_Y, myLocation.y);
+            return;
+        }
+    }
+
+    public static MapLocation getTowerLocationWhereEnemySpotted() throws GameActionException {
+        int currentRound = Clock.getRoundNum();
+        int currentChannelValue = rc.readBroadcast(Channel.ENEMY_SPOTTED_CONTEXT);
+        int roundWritten = currentChannelValue % 10000;
+        if (roundWritten < currentRound) {
+            return null;
+        }
+
+        int x = rc.readBroadcast(Channel.ENEMY_SPOTTED_LOCATION_X);
+        int y = rc.readBroadcast(Channel.ENEMY_SPOTTED_LOCATION_Y);
+        return new MapLocation(x, y);
+    }
 }
