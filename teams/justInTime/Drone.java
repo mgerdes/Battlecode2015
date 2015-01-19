@@ -98,6 +98,8 @@ public class Drone {
                 return;
             }
             else {
+                Debug.setString(1, "going to " + destination.toString(), rc);
+
                 SafeBug.setDestination(destination);
                 Direction direction = SafeBug.getDirection(rc.getLocation());
                 if (direction != Direction.NONE) {

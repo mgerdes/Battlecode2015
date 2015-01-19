@@ -75,7 +75,6 @@ public class HQ {
 
         updateSpawningAndOrders();
         queueBuildings();
-        broadcastAllTerrainTiles();
 
         updateRallyPoint();
 
@@ -93,6 +92,8 @@ public class HQ {
                 spawn(RobotType.BEAVER);
             }
         }
+
+        broadcastAllTerrainTiles();
     }
 
     private static void broadcastAllTerrainTiles() throws GameActionException {
@@ -132,7 +133,10 @@ public class HQ {
         }
 
         if (!allTerrainTilesBroadcast) {
-            allTerrainTilesBroadcast = MapBuilder.processUntilComplete(7000);
+            allTerrainTilesBroadcast = MapBuilder.processUntilComplete(Clock.getBytecodesLeft() - 30);
+            if (Clock.getBytecodeNum() < 1000) {
+                System.out.println("bytecodes exceeded?");
+            }
         }
     }
 

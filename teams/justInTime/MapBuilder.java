@@ -22,6 +22,8 @@ public class MapBuilder {
     private static int debugWaitingForLocation = 0;
     private static int debugStopForBytecodes = 0;
 
+    private static final int MAX_BYTECODES_CONSUMED_IN_ONE_LOOP_PASS = 220;
+
     private static boolean[][] wasBroadcast;
 
     public static void init(int mapWidthC,
@@ -50,10 +52,8 @@ public class MapBuilder {
         int finalBytecodeValue = initialBytecodeValue + bytecodeLimit;
         for (; xLoop < mapWidth; xLoop++) {
             for (; yLoop < mapHeight; yLoop++) {
-//                System.out.println(xLoop + " " + yLoop);
-                if (Clock.getBytecodeNum() > finalBytecodeValue) {
+                if (Clock.getBytecodeNum() > finalBytecodeValue - MAX_BYTECODES_CONSUMED_IN_ONE_LOOP_PASS) {
                     debugStopForBytecodes++;
-                    System.out.println("stopping due to bytecodes");
                     return false;
                 }
 
@@ -64,14 +64,11 @@ public class MapBuilder {
                 MapLocation locationToCheck = getAbsoluteMapLocationForRelativeCoordinates(xLoop, yLoop);
                 MapLocation reflected = getReflectedMapLocation(locationToCheck);
                 TerrainTile tile = rc.senseTerrainTile(locationToCheck);
-//                System.out.printf("sensed %s : %s\n", locationToCheck, tile);
                 if (tile == TerrainTile.UNKNOWN) {
                     tile = rc.senseTerrainTile(reflected);
-//                    System.out.printf("reflected %s : %s\n", reflected, tile);
                 }
 
                 if (tile == TerrainTile.UNKNOWN) {
-//                    System.out.println("need location " + locationToCheck);
                     MapLocation closerToOurHq =
                             myHq.distanceSquaredTo(locationToCheck) < myHq.distanceSquaredTo(reflected) ?
                             locationToCheck
@@ -99,23 +96,12 @@ public class MapBuilder {
             }
         }
 
-//        System.out.printf("\nxLoop:%d\nmapWidth:%s\nyLoop:%s\nmapHeight:%s\n",
-//                          xLoop,
-//                          mapWidth,
-//                          yLoop,
-//                          mapHeight);
+        System.out.printf(
+                "\nWaited for location %d times\nBytecode break %d times\n",
+                debugWaitingForLocation,
+                debugStopForBytecodes);
 
-        boolean mapIsComplete = xLoop == mapWidth
-                && yLoop == mapHeight;
-        if (mapIsComplete) {
-            System.out.printf(
-                    "Waited for location %d times\nBytecode break %d times",
-                    debugWaitingForLocation,
-                    debugStopForBytecodes);
-
-        }
-
-        return mapIsComplete;
+        return true;
     }
 
     private static MapLocation getAbsoluteMapLocationForRelativeCoordinates(int x, int y) {
