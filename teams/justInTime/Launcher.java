@@ -12,12 +12,14 @@ public class Launcher {
 
     private static Team enemyTeam;
     private static Team myTeam;
+    private static int myId;
 
     public static void run(RobotController rcC) {
         rc = rcC;
 
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
+        myId = rc.getID();
 
         SafeBug.init(rcC);
         SupplySharing.init(rcC);
@@ -70,6 +72,10 @@ public class Launcher {
     }
 
     private static void attackEnemyStructure() throws GameActionException {
+        if (rc.getSupplyLevel() < 600) {
+            rc.broadcast(ChannelList.NEED_SUPPLY, myId);
+        }
+
         MapLocation currentLocation = rc.getLocation();
         RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.MISSILE.sensorRadiusSquared, enemyTeam);
 

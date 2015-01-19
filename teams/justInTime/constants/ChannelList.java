@@ -31,10 +31,9 @@ public class ChannelList {
     public static final int MAP_WIDTH = 93;
     public static final int MAP_HEIGHT = 94;
     public static final int MAP_SYMMETRY = 95;
-
     public static final int POI_TO_ATTACK = 96;
-
     public static final int ALL_TERRAIN_TILES_BROADCASTED = 97;
+    public static final int NEED_SUPPLY = 98;
 
     //--Unit counts
     public static final int DRONE_COUNT = 100;

@@ -354,14 +354,16 @@ public class HQ {
 
         MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.DefendMiners);
 
-        if (!allTerrainTilesBroadcast) {
-            MessageBoard.setPriorityOrder(1, RobotType.DRONE, Order.SurveyMap);
-        }
 
         if (launcherCount > 1) {
+            MessageBoard.setPriorityOrder(1, RobotType.DRONE, Order.MoveSupply);
             MessageBoard.setDefaultOrder(RobotType.DRONE, Order.Rally);
         }
         else {
+            if (!allTerrainTilesBroadcast) {
+                MessageBoard.setPriorityOrder(1, RobotType.DRONE, Order.SurveyMap);
+            }
+
             MessageBoard.setDefaultOrder(RobotType.DRONE, Order.AttackEnemyMiners);
         }
     }

@@ -70,24 +70,73 @@ public class Drone {
     }
 
     private static void doYourThing() throws GameActionException {
-        SupplySharing.share();
-
         Order order = MessageBoard.getOrder(RobotType.DRONE);
         switch (order) {
             case SurveyMap:
+                Debug.setString(0, "surveying...", rc);
+                SupplySharing.share();
                 surveyMap();
                 break;
             case AttackEnemyMiners:
+                Debug.setString(0, "attack miners...", rc);
+                SupplySharing.share();
                 swarm();
                 break;
             case Rally:
+                Debug.setString(0, "rally...", rc);
+                SupplySharing.share();
                 rally();
+                break;
+            case MoveSupply:
+                Debug.setString(0, "moving supply...", rc);
+                moveSupply();
                 break;
         }
     }
 
+    private static void moveSupply() throws GameActionException {
+        if (!rc.isCoreReady()) {
+            return;
+        }
+
+        MapLocation currentLocation = rc.getLocation();
+        RobotInfo[] enemiesInSensor = rc.senseNearbyRobots(RobotType.DRONE.sensorRadiusSquared, enemyTeam);
+        RobotType[] enemiesToIgnore = new RobotType[] {RobotType.BEAVER, RobotType.DRONE};
+
+        if (rc.getSupplyLevel() < 1000) {
+            SafeBug.setDestination(myHqLocation);
+            Direction direction = SafeBug.getDirection(currentLocation, null, enemiesInSensor, enemiesToIgnore);
+            if (direction != Direction.NONE) {
+                rc.move(direction);
+            }
+
+            return;
+        }
+
+        int robotID = rc.readBroadcast(ChannelList.NEED_SUPPLY);
+        if (robotID == 0) {
+            return;
+        }
+
+        MapLocation robotToSupplyLocation = rc.senseRobot(robotID).location;
+        if (robotToSupplyLocation.distanceSquaredTo(currentLocation) <= GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED) {
+            rc.transferSupplies((int) rc.getSupplyLevel(), robotToSupplyLocation);
+            Debug.setString(1,
+                            String.format("passed supply to robot %d at location %s\n", robotID, robotToSupplyLocation),
+                            rc);
+            return;
+        }
+
+        SafeBug.setDestination(robotToSupplyLocation);
+        Direction direction = SafeBug.getDirection(currentLocation, null, enemiesInSensor, enemiesToIgnore);
+        if (direction != Direction.NONE) {
+            rc.move(direction);
+        }
+
+        return;
+    }
+
     private static void surveyMap() throws GameActionException {
-        Debug.setString(0, "surveying...", rc);
         if (!rc.isCoreReady()) {
             return;
         }
