@@ -118,7 +118,9 @@ public class Drone {
             return;
         }
 
+        //--TODO: robot may be dead
         MapLocation robotToSupplyLocation = rc.senseRobot(robotID).location;
+
         if (robotToSupplyLocation.distanceSquaredTo(currentLocation) <= GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED) {
             rc.transferSupplies((int) rc.getSupplyLevel(), robotToSupplyLocation);
             Debug.setString(1,

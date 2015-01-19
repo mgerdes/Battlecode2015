@@ -65,7 +65,7 @@ public class Miner {
                 rc.mine();
             }
             else {
-                Direction direction = findDirectionClosestToHqWithOre(currentLocation);
+                Direction direction = findDirectionMostAwayFromEnemyHqWithOre(currentLocation);
                 if (direction == null) {
                     Bug.setDestination(defaultLocation);
                     direction = Bug.getDirection(currentLocation);
@@ -98,11 +98,11 @@ public class Miner {
         }
     }
 
-    private static Direction findDirectionClosestToHqWithOre(MapLocation currentLocation) {
-        int directionToHq = Helper.getInt(currentLocation.directionTo(myHqLocation));
+    private static Direction findDirectionMostAwayFromEnemyHqWithOre(MapLocation currentLocation) {
+        int directionAwayFromHq = Helper.getInt(enemyHqLocation.directionTo(myHqLocation));
         int[] directions = new int[]{0, -1, 1, -2, 2, -3, 3, -4};
         for (int n : directions) {
-            Direction direction = Helper.getDirection(directionToHq + n);
+            Direction direction = Helper.getDirection(directionAwayFromHq + n);
             MapLocation nextLocation = currentLocation.add(direction);
             if (rc.senseOre(nextLocation) > 0
                     && rc.canMove(direction)) {
