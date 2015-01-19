@@ -21,16 +21,26 @@ public class PathBuilder {
 
         //--broadcast all of destinations (point of interests)
         //--broad the number of POI
+        for (int i = 0; i < towerList.length; i++) {
+            int relativeX = getRelativeMapLocationX(towerList[i].x);
+            int relativeY = getRelativeMapLocationY(towerList[i].y);
+            rc.broadcast(ChannelList.POI[i], getHashedLocation(relativeX, relativeY));
+        }
+        int relativeX = getRelativeMapLocationX(enemyHq.x);
+        int relativeY = getRelativeMapLocationY(enemyHq.y);
+        rc.broadcast(ChannelList.POI[towerList.length], getHashedLocation(relativeX, relativeY));
+        rc.broadcast(ChannelList.NUMBER_OF_POIS, towerList.length);
 
-        rc.broadcast(ChannelList.BFS_LOOP_STATE, -1); // cost ~ 25
-        resetQueue();
+        beginBuild(1);
+
+        rc.broadcast(ChannelList.BFS_LOOP_STATE, -1);
     }
 
     public static void build(int bytecodeLimit) throws GameActionException {
+        int currentPOI = rc.readBroadcast(ChannelList.CURRENT_POI);
         int loopState = rc.readBroadcast(ChannelList.BFS_LOOP_STATE);
 
         while (!isQueueEmpty() || loopState != -1 /* not sure if this is needed */) {
-            int currentPOI = rc.readBroadcast(ChannelList.CURRENT_POI);
 
             int currentLocationHashed;
             if (loopState == -1) {
@@ -71,25 +81,51 @@ public class PathBuilder {
                     rc.broadcast(ChannelList.BFS_LOOP_STATE, -1); // cost ~ 25
                 }
             }
+        }
 
+        endBuild(currentPOI);
+    }
+
+    private static void beginBuild(int poi) throws GameActionException {
+        resetQueue();
+        rc.broadcast(ChannelList.CURRENT_POI, poi);
+        enqueue(rc.readBroadcast(ChannelList.POI[poi - 1]));
+    }
+
+    private static void endBuild(int poi) throws GameActionException {
+        if (poi + 1 < rc.readBroadcast(ChannelList.NUMBER_OF_POIS)) {
+            beginBuild(poi + 1);
+        } else {
+            // Having a current POI of 1 higher then the number of POIs signifies building is complete.
+            rc.broadcast(ChannelList.CURRENT_POI, poi + 1);
         }
     }
 
-    public static boolean isComplete() {
+    public static boolean isComplete() throws GameActionException {
         //--Returns true when all paths are done and broadcast
-        return false;
+        return rc.readBroadcast(ChannelList.CURRENT_POI) == rc.readBroadcast(ChannelList.NUMBER_OF_POIS);
     }
 
-    public static int getLoopState(int i, int currentLocationHashed) {
+    private static int getLoopState(int i, int currentLocationHashed) {
         return i * 100000 + currentLocationHashed;
     }
 
-    public static int getLoopIndex(int loopState) {
+    private static int getLoopIndex(int loopState) {
         return loopState / 100000;
     }
 
-    public static int getCurrentLocationHashed(int loopState) {
+    private static int getCurrentLocationHashed(int loopState) {
         return loopState % 100000;
+    }
+
+    private static int getRelativeMapLocationX(int absoluteX) throws GameActionException {
+        MapLocation NWCorner = Communication.readMapLocationFromChannel(ChannelList.NW_MAP_CORNER);
+        return absoluteX - NWCorner.x;
+    }
+
+    private static int getRelativeMapLocationY(int absoluteY) throws GameActionException {
+        MapLocation NWCorner = Communication.readMapLocationFromChannel(ChannelList.NW_MAP_CORNER);
+        return absoluteY - NWCorner.y;
     }
 
     //--TODO NWCorner should be saved somewhere to avoid same readBroadcast call.

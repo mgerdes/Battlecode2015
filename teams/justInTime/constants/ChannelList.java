@@ -20,6 +20,9 @@ public class ChannelList {
 
     public static final int LOCATION_TO_SURVEY = 28;
 
+    public static final int[] POI = {30,31,32,33,34,35,36};
+    public static final int NUMBER_OF_POIS = 37;
+
     //--Path building info
     public static final int CURRENT_POI = 80;
     public static final int LAST_LOCATION_RELATIVE = 81;
