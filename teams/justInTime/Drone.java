@@ -13,14 +13,11 @@ import justInTime.util.Helper;
 public class Drone {
     private static RobotController rc;
 
-    private static final int ROBOT_NOT_SET = -1;
-
     private static Team enemyTeam;
     private static MapLocation enemyHqLocation;
     private static MapLocation myHqLocation;
     private static Direction awayFromEnemyHq;
     private static Team myTeam;
-    private static int myId;
 
     private static final int[] directions = new int[]{0, -1, 1, -2, 2};
 
@@ -50,7 +47,6 @@ public class Drone {
         awayFromEnemyHq = enemyHqLocation.directionTo(myHqLocation);
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
-        myId = rc.getID();
 
         Bug.init(rcC);
         SafeBug.init(rcC);
@@ -128,7 +124,7 @@ public class Drone {
             deliveringSupply = true;
         }
 
-        int robotID = rc.readBroadcast(ChannelList.NEED_SUPPLY);
+        int robotID = Communication.getRobotIdThatNeedsSupply();
         if (robotID == 0) {
             //--There is no robot to supply, we call this method to get the default order.
             doYourThing();
@@ -443,7 +439,7 @@ public class Drone {
         SafeBug.setDestination(enemyHqLocation);
 
         if (rc.getSupplyLevel() < 500) {
-            rc.broadcast(ChannelList.NEED_SUPPLY, myId);
+            Communication.iNeedSupply();
         }
 
         RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.DRONE.sensorRadiusSquared, enemyTeam);

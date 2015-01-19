@@ -4,8 +4,6 @@ import battlecode.common.*;
 import justInTime.constants.ChannelList;
 import justInTime.constants.Order;
 import justInTime.navigation.SafeBug;
-import justInTime.util.Debug;
-import justInTime.util.Helper;
 
 public class Launcher {
     private static RobotController rc;
@@ -90,7 +88,7 @@ public class Launcher {
                 return;
             }
             else {
-                rc.broadcast(ChannelList.NEED_SUPPLY, myId);
+                Communication.iNeedSupply();
             }
         }
 

@@ -1,21 +1,71 @@
 package justInTime;
 
+import battlecode.common.*;
 import justInTime.constants.ChannelList;
-import battlecode.common.Clock;
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
 
 public class Communication {
     private static RobotController rc;
 
     private static final int MAP_COORDINATE_ACTIVE_FLAG = 1000000;
     private static MapLocation myHq;
+    private static int myType;
+    private static int myId;
 
     public static void init(RobotController rcC) {
         rc = rcC;
 
         myHq = rc.senseHQLocation();
+        myType = rc.getType().ordinal();
+        myId = rc.getID();
+    }
+
+    public static void iNeedSupply() throws GameActionException {
+        //--We are signalling one robot that needs supply
+        //--When one unit needs supply, their request cannot be overriden unless
+        //  the robot is of a higher priority
+
+        //--The supply context channel is type, round number (T-RRRR)
+
+        //--If I made the request, update it
+        int currentRound = Clock.getRoundNum();
+        int requestId = rc.readBroadcast(ChannelList.NEED_SUPPLY_ROBOT_ID);
+        if (myId == requestId) {
+            rc.broadcast(ChannelList.NEED_SUPPLY_CONTEXT,
+                         myType * 10000 + currentRound);
+            return;
+        }
+
+        //--If the request is expired, I can overwrite it
+        int supplyContextValue = rc.readBroadcast(ChannelList.NEED_SUPPLY_CONTEXT);
+        int supplyRound = supplyContextValue % 10000;
+        if (supplyRound < currentRound - 1) {
+            rc.broadcast(ChannelList.NEED_SUPPLY_ROBOT_ID, myId);
+            rc.broadcast(ChannelList.NEED_SUPPLY_CONTEXT,
+                         myType * 10000 + currentRound);
+            return;
+        }
+
+        //--If my type is a higher priority, I can overwrite it
+        int currentType = supplyContextValue / 10000;
+        if (myType > currentType) {
+            rc.broadcast(ChannelList.NEED_SUPPLY_ROBOT_ID, myId);
+            rc.broadcast(ChannelList.NEED_SUPPLY_CONTEXT,
+                         myType * 10000 + currentRound);
+            return;
+        }
+    }
+
+    public static int getRobotIdThatNeedsSupply() throws GameActionException {
+        int supplyContextValue = rc.readBroadcast(ChannelList.NEED_SUPPLY_CONTEXT);
+        int supplyRound = supplyContextValue % 10000;
+        int currentRound = Clock.getRoundNum();
+
+        //--If context is expired, return 0
+        if (supplyRound < currentRound - 1) {
+            return 0;
+        }
+
+        return rc.readBroadcast(ChannelList.NEED_SUPPLY_ROBOT_ID);
     }
 
     public static MapLocation getDistressLocation() throws GameActionException {
