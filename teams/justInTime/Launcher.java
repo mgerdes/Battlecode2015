@@ -14,11 +14,15 @@ public class Launcher {
     private static Team myTeam;
     private static int myId;
 
+    private static final int MAXIMUM_DISTANCE_SQUARED_TO_GO_TO_HQ_FOR_SUPPLY = 100;
+    private static MapLocation myHq;
+
     public static void run(RobotController rcC) {
         rc = rcC;
 
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
+        myHq = rc.senseHQLocation();
         myId = rc.getID();
 
         SafeBug.init(rcC);
@@ -72,11 +76,24 @@ public class Launcher {
     }
 
     private static void attackEnemyStructure() throws GameActionException {
+        MapLocation currentLocation = rc.getLocation();
+
         if (rc.getSupplyLevel() < 600) {
-            rc.broadcast(ChannelList.NEED_SUPPLY, myId);
+            if (currentLocation.distanceSquaredTo(myHq) < MAXIMUM_DISTANCE_SQUARED_TO_GO_TO_HQ_FOR_SUPPLY) {
+                SafeBug.setDestination(myHq);
+                Direction direction = SafeBug.getDirection(currentLocation);
+                if (rc.isCoreReady()
+                        && direction != Direction.NONE) {
+                    rc.move(direction);
+                }
+
+                return;
+            }
+            else {
+                rc.broadcast(ChannelList.NEED_SUPPLY, myId);
+            }
         }
 
-        MapLocation currentLocation = rc.getLocation();
         RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.MISSILE.sensorRadiusSquared, enemyTeam);
 
         //--If there are no nearby enemies, move closer
