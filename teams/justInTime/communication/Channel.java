@@ -36,8 +36,8 @@ public class Channel {
     public static final int MAP_SYMMETRY = 95;
     public static final int POI_TO_ATTACK = 96;
     public static final int ALL_TERRAIN_TILES_BROADCASTED = 97;
-    public static final int NEED_SUPPLY_ROBOT_ID = 98;
-    public static final int NEED_SUPPLY_CONTEXT = 99;
+    protected static final int NEED_SUPPLY_ROBOT_ID = 98;
+    protected static final int NEED_SUPPLY_CONTEXT = 99;
 
     //--Unit counts
     public static final int DRONE_COUNT = 100;
@@ -47,7 +47,7 @@ public class Channel {
 
     //--Building counts
     public static final int SUPPLY_DEPOT_COUNT = 200;
-    public static final int SUPPLY_DEPOT_ROUND_UPDATED = 201;
+    protected static final int SUPPLY_DEPOT_ROUND_UPDATED = 201;
 
     //--Production orders
     public static final int MORE_MINERS = 500;
@@ -61,10 +61,10 @@ public class Channel {
     public static final int QUEUE_END_POINTER = 4001;
 
     //--Distress!
-    public static final int DISTRESS_SIGNAL_ROUND_NUMBER = 5000;
-    public static final int DISTRESS_SIGNAL_CREATOR = 5001;
-    public static final int DISTRESS_LOCATION_X = 5002;
-    public static final int DISTRESS_LOCATION_Y = 5003;
+    protected static final int DISTRESS_SIGNAL_ROUND_NUMBER = 5000;
+    protected static final int DISTRESS_SIGNAL_CREATOR = 5001;
+    protected static final int DISTRESS_LOCATION_X = 5002;
+    protected static final int DISTRESS_LOCATION_Y = 5003;
 
     //--Message board
 
