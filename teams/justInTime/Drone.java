@@ -93,7 +93,17 @@ public class Drone {
         }
 
         if (sizeAndCornersBroadcasted) {
-            return;
+            MapLocation destination = Communication.readMapLocationFromChannel(ChannelList.LOCATION_TO_SURVEY);
+            if (destination == null) {
+                return;
+            }
+            else {
+                SafeBug.setDestination(destination);
+                Direction direction = SafeBug.getDirection(rc.getLocation());
+                if (direction != Direction.NONE) {
+                    rc.move(direction);
+                }
+            }
         }
 
         if (symmetry == Symmetry.UNKNOWN) {
@@ -129,7 +139,7 @@ public class Drone {
             Communication.setMapLocationOnChannel(new MapLocation(eastEdge, southEdge), ChannelList.SE_MAP_CORNER);
             Communication.setMapLocationOnChannel(new MapLocation(westEdge, southEdge), ChannelList.SW_MAP_CORNER);
             Communication.setMapLocationOnChannel(new MapLocation(westEdge, northEdge), ChannelList.NW_MAP_CORNER);
-            rc.broadcast(ChannelList.SURVEY_COMPLETE, 1);
+            rc.broadcast(ChannelList.PERIMETER_SURVEY_COMPLETE, 1);
             sizeAndCornersBroadcasted = true;
         }
     }
@@ -295,7 +305,7 @@ public class Drone {
                 break;
         }
 
-        rc.broadcast(ChannelList.SURVEY_COMPLETE, 1);
+        rc.broadcast(ChannelList.PERIMETER_SURVEY_COMPLETE, 1);
         sizeAndCornersBroadcasted = true;
     }
 

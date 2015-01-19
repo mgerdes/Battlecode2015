@@ -96,7 +96,7 @@ public class HQ {
     }
 
     private static void broadcastAllTerrainTiles() throws GameActionException {
-        if (rc.readBroadcast(ChannelList.SURVEY_COMPLETE) != 1) {
+        if (rc.readBroadcast(ChannelList.PERIMETER_SURVEY_COMPLETE) != 1) {
             return;
         }
 
@@ -105,7 +105,7 @@ public class HQ {
                             rc.readBroadcast(ChannelList.MAP_HEIGHT),
                             Communication.readMapLocationFromChannel(ChannelList.NW_MAP_CORNER),
                             rc.readBroadcast(ChannelList.MAP_SYMMETRY),
-                            myHqLocation);
+                            rc);
             mapBuilderInitialized = true;
         }
 
@@ -122,23 +122,16 @@ public class HQ {
                               Communication.readMapLocationFromChannel(ChannelList.NW_MAP_CORNER));
 
             System.out.println("my hq" + myHqLocation);
-            System.out.println("my hq" + MapBuilder.getReflected(enemyHqLocation));
+            System.out.println("my hq" + MapBuilder.getReflectedMapLocation(enemyHqLocation));
 
             System.out.println("enemy hq" + enemyHqLocation);
-            System.out.println("enemy hq" + MapBuilder.getReflected(myHqLocation));
+            System.out.println("enemy hq" + MapBuilder.getReflectedMapLocation(myHqLocation));
 
             printedMapDataForDebug = true;
         }
 
         if (!allTerrainTilesBroadcast) {
-            MapLocation unknown = MapBuilder.processAndReturnUnknown(7000);
-            if (unknown == null) {
-                allTerrainTilesBroadcast = true;
-                rc.broadcast(ChannelList.ALL_TERRAIN_TILES_BROADCASTED, 1);
-            }
-            else {
-                Communication.setMapLocationOnChannel(unknown, ChannelList.LOCATION_TO_SURVEY);
-            }
+            allTerrainTilesBroadcast = MapBuilder.processUntilComplete(7000);
         }
     }
 
@@ -346,7 +339,7 @@ public class HQ {
         //--Set orders
         MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.DefendMiners);
 
-        if (rc.readBroadcast(ChannelList.SURVEY_COMPLETE) == 0) {
+        if (!allTerrainTilesBroadcast) {
             MessageBoard.setPriorityOrder(1, RobotType.DRONE, Order.SurveyMap);
         }
 

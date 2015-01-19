@@ -27,7 +27,7 @@ public class ChannelList {
     //--Misc
     public static final int MINER_DISTANCE_SQUARED_TO_HQ = 90;
     public static final int TOWER_VOID_COUNT = 91;
-    public static final int SURVEY_COMPLETE = 92;
+    public static final int PERIMETER_SURVEY_COMPLETE = 92;
     public static final int MAP_WIDTH = 93;
     public static final int MAP_HEIGHT = 94;
     public static final int MAP_SYMMETRY = 95;
