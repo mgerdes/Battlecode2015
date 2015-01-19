@@ -11,15 +11,11 @@ public class Launcher {
     private static RobotController rc;
 
     private static Team enemyTeam;
-    private static MapLocation enemyHqLocation;
-    private static MapLocation myHqLocation;
     private static Team myTeam;
 
     public static void run(RobotController rcC) {
         rc = rcC;
 
-        myHqLocation = rc.senseHQLocation();
-        enemyHqLocation = rc.senseEnemyHQLocation();
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
 
@@ -75,19 +71,24 @@ public class Launcher {
 
     private static void attackEnemyStructure() throws GameActionException {
         MapLocation currentLocation = rc.getLocation();
-        RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.MISSILE.sensorRadiusSquared, enemyTeam);
+        RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.MISSILE.sensorRadiusSquared, enemyTeam);
 
         //--If there are no nearby enemies, move closer
-        if (enemiesInAttackRange.length == 0) {
-
-            if (!rc.isCoreReady()) {
-                return;
-            }
-
+        if (enemiesInSensorRange.length == 0) {
             MapLocation structureToAttack = Communication.readMapLocationFromChannel(ChannelList.STRUCTURE_TO_ATTACK);
             SafeBug.setDestination(structureToAttack);
             Direction direction = SafeBug.getDirection(currentLocation, structureToAttack);
-            if (direction != Direction.NONE) {
+
+            //--See if our missiles would be close enough to attack
+            MapLocation missileLocation = currentLocation.add(direction);
+            if (missileLocation.distanceSquaredTo(structureToAttack) <= RobotType.MISSILE.sensorRadiusSquared) {
+                if (rc.canLaunch(direction)) {
+                    rc.launchMissile(direction);
+                    return;
+                }
+            }
+            else if (rc.isCoreReady()
+                    && direction != Direction.NONE) {
                 rc.move(direction);
             }
 
@@ -95,7 +96,7 @@ public class Launcher {
         }
 
         //--There are enemies nearby. Let's attack
-        MapLocation locationToAttack = enemiesInAttackRange[0].location;
+        MapLocation locationToAttack = enemiesInSensorRange[0].location;
         Direction attackDirection = currentLocation.directionTo(locationToAttack);
         if (rc.canLaunch(attackDirection)) {
             rc.launchMissile(attackDirection);

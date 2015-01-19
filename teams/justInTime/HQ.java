@@ -18,8 +18,8 @@ public class HQ {
     private static final int HQ_TRY_ATTACK_AFTER_ROUND = 100;
     private static final int HQ_BROADCAST_ATTACK_LOCATION_AFTER_ROUND = 100;
 
-    private static final int MIDGAME_ROUND_NUMBER = 600;
-    private static final int LAUNCHER_ATTACK_ROUND_NUMBER = 1200;
+    private static final int MIDGAME_ROUND_NUMBER = 700;
+    private static final int LAUNCHERS_REQUIRED_FOR_ATTACK = 3;
 
     private static final int SPAWN_ON = 1;
     private static final int SPAWN_OFF = 0;
@@ -324,6 +324,9 @@ public class HQ {
     private static void updateSpawningAndOrders() throws GameActionException {
         int currentRound = Clock.getRoundNum();
 
+        int launcherCount = rc.readBroadcast(ChannelList.LAUNCHER_COUNT);
+        boolean doTheBigAttack = launcherCount >= LAUNCHERS_REQUIRED_FOR_ATTACK;
+
         //--Spawn up to 35 miners
         int minerCount = rc.readBroadcast(ChannelList.MINER_COUNT);
         MessageBoard.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
@@ -335,32 +338,31 @@ public class HQ {
 
         //--Spawn up to 25 soldiers in early game, 40 in mid-game
         int soldierCount = rc.readBroadcast(ChannelList.SOLDIER_COUNT);
-        int soldierMax = currentRound > MIDGAME_ROUND_NUMBER ? 40 : 25;
-        MessageBoard.setSpawn(RobotType.SOLDIER, soldierCount < 25 ? SPAWN_ON : SPAWN_OFF);
+        int soldierMax = currentRound > MIDGAME_ROUND_NUMBER ? 40 : 20;
+        MessageBoard.setSpawn(RobotType.SOLDIER, soldierCount < soldierMax ? SPAWN_ON : SPAWN_OFF);
 
         //--Spawn launchers!
         MessageBoard.setSpawn(RobotType.LAUNCHER, SPAWN_ON);
 
         //--Set orders
+        if (doTheBigAttack) {
+            MessageBoard.setDefaultOrder(RobotType.LAUNCHER, Order.AttackEnemyStructure);
+        }
+        else {
+            MessageBoard.setDefaultOrder(RobotType.LAUNCHER, Order.Rally);
+        }
+
         MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.DefendMiners);
 
         if (!allTerrainTilesBroadcast) {
             MessageBoard.setPriorityOrder(1, RobotType.DRONE, Order.SurveyMap);
         }
 
-        int launcherCount = rc.readBroadcast(ChannelList.LAUNCHER_COUNT);
         if (launcherCount > 1) {
             MessageBoard.setDefaultOrder(RobotType.DRONE, Order.Rally);
         }
         else {
             MessageBoard.setDefaultOrder(RobotType.DRONE, Order.AttackEnemyMiners);
-        }
-
-        if (currentRound < LAUNCHER_ATTACK_ROUND_NUMBER) {
-            MessageBoard.setDefaultOrder(RobotType.LAUNCHER, Order.Rally);
-        }
-        else {
-            MessageBoard.setDefaultOrder(RobotType.LAUNCHER, Order.AttackEnemyStructure);
         }
     }
 
