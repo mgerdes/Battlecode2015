@@ -5,6 +5,7 @@ import nemesis2.communication.Channel;
 import nemesis2.communication.Radio;
 import nemesis2.constants.Order;
 import nemesis2.navigation.SafeBug;
+import nemesis2.util.Debug;
 import nemesis2.util.Helper;
 
 public class Soldier {
@@ -15,6 +16,7 @@ public class Soldier {
     private static Team myTeam;
     private static MapLocation myHqLocation;
 
+    private static final int[] directions = new int[]{0, -1, 1, -2, 2};
     private static final int MIN_DISTANCE_SQUARED_AWAY_FROM_HQ = 16;
 
     public static void run(RobotController rcC) {
@@ -53,6 +55,76 @@ public class Soldier {
             case DefendMiners:
                 defendMiners();
                 break;
+            case AttackEnemyMiners:
+                attackEnemyMiners();
+                break;
+        }
+    }
+
+    private static void attackEnemyMiners() throws GameActionException {
+        MapLocation currentLocation = rc.getLocation();
+        SafeBug.setDestination(enemyHqLocation);
+
+        if (rc.getSupplyLevel() < 500) {
+            Radio.iNeedSupply();
+        }
+
+        RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.SOLDIER.sensorRadiusSquared, enemyTeam);
+        RobotType[] typesToIgnore = new RobotType[]{RobotType.BEAVER, RobotType.MINER};
+
+        boolean iAmCoreReady = rc.isCoreReady();
+
+        if (iAmCoreReady) {
+            //--If any fighting units can shoot us, move away
+            for (RobotInfo enemy : enemiesInSensorRange) {
+                if (enemy.type != RobotType.MINER
+                        && enemy.type != RobotType.BEAVER
+                        && enemy.type.attackRadiusSquared >= currentLocation.distanceSquaredTo(enemy.location)) {
+                    Direction runawayDirection = SafeBug.getDirection(
+                            currentLocation,
+                            null,
+                            enemiesInSensorRange,
+                            typesToIgnore);
+                    Debug.setString(0, runawayDirection.toString(), rc);
+                    if (runawayDirection != Direction.NONE) {
+                        rc.move(runawayDirection);
+                        return;
+                    }
+                    else {
+                        //--We could not find a runaway direction... turn around!
+                        runawayDirection = SafeBug.getPreviousDirection().opposite();
+                        if (runawayDirection != Direction.NONE) {
+                            tryMove(runawayDirection);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        //--If I can shoot any units, shoot them or wait until I can shoot them
+        //--Otherwise, continue towards enemy using the awesome safe bug
+        RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.SOLDIER.attackRadiusSquared, enemyTeam);
+        if (enemiesInAttackRange.length > 0) {
+            if (rc.isWeaponReady()) {
+                double lowestHealth = 1000000;
+                int index = 0;
+                for (int i = 0; i < enemiesInAttackRange.length; i++) {
+                    double thisHealth = enemiesInAttackRange[0].health;
+                    if (thisHealth < lowestHealth) {
+                        lowestHealth = thisHealth;
+                        index = i;
+                    }
+                }
+
+                rc.attackLocation(enemiesInAttackRange[index].location);
+            }
+        }
+        else if (iAmCoreReady) {
+            Direction direction = SafeBug.getDirection(currentLocation, null, enemiesInSensorRange, typesToIgnore);
+            if (direction != Direction.NONE) {
+                rc.move(direction);
+            }
         }
     }
 
@@ -138,5 +210,16 @@ public class Soldier {
         }
 
         return null;
+    }
+
+    private static void tryMove(Direction initial) throws GameActionException {
+        int initialDirectionValue = Helper.getInt(initial);
+        for (int i = 0; i < directions.length; i++) {
+            Direction direction = Helper.getDirection(initialDirectionValue + i);
+            if (rc.canMove(direction)) {
+                rc.move(direction);
+                return;
+            }
+        }
     }
 }
