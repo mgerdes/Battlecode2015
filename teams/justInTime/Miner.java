@@ -48,6 +48,10 @@ public class Miner {
     private static void doYourThing() throws GameActionException {
         SupplySharing.share();
 
+        if (rc.getSupplyLevel() < 200) {
+            Radio.iNeedSupply();
+        }
+
         MapLocation currentLocation = rc.getLocation();
         updateMinerRadius(currentLocation);
 

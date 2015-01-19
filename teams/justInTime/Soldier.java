@@ -62,6 +62,10 @@ public class Soldier {
             Radio.setDistressLocation(currentLocation);
         }
 
+        if (rc.getSupplyLevel() < 200) {
+            Radio.iNeedSupply();
+        }
+
         if (rc.isWeaponReady()) {
             if (enemiesInAttackRange.length > 0) {
                 rc.attackLocation(enemiesInAttackRange[0].location);
