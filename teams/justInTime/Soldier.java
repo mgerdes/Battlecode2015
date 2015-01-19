@@ -3,7 +3,7 @@ package justInTime;
 import battlecode.common.*;
 import justInTime.constants.ChannelList;
 import justInTime.constants.Order;
-import justInTime.navigation.Bug;
+import justInTime.navigation.SafeBug;
 import justInTime.util.Debug;
 
 public class Soldier {
@@ -22,7 +22,7 @@ public class Soldier {
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
 
-        Bug.init(rcC);
+        SafeBug.init(rcC);
         SupplySharing.init(rcC);
         Communication.init(rcC);
         MessageBoard.init(rcC);
@@ -54,8 +54,13 @@ public class Soldier {
     }
 
     private static void defendMiners() throws GameActionException {
+        MapLocation currentLocation = rc.getLocation();
+        RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.SOLDIER.attackRadiusSquared, enemyTeam);
+        if (enemiesInAttackRange.length > 0) {
+            Communication.setDistressLocation(currentLocation);
+        }
+
         if (rc.isWeaponReady()) {
-            RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.SOLDIER.attackRadiusSquared, enemyTeam);
             if (enemiesInAttackRange.length > 0) {
                 rc.attackLocation(enemiesInAttackRange[0].location);
                 return;
@@ -66,30 +71,33 @@ public class Soldier {
             return;
         }
 
-        MapLocation currentLocation = rc.getLocation();
         MapLocation distressLocation = Communication.getDistressLocation();
         if (distressLocation != null) {
-            Bug.setDestination(distressLocation);
+            SafeBug.setDestination(distressLocation);
         }
         else {
             RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.SOLDIER.sensorRadiusSquared, enemyTeam);
+
             int minerDistance = rc.readBroadcast(ChannelList.MINER_DISTANCE_SQUARED_TO_HQ);
             int myDistanceToHq = currentLocation.distanceSquaredTo(myHqLocation);
             //--Go to nearby enemy unless I'm too far from base
             if (enemiesInSensorRange.length > 0
-                    && myDistanceToHq < minerDistance + 9) {
-                Bug.setDestination(enemiesInSensorRange[0].location);
+                    && myDistanceToHq < minerDistance + 4) {
+                SafeBug.setDestination(enemiesInSensorRange[0].location);
             }
             //--If there are no nearby enemies, make sure that I'm outside the miner circle
             else if (myDistanceToHq < minerDistance + 2) {
                 Debug.setString(1, "my distance is " + myDistanceToHq, rc);
-                Bug.setDestination(enemyHqLocation);
+                SafeBug.setDestination(enemyHqLocation);
             }
             else {
                 return;
             }
         }
 
-        rc.move(Bug.getDirection(currentLocation));
+        Direction direction = SafeBug.getDirection(currentLocation);
+        if (direction != Direction.NONE) {
+            rc.move(direction);
+        }
     }
 }

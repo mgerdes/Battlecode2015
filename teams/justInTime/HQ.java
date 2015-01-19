@@ -423,10 +423,11 @@ public class HQ {
     }
 
     private static void spawn(RobotType type) throws GameActionException {
-        int direction = 0;
+        int startingDirection = Helper.getInt(enemyHqLocation.directionTo(myHqLocation));
+        int direction = startingDirection;
         while (!rc.canSpawn(directions[direction], type)) {
-            direction++;
-            if (direction > 7) {
+            direction = (direction + 1) % 8;
+            if (direction == startingDirection) {
                 return;
             }
         }
