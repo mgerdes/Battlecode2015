@@ -31,7 +31,6 @@ public class BuildingQueue {
         int queueEndPointer = rc.readBroadcast(ChannelList.QUEUE_END_POINTER);
         rc.broadcast(queueEndPointer != 0 ? queueEndPointer : ChannelList.BUILDING_QUEUE_START, building);
         incrementChannel(ChannelList.QUEUE_END_POINTER);
-        System.out.println("adding building " + building);
         return true;
     }
 

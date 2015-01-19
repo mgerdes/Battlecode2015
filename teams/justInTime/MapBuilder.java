@@ -74,6 +74,9 @@ public class MapBuilder {
                             locationToCheck
                             : reflected;
                     Communication.setMapLocationOnChannel(closerToOurHq, ChannelList.LOCATION_TO_SURVEY);
+
+//                    System.out.println("need location original " + locationToCheck);
+//                    System.out.println("need location reflected " + closerToOurHq);
                     debugWaitingForLocation++;
                     return false;
                 }
@@ -116,7 +119,7 @@ public class MapBuilder {
                 return new MapLocation(location.x, 2 * minY + mapHeight - location.y - 1);
             case Symmetry.ROTATION:
                 return new MapLocation(
-                        2 * minX + mapHeight - location.x - 1,
+                        2 * minX + mapWidth - location.x - 1,
                         2 * minY + mapHeight - location.y - 1);
         }
 
