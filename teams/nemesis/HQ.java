@@ -5,6 +5,7 @@ import nemesis.constants.Building;
 import nemesis.communication.Channel;
 import nemesis.constants.Order;
 import nemesis.constants.Symmetry;
+import nemesis.util.Debug;
 import nemesis.util.Helper;
 import battlecode.common.*;
 
@@ -16,7 +17,7 @@ public class HQ {
     private static MapLocation myHqLocation;
     private static MapLocation enemyHqLocation;
 
-    private static final int HQ_TRY_ATTACK_AFTER_ROUND = 100;
+    private static final int HQ_TRY_ATTACK_AFTER_ROUND = 150;
     private static final int HQ_BROADCAST_ATTACK_LOCATION_AFTER_ROUND = 100;
 
     private static final int LAUNCHERS_REQUIRED_FOR_ATTACK = 3;
@@ -73,7 +74,7 @@ public class HQ {
 
         RobotInfo[] friendlyRobots = rc.senseNearbyRobots(1000000, myTeam);
 
-        updateSpawningAndOrders();
+//        updateSpawningAndOrders();
         queueBuildings();
 
         updateRallyPoint();
@@ -375,14 +376,15 @@ public class HQ {
 
         //--Try splash attack!
         if (myTowerCount > 4) {
-            RobotInfo[] enemiesInSplashRange = rc.senseNearbyRobots(
-                    attackRadiusSquared + GameConstants
-                            .HQ_BUFFED_SPLASH_RADIUS_SQUARED, enemyTeam);
-            if (enemiesInSplashRange.length == 0) {
+            RobotInfo[] enemiesWeMaySplash = rc.senseNearbyRobots(
+                    64,
+                    enemyTeam);
+            if (enemiesWeMaySplash.length == 0) {
+                Debug.setString(1, "no enemies to splash", rc);
                 return;
             }
 
-            MapLocation enemyToSplash = enemiesInSplashRange[0].location;
+            MapLocation enemyToSplash = enemiesWeMaySplash[0].location;
             MapLocation locationToSplash = enemyToSplash;
             while (myHqLocation.distanceSquaredTo(locationToSplash) > attackRadiusSquared) {
                 locationToSplash = locationToSplash.add(locationToSplash.directionTo(myHqLocation));
