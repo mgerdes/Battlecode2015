@@ -77,7 +77,7 @@ public class Drone {
                 SupplySharing.share();
                 surveyMap();
                 break;
-            case AttackEnemyMiners:
+            case Swarm:
                 Debug.setString(0, "attack miners...", rc);
                 SupplySharing.shareOnlyWithType(RobotType.DRONE);
                 swarm();

@@ -29,6 +29,13 @@ public class SafeBug {
     private static int distanceStartBugging;
     private static int numberOfNinetyDegreeRotations;
 
+    //--Constants
+    private static final int SUPER_HQ_RANGE_WITH_SPLASH =
+            (int) Math.pow(
+                    Math.sqrt(GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED)
+                            + Math.sqrt(GameConstants.HQ_BUFFED_SPLASH_RADIUS_SQUARED),
+                    2);
+
     public static void init(RobotController rcC) {
         rc = rcC;
         defaultLeft = rcC.getID() % 2 == 0;
@@ -222,8 +229,7 @@ public class SafeBug {
         int hqAttackRange;
         if (enemyTowerLocations.length > 4) {
             //--Bonus for 2 and 5 towers
-            hqAttackRange =
-                    GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED + GameConstants.HQ_BUFFED_SPLASH_RADIUS_SQUARED;
+            hqAttackRange = SUPER_HQ_RANGE_WITH_SPLASH;
         }
         else if (enemyTowerLocations.length > 1) {
             //--Bonus for 2 towers

@@ -266,8 +266,7 @@ public class HQ {
         MapLocation currentRallyPoint = Radio.readMapLocationFromChannel(Channel.RALLY_POINT);
         if (currentRallyPoint == null) {
             MapLocation towerWithFewestVoids = Radio.readMapLocationFromChannel(
-                    Channel
-                                                                                        .OUR_TOWER_WITH_LOWEST_VOID_COUNT);
+                    Channel.OUR_TOWER_WITH_LOWEST_VOID_COUNT);
             if (towerWithFewestVoids != null) {
                 Radio.setMapLocationOnChannel(
                         towerWithFewestVoids.add(towerWithFewestVoids.directionTo(enemyHqLocation), 4),
@@ -358,7 +357,7 @@ public class HQ {
         MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.DefendMiners);
 
         MessageBoard.setPriorityOrder(1, RobotType.DRONE, Order.MoveSupply);
-        MessageBoard.setDefaultOrder(RobotType.DRONE, Order.AttackEnemyMiners);
+        MessageBoard.setDefaultOrder(RobotType.DRONE, Order.Swarm);
     }
 
     private static void tryToAttack() throws GameActionException {
@@ -375,9 +374,7 @@ public class HQ {
 
         //--Try splash attack!
         if (myTowerCount > 4) {
-            RobotInfo[] enemiesInSplashRange = rc.senseNearbyRobots(
-                    attackRadiusSquared + GameConstants
-                            .HQ_BUFFED_SPLASH_RADIUS_SQUARED, enemyTeam);
+            RobotInfo[] enemiesInSplashRange = rc.senseNearbyRobots(64, enemyTeam);
             if (enemiesInSplashRange.length == 0) {
                 return;
             }

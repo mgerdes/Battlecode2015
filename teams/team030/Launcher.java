@@ -5,16 +5,17 @@ import team030.communication.Channel;
 import team030.communication.Radio;
 import team030.constants.Order;
 import team030.navigation.SafeBug;
+import team030.util.Helper;
 
 public class Launcher {
     private static RobotController rc;
 
     private static Team enemyTeam;
     private static Team myTeam;
-    private static int myId;
-
-    private static final int MAXIMUM_DISTANCE_SQUARED_TO_GO_TO_HQ_FOR_SUPPLY = 100;
     private static MapLocation myHq;
+
+    private static final int[] directions = new int[]{0, -1, 1, -2, 2};
+    private static final int MAXIMUM_DISTANCE_SQUARED_TO_GO_TO_HQ_FOR_SUPPLY = 100;
 
     public static void run(RobotController rcC) {
         rc = rcC;
@@ -22,7 +23,6 @@ public class Launcher {
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
         myHq = rc.senseHQLocation();
-        myId = rc.getID();
 
         SafeBug.init(rcC);
         SupplySharing.init(rcC);
@@ -117,11 +117,33 @@ public class Launcher {
             return;
         }
 
-        //--There are enemies nearby. Let's attack
+        //--If the enemies are too close, move away
+        if (rc.isCoreReady()) {
+            int enemiesInSensorCount = enemiesInSensorRange.length;
+            for (int i = 0; i < enemiesInSensorCount; i++) {
+                if (currentLocation.distanceSquaredTo(enemiesInSensorRange[i].location) <= 5) {
+                    tryMove(enemiesInSensorRange[i].location.directionTo(currentLocation));
+                    break;
+                }
+            }
+        }
+
+        //--Attack the enemies
         MapLocation locationToAttack = enemiesInSensorRange[0].location;
         Direction attackDirection = currentLocation.directionTo(locationToAttack);
         if (rc.canLaunch(attackDirection)) {
             rc.launchMissile(attackDirection);
+        }
+    }
+
+    private static void tryMove(Direction initial) throws GameActionException {
+        int initialDirectionValue = Helper.getInt(initial);
+        for (int i = 0; i < directions.length; i++) {
+            Direction direction = Helper.getDirection(initialDirectionValue + i);
+            if (rc.canMove(direction)) {
+                rc.move(direction);
+                return;
+            }
         }
     }
 }
