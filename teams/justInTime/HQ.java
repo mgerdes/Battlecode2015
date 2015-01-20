@@ -357,7 +357,7 @@ public class HQ {
         MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.DefendMiners);
 
         MessageBoard.setPriorityOrder(1, RobotType.DRONE, Order.MoveSupply);
-        MessageBoard.setDefaultOrder(RobotType.DRONE, Order.AttackEnemyMiners);
+        MessageBoard.setDefaultOrder(RobotType.DRONE, Order.Swarm);
     }
 
     private static void tryToAttack() throws GameActionException {

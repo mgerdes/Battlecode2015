@@ -1,5 +1,5 @@
 package justInTime.constants;
 
 public enum Order {
-    NoOrder, AttackEnemyMiners, DefendMiners, Rally, AttackEnemyStructure, MoveSupply, SurveyMap
+    NoOrder, Swarm, DefendMiners, Rally, AttackEnemyStructure, MoveSupply, SurveyMap
 }
