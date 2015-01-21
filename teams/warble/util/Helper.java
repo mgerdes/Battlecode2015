@@ -83,13 +83,108 @@ public class Helper {
     }
 
     public static Direction getSumOfDirections(Direction[] allDirection) {
-        //--Note: This method will favor diagonal directions
         int dx = 0;
         int dy = 0;
         int length = allDirection.length;
         for (int i = 0; i < length; i++) {
-            dx = allDirection[i].dx;
-            dy = allDirection[i].dy;
+            dx += allDirection[i].dx;
+            dy += allDirection[i].dy;
+        }
+
+        if (dx > 0) {
+            if (dy < 0) {
+                return Direction.NORTH_EAST;
+            }
+            else if (dy > 0) {
+                return Direction.SOUTH_EAST;
+            }
+            else {
+                return Direction.EAST;
+            }
+        }
+        else if (dx < 0) {
+            if (dy < 0) {
+                return Direction.NORTH_WEST;
+            }
+            else if (dy > 0) {
+                return Direction.SOUTH_WEST;
+            }
+            else {
+                return Direction.WEST;
+            }
+        }
+        else {
+            if (dy < 0) {
+                return Direction.NORTH;
+            }
+            else if (dy > 0) {
+                return Direction.SOUTH;
+            }
+        }
+
+        return Direction.NONE;
+    }
+
+    public static Direction getDirectionAwayFrom(RobotInfo[] robots, MapLocation currentLocation) {
+        int robotCount = robots.length;
+        if (robotCount == 1) {
+            return robots[0].location.directionTo(currentLocation);
+        }
+
+        int dx = 0;
+        int dy = 0;
+        for (int i = 0; i < robotCount; i++) {
+            Direction d = robots[i].location.directionTo(currentLocation);
+            dx += d.dx;
+            dy += d.dy;
+        }
+
+        if (dx > 0) {
+            if (dy < 0) {
+                return Direction.NORTH_EAST;
+            }
+            else if (dy > 0) {
+                return Direction.SOUTH_EAST;
+            }
+            else {
+                return Direction.EAST;
+            }
+        }
+        else if (dx < 0) {
+            if (dy < 0) {
+                return Direction.NORTH_WEST;
+            }
+            else if (dy > 0) {
+                return Direction.SOUTH_WEST;
+            }
+            else {
+                return Direction.WEST;
+            }
+        }
+        else {
+            if (dy < 0) {
+                return Direction.NORTH;
+            }
+            else if (dy > 0) {
+                return Direction.SOUTH;
+            }
+        }
+
+        return Direction.NONE;
+    }
+
+    public static Direction getDirectionAwayFrom(MapLocation[] locations, MapLocation currentLocation) {
+        int locationCount = locations.length;
+        if (locationCount == 1) {
+            return locations[0].directionTo(currentLocation);
+        }
+
+        int dx = 0;
+        int dy = 0;
+        for (int i = 0; i < locationCount; i++) {
+            Direction d = locations[i].directionTo(currentLocation);
+            dx += d.dx;
+            dy += d.dy;
         }
 
         if (dx > 0) {
