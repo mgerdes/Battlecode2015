@@ -50,10 +50,10 @@ public class Channel {
     protected static final int SUPPLY_DEPOT_ROUND_UPDATED = 201;
 
     //--Production orders
-    public static final int MORE_MINERS = 500;
-    public static final int MORE_DRONES = 501;
-    public static final int MORE_SOLDIERS = 502;
-    public static final int MORE_LAUNCHERS = 503;
+    protected static final int MORE_MINERS = 500;
+    protected static final int MORE_DRONES = 501;
+    protected static final int MORE_SOLDIERS = 502;
+    protected static final int MORE_LAUNCHERS = 503;
 
     //--Building Queue
     public static final int BUILDING_QUEUE_START = 3000;
@@ -70,15 +70,14 @@ public class Channel {
     protected static final int ENEMY_SPOTTED_LOCATION_X = 5101;
     protected static final int ENEMY_SPOTTED_LOCATION_Y = 5102;
 
-    //--Message board
+    //--Hq orders
+    protected static final int SOLDIER_PRIORITY_ORDERS = 6000;
+    protected static final int DRONE_PRIORITY_ORDERS = 6020;
+    protected static final int LAUNCHER_PRIORITY_ORDERS = 6030;
 
-    public static final int SOLDIER_PRIORITY_ORDERS = 6000;
-    public static final int DRONE_PRIORITY_ORDERS = 6020;
-    public static final int LAUNCHER_PRIORITY_ORDERS = 6030;
-
-    public static final int SOLDIER_DEFAULT_ORDER = 7000;
-    public static final int DRONE_DEFAULT_ORDERS = 7002;
-    public static final int LAUNCHER_DEFAULT_ORDERS = 7030;
+    protected static final int SOLDIER_DEFAULT_ORDER = 7000;
+    protected static final int DRONE_DEFAULT_ORDERS = 7002;
+    protected static final int LAUNCHER_DEFAULT_ORDERS = 7030;
 
     //--Terrain tile storage
     public static final int NW_CORNER_TERRAIN_TILE = 10000; //--24400

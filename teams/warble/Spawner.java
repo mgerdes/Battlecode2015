@@ -1,6 +1,7 @@
 package warble;
 
 import warble.communication.Channel;
+import warble.communication.HqOrders;
 import warble.util.Debug;
 import warble.util.Helper;
 import battlecode.common.*;
@@ -16,7 +17,7 @@ public class Spawner {
 
         myTeam = rc.getTeam();
 
-        MessageBoard.init(rcC);
+        HqOrders.init(rcC);
 
         buildUnitData();
 
@@ -52,7 +53,7 @@ public class Spawner {
     private static void tryToSpawn() throws GameActionException {
         for (RobotType type : typesBuiltHere) {
             if (rc.getTeamOre() >= type.oreCost
-                    && MessageBoard.shouldSpawn(type)) {
+                    && HqOrders.shouldSpawn(type)) {
                 spawn(type);
                 return;
             }

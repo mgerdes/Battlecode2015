@@ -2,6 +2,7 @@ package warble;
 
 import battlecode.common.*;
 import warble.communication.Channel;
+import warble.communication.HqOrders;
 import warble.communication.Radio;
 import warble.constants.Order;
 import warble.navigation.SafeBug;
@@ -28,7 +29,7 @@ public class Soldier {
         SafeBug.init(rcC);
         SupplySharing.init(rcC);
         Radio.init(rcC);
-        MessageBoard.init(rcC);
+        HqOrders.init(rcC);
 
         loop();
     }
@@ -47,7 +48,7 @@ public class Soldier {
     private static void doYourThing() throws GameActionException {
         SupplySharing.share();
 
-        Order order = MessageBoard.getOrder(rc.getType());
+        Order order = HqOrders.getOrder(rc.getType());
 
         switch (order) {
             case DefendMiners:

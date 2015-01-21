@@ -2,6 +2,7 @@ package warble;
 
 import battlecode.common.*;
 import warble.communication.Channel;
+import warble.communication.HqOrders;
 import warble.communication.Radio;
 import warble.constants.Order;
 import warble.navigation.SafeBug;
@@ -27,7 +28,7 @@ public class Launcher {
         SafeBug.init(rcC);
         SupplySharing.init(rcC);
         Radio.init(rcC);
-        MessageBoard.init(rcC);
+        HqOrders.init(rcC);
 
         loop();
     }
@@ -46,7 +47,7 @@ public class Launcher {
     private static void doYourThing() throws GameActionException {
         SupplySharing.shareOnlyWithType(RobotType.LAUNCHER);
 
-        Order order = MessageBoard.getOrder(RobotType.LAUNCHER);
+        Order order = HqOrders.getOrder(RobotType.LAUNCHER);
         switch (order) {
             case Rally:
                 rally();

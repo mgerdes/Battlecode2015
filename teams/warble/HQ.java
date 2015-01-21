@@ -1,5 +1,6 @@
 package warble;
 
+import warble.communication.HqOrders;
 import warble.communication.Radio;
 import warble.constants.Building;
 import warble.communication.Channel;
@@ -49,7 +50,7 @@ public class HQ {
         BuildingQueue.init(rcC);
         Radio.init(rcC);
         SupplySharing.init(rcC);
-        MessageBoard.init(rcC);
+        HqOrders.init(rcC);
 
         analyzeMap();
         initializeChannels();
@@ -331,33 +332,33 @@ public class HQ {
 
         //--Spawn up to 35 miners
         int minerCount = rc.readBroadcast(Channel.MINER_COUNT);
-        MessageBoard.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
+        HqOrders.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
 
         //--Spawn up to 20 drones
         int droneCount = rc.readBroadcast(Channel.DRONE_COUNT);
         int droneMax = 20;
-        MessageBoard.setSpawn(RobotType.DRONE, droneCount < droneMax ? SPAWN_ON : SPAWN_OFF);
+        HqOrders.setSpawn(RobotType.DRONE, droneCount < droneMax ? SPAWN_ON : SPAWN_OFF);
 
         //--Spawn up to 20 soldiers
         int soldierCount = rc.readBroadcast(Channel.SOLDIER_COUNT);
         int soldierMax = 20;
-        MessageBoard.setSpawn(RobotType.SOLDIER, soldierCount < soldierMax ? SPAWN_ON : SPAWN_OFF);
+        HqOrders.setSpawn(RobotType.SOLDIER, soldierCount < soldierMax ? SPAWN_ON : SPAWN_OFF);
 
         //--Spawn launchers!
-        MessageBoard.setSpawn(RobotType.LAUNCHER, SPAWN_ON);
+        HqOrders.setSpawn(RobotType.LAUNCHER, SPAWN_ON);
 
         //--Set orders
         if (doTheBigAttack) {
-            MessageBoard.setDefaultOrder(RobotType.LAUNCHER, Order.AttackEnemyStructure);
+            HqOrders.setDefaultOrder(RobotType.LAUNCHER, Order.AttackEnemyStructure);
         }
         else {
-            MessageBoard.setDefaultOrder(RobotType.LAUNCHER, Order.Rally);
+            HqOrders.setDefaultOrder(RobotType.LAUNCHER, Order.Rally);
         }
 
-        MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.DefendMiners);
+        HqOrders.setDefaultOrder(RobotType.SOLDIER, Order.DefendMiners);
 
-        MessageBoard.setPriorityOrder(1, RobotType.DRONE, Order.MoveSupply);
-        MessageBoard.setDefaultOrder(RobotType.DRONE, Order.Swarm);
+        HqOrders.setPriorityOrder(1, RobotType.DRONE, Order.MoveSupply);
+        HqOrders.setDefaultOrder(RobotType.DRONE, Order.Swarm);
     }
 
     private static void tryToAttack() throws GameActionException {

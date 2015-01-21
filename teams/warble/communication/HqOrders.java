@@ -1,4 +1,4 @@
-package warble;
+package warble.communication;
 
 import battlecode.common.Clock;
 import battlecode.common.GameActionException;
@@ -8,7 +8,7 @@ import warble.communication.Channel;
 import warble.constants.Config;
 import warble.constants.Order;
 
-public class MessageBoard {
+public class HqOrders {
     private static RobotController rc;
 
     private static Order[] orders;

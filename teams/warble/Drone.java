@@ -2,6 +2,7 @@ package warble;
 
 import warble.communication.Channel;
 import battlecode.common.*;
+import warble.communication.HqOrders;
 import warble.communication.Radio;
 import warble.constants.Order;
 import warble.constants.Symmetry;
@@ -53,7 +54,7 @@ public class Drone {
         SafeBug.init(rcC);
         SupplySharing.init(rcC);
         Radio.init(rcC);
-        MessageBoard.init(rcC);
+        HqOrders.init(rcC);
 
         loop();
     }
@@ -70,7 +71,7 @@ public class Drone {
     }
 
     private static void doYourThing() throws GameActionException {
-        Order order = MessageBoard.getOrder(RobotType.DRONE);
+        Order order = HqOrders.getOrder(RobotType.DRONE);
         switch (order) {
             case SurveyMap:
                 Debug.setString(0, "surveying...", rc);
