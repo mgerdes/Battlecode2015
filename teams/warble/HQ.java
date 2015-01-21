@@ -349,16 +349,16 @@ public class HQ {
 
         //--Set orders
         if (doTheBigAttack) {
-            HqOrders.setDefaultOrder(RobotType.LAUNCHER, Order.AttackEnemyStructure);
+            HqOrders.setDefaultFor(RobotType.LAUNCHER, Order.AttackEnemyStructure);
         }
         else {
-            HqOrders.setDefaultOrder(RobotType.LAUNCHER, Order.Rally);
+            HqOrders.setDefaultFor(RobotType.LAUNCHER, Order.Rally);
         }
 
-        HqOrders.setDefaultOrder(RobotType.SOLDIER, Order.DefendMiners);
+        HqOrders.setDefaultFor(RobotType.SOLDIER, Order.DefendMiners);
 
-        HqOrders.setPriorityOrder(1, RobotType.DRONE, Order.MoveSupply);
-        HqOrders.setDefaultOrder(RobotType.DRONE, Order.Swarm);
+        HqOrders.setPriorityFor(1, RobotType.DRONE, Order.MoveSupply);
+        HqOrders.setDefaultFor(RobotType.DRONE, Order.Swarm);
     }
 
     private static void tryToAttack() throws GameActionException {

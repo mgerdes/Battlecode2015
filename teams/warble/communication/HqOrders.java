@@ -52,7 +52,7 @@ public class HqOrders {
         return false;
     }
 
-    public static void setDefaultOrder(RobotType type, Order order) throws GameActionException {
+    public static void setDefaultFor(RobotType type, Order order) throws GameActionException {
         switch (type) {
             case SOLDIER:
                 updateChannelIfDifferent(Channel.SOLDIER_DEFAULT_ORDER, order.ordinal());
@@ -66,7 +66,7 @@ public class HqOrders {
         }
     }
 
-    public static void setPriorityOrder(int count, RobotType type, Order order) throws GameActionException {
+    public static void setPriorityFor(int count, RobotType type, Order order) throws GameActionException {
         switch (type) {
             case SOLDIER:
                 setPriorityOrderForChannel(Channel.SOLDIER_PRIORITY_ORDERS, count, order);
