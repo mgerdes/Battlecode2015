@@ -16,7 +16,7 @@ public class BasicNav {
     public static Direction getNavigableDirectionClosestTo(Direction initial) {
         int initialDirectionValue = Helper.getInt(initial);
         for (int i = 0; i < directions.length; i++) {
-            Direction direction = Helper.getDirection(initialDirectionValue + i);
+            Direction direction = Helper.getDirection(initialDirectionValue + directions[i]);
             if (rc.canMove(direction)) {
                 return direction;
             }
