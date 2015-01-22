@@ -7,36 +7,37 @@ import battlecode.common.RobotType;
 public class RobotPlayer {
     public static void run(RobotController rc) throws GameActionException {
         RobotType type = rc.getType();
-
-        if (type == RobotType.HQ) {
-            HQ.run(rc);
-        }
-        else if (type == RobotType.TOWER) {
-            Tower.run(rc);
-        }
-        else if (type == RobotType.SUPPLYDEPOT) {
-            SupplyDepot.run(rc);
-        }
-        else if (type == RobotType.BEAVER) {
-            Beaver.run(rc);
-        }
-        else if (type == RobotType.MINER) {
-            Miner.run(rc);
-        }
-        else if (type == RobotType.DRONE) {
-            Drone.run(rc);
-        }
-        else if (type == RobotType.SOLDIER) {
-            Soldier.run(rc);
-        }
-        else if (type == RobotType.LAUNCHER) {
-            Launcher.run(rc);
-        }
-        else if (type == RobotType.MISSILE) {
-            Missile.run(rc);
-        }
-        else {
-            Spawner.init(rc);
+        switch (type) {
+            case HQ:
+                HQ.run(rc);
+                break;
+            case TOWER:
+                Tower.run(rc);
+                break;
+            case SUPPLYDEPOT:
+                SupplyDepot.run(rc);
+                break;
+            case BEAVER:
+                Beaver.run(rc);
+                break;
+            case MINER:
+                Miner.run(rc);
+                break;
+            case DRONE:
+                Drone.run(rc);
+                break;
+            case SOLDIER:
+                Soldier.run(rc);
+                break;
+            case LAUNCHER:
+                Launcher.run(rc);
+                break;
+            case MISSILE:
+                Missile.run(rc);
+                break;
+            default: //--All buildings other than towers and HQ
+                Spawner.init(rc);
+                break;
         }
     }
 }
