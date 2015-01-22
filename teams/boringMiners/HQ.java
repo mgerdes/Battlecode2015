@@ -246,10 +246,6 @@ public class HQ {
 
     private static void setInitialBuildings() throws GameActionException {
         BuildingQueue.addBuilding(Building.MINER_FACTORY);
-        BuildingQueue.addBuilding(Building.HELIPAD);
-        BuildingQueue.addBuilding(Building.BARRACKS);
-        BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
-        BuildingQueue.addBuilding(Building.AEROSPACE_LAB);
     }
 
     private static void queueBuildings() throws GameActionException {
@@ -324,40 +320,7 @@ public class HQ {
     }
 
     private static void updateSpawningAndOrders() throws GameActionException {
-        int currentRound = Clock.getRoundNum();
-
-        int launcherCount = rc.readBroadcast(Channel.LAUNCHER_COUNT);
-        boolean doTheBigAttack = launcherCount >= LAUNCHERS_REQUIRED_FOR_ATTACK;
-
-        //--Spawn up to 35 miners
-        int minerCount = rc.readBroadcast(Channel.MINER_COUNT);
-        MessageBoard.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
-
-        //--Spawn up to 20 drones
-        int droneCount = rc.readBroadcast(Channel.DRONE_COUNT);
-        int droneMax = 20;
-        MessageBoard.setSpawn(RobotType.DRONE, droneCount < droneMax ? SPAWN_ON : SPAWN_OFF);
-
-        //--Spawn up to 20 soldiers
-        int soldierCount = rc.readBroadcast(Channel.SOLDIER_COUNT);
-        int soldierMax = 20;
-        MessageBoard.setSpawn(RobotType.SOLDIER, soldierCount < soldierMax ? SPAWN_ON : SPAWN_OFF);
-
-        //--Spawn launchers!
-        MessageBoard.setSpawn(RobotType.LAUNCHER, SPAWN_ON);
-
-        //--Set orders
-        if (doTheBigAttack) {
-            MessageBoard.setDefaultOrder(RobotType.LAUNCHER, Order.AttackEnemyStructure);
-        }
-        else {
-            MessageBoard.setDefaultOrder(RobotType.LAUNCHER, Order.Rally);
-        }
-
-        MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.DefendMiners);
-
-        MessageBoard.setPriorityOrder(1, RobotType.DRONE, Order.MoveSupply);
-        MessageBoard.setDefaultOrder(RobotType.DRONE, Order.Swarm);
+        MessageBoard.setSpawn(RobotType.MINER, SPAWN_ON);
     }
 
     private static void tryToAttack() throws GameActionException {
