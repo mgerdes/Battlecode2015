@@ -49,29 +49,9 @@ public class Launcher {
 
         Order order = HqOrders.getOrder(RobotType.LAUNCHER);
         switch (order) {
-            case Rally:
-                rally();
-                break;
             case AttackEnemyStructure:
                 attackEnemyStructure();
                 break;
-        }
-    }
-
-    private static void rally() throws GameActionException {
-        //--TODO: Add some logic to handle nearby enemies
-
-        MapLocation currentLocation = rc.getLocation();
-
-        if (!rc.isCoreReady()) {
-            return;
-        }
-
-        MapLocation rallyPoint = Radio.readMapLocationFromChannel(Channel.RALLY_POINT);
-        SafeBug.setDestination(rallyPoint);
-        Direction direction = SafeBug.getDirection(currentLocation);
-        if (direction != Direction.NONE) {
-            rc.move(direction);
         }
     }
 
@@ -129,11 +109,22 @@ public class Launcher {
             }
         }
 
-        //--Attack the enemies
-        MapLocation locationToAttack = enemiesInSensorRange[0].location;
-        Direction attackDirection = currentLocation.directionTo(locationToAttack);
-        if (rc.canLaunch(attackDirection)) {
-            rc.launchMissile(attackDirection);
+        //--Attack a non-missile enemy
+        int nonMissileEnemyCount = Helper.getRobotsExcludingType(enemiesInSensorRange, RobotType.MISSILE);
+        if (nonMissileEnemyCount != 0) {
+            int index = 0;
+            for (int i = 0; i < enemiesInSensorRange.length; i++) {
+                if (enemiesInSensorRange[i].type != RobotType.MISSILE) {
+                    index = i;
+                    break;
+                }
+            }
+
+            MapLocation locationToAttack = enemiesInSensorRange[index].location;
+            Direction attackDirection = currentLocation.directionTo(locationToAttack);
+            if (rc.canLaunch(attackDirection)) {
+                rc.launchMissile(attackDirection);
+            }
         }
     }
 

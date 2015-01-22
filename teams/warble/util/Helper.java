@@ -27,6 +27,18 @@ public class Helper {
         return count;
     }
 
+    public static int getRobotsExcludingType(RobotInfo[] robots, RobotType typeToExclude) {
+        int count = 0;
+        int length = robots.length;
+        for (int i = 0; i < length; i++) {
+            if (robots[i].type != typeToExclude) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
     public static int getRobotsOfATypeWithNoSupply(RobotInfo[] robots, RobotType type, int max) {
         int count = 0;
         for (RobotInfo robot : robots) {

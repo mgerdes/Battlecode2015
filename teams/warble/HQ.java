@@ -325,11 +325,6 @@ public class HQ {
     }
 
     private static void updateSpawningAndOrders() throws GameActionException {
-        int currentRound = Clock.getRoundNum();
-
-        int launcherCount = rc.readBroadcast(Channel.LAUNCHER_COUNT);
-        boolean doTheBigAttack = launcherCount >= LAUNCHERS_REQUIRED_FOR_ATTACK;
-
         //--Spawn up to 35 miners
         int minerCount = rc.readBroadcast(Channel.MINER_COUNT);
         HqOrders.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
@@ -348,12 +343,7 @@ public class HQ {
         HqOrders.setSpawn(RobotType.LAUNCHER, SPAWN_ON);
 
         //--Set orders
-        if (doTheBigAttack) {
-            HqOrders.setDefaultFor(RobotType.LAUNCHER, Order.AttackEnemyStructure);
-        }
-        else {
-            HqOrders.setDefaultFor(RobotType.LAUNCHER, Order.Rally);
-        }
+        HqOrders.setDefaultFor(RobotType.LAUNCHER, Order.AttackEnemyStructure);
 
         HqOrders.setDefaultFor(RobotType.SOLDIER, Order.DefendMiners);
 
