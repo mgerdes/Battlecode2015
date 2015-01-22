@@ -446,17 +446,6 @@ public class Drone {
             Radio.iNeedSupply();
         }
 
-        //--Should micro consider attack delays?
-
-        //--Should I stay or should I go?
-        //
-        //--I should go if many enemies can attack me, and I have no teammates to help.
-        //--I should stay if I am a group that is attacking a weak enemy.
-        //
-        //--Are there enough friendlies to participate in attacking the group of enemies
-        //  that can attack me?
-        //
-
         //--Find the enemies that can attack me
         RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.DRONE.sensorRadiusSquared, enemyTeam);
         RobotInfo[] robotsCanAttackMe = getRobotsCanAttackLocation(enemiesInSensorRange, currentLocation);
@@ -563,9 +552,11 @@ public class Drone {
                 }
             }
             else {
-                Direction away = BasicNav.getNavigableDirectionClosestTo(enemyLocation.directionTo(currentLocation));
-                if (away != Direction.NONE) {
-                    rc.move(away);
+                if (isCoreReady) {
+                    Direction away = BasicNav.getNavigableDirectionClosestTo(enemyLocation.directionTo(currentLocation));
+                    if (away != Direction.NONE) {
+                        rc.move(away);
+                    }
                 }
             }
 
@@ -573,16 +564,35 @@ public class Drone {
         }
 
         //--No enemies are nearby that can attack me
-        //--Go to destination
+        //--Go to destination (if it is safe)
         if (!isCoreReady) {
             return;
         }
 
-        RobotType[] typesToIgnore = new RobotType[]{RobotType.BEAVER, RobotType.MINER};
+        RobotType[] typesToIgnore = new RobotType[] {RobotType.BEAVER, RobotType.MINER};
         Direction direction = SafeBug.getDirection(currentLocation, null, enemiesInSensorRange, typesToIgnore);
-        if (direction != Direction.NONE) {
-            rc.move(direction);
+        if (direction == Direction.NONE) {
+            return;
         }
+
+        //--Check if the direction will be safe
+        MapLocation next = currentLocation.add(direction);
+        RobotInfo[] robotsCanAttackDestination = getRobotsCanAttackLocation(enemiesInSensorRange, next);
+        int canAttackDestinationCount = robotsCanAttackDestination.length;
+        if (canAttackDestinationCount > 1) {
+            return;
+        }
+
+        //--Did the safe bug already check for this?
+        if (canAttackDestinationCount == 1) {
+            RobotType enemyType = robotsCanAttackDestination[0].type;
+            if (enemyType != RobotType.MINER
+                    && enemyType != RobotType.BEAVER) {
+                return;
+            }
+        }
+
+        rc.move(direction);
     }
 
     private static MapLocation[] getLocationsCanAttackLocation(RobotInfo[] robots, MapLocation location) {
@@ -667,7 +677,6 @@ public class Drone {
                             null,
                             enemiesInSensorRange,
                             typesToIgnore);
-                    Debug.setString(0, runawayDirection.toString(), rc);
                     if (runawayDirection != Direction.NONE) {
                         rc.move(runawayDirection);
                         return;
