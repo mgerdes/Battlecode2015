@@ -82,8 +82,7 @@ public class Drone {
             case Swarm:
                 Debug.setString(0, "swarming...", rc);
                 SupplySharing.shareOnlyWithType(RobotType.DRONE);
-//                swarmMicro();
-                swarm();
+                swarmMicro();
                 break;
             case Rally:
                 Debug.setString(0, "rally...", rc);

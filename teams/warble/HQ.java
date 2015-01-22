@@ -329,10 +329,18 @@ public class HQ {
         int minerCount = rc.readBroadcast(Channel.MINER_COUNT);
         HqOrders.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
 
-        //--Spawn up to 20 drones
+        //--Spawn up to 20 drones in early game.
+        //--When we have 2 launchers, only make up to 2 drones
+        int launcherCount = rc.readBroadcast(Channel.LAUNCHER_COUNT);
         int droneCount = rc.readBroadcast(Channel.DRONE_COUNT);
-        int droneMax = 20;
-        HqOrders.setSpawn(RobotType.DRONE, droneCount < droneMax ? SPAWN_ON : SPAWN_OFF);
+        if (launcherCount > 1
+                && droneCount > 1) {
+            HqOrders.setSpawn(RobotType.DRONE, SPAWN_OFF);
+        }
+        else {
+            int droneMax = 20;
+            HqOrders.setSpawn(RobotType.DRONE, droneCount < droneMax ? SPAWN_ON : SPAWN_OFF);
+        }
 
         //--Spawn up to 20 soldiers
         int soldierCount = rc.readBroadcast(Channel.SOLDIER_COUNT);
