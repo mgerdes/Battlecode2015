@@ -101,6 +101,13 @@ public class Drone {
             return;
         }
 
+        int robotID = Radio.getRobotIdThatNeedsSupply();
+        if (robotID == 0) {
+            //--There is no robot to supply, we call this method to get the default order.
+            doYourThing();
+            return;
+        }
+
         MapLocation currentLocation = rc.getLocation();
         RobotInfo[] enemiesInSensor = rc.senseNearbyRobots(RobotType.DRONE.sensorRadiusSquared, enemyTeam);
         RobotType[] enemiesToIgnore = new RobotType[]{RobotType.BEAVER, RobotType.DRONE};
@@ -125,13 +132,6 @@ public class Drone {
 
         if (currentSupply >= 5000) {
             deliveringSupply = true;
-        }
-
-        int robotID = Radio.getRobotIdThatNeedsSupply();
-        if (robotID == 0) {
-            //--There is no robot to supply, we call this method to get the default order.
-            doYourThing();
-            return;
         }
 
         MapLocation robotToSupplyLocation = rc.senseRobot(robotID).location;
