@@ -34,6 +34,7 @@ public class HQ {
     private static boolean printedMapDataForDebug;
     private static boolean mapBuilderInitialized;
     private static boolean allTerrainTilesBroadcast;
+    private static boolean towersFormWall;
 
     public static void run(RobotController rcC) throws GameActionException {
         rc = rcC;
@@ -186,6 +187,8 @@ public class HQ {
             symmetryString = "Rotational";
         }
 
+        towersFormWall = MapAnalysis.towersFormWall(myTowers);
+
         System.out.printf(
                 "hqDist: %d\ncount %d\ntower2tower: %f\ntower2Hq: %f\noreNearHQ: %f\nsymmetryType: %s\ntowersFromWall: %s\n",
                 distanceBetweenHq,
@@ -194,7 +197,7 @@ public class HQ {
                 averageTowerToHqDistance,
                 oreNearHq,
                 symmetryString,
-                MapAnalysis.towersFormWall(myTowers));
+                towersFormWall);
     }
 
     private static int getSymmetryType() {
@@ -334,23 +337,20 @@ public class HQ {
         int minerCount = rc.readBroadcast(Channel.MINER_COUNT);
         HqOrders.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
 
-        //--Spawn up to 20 soldiers
-        HqOrders.setSpawn(RobotType.SOLDIER, SPAWN_ON);
-
         //--Spawn tanks!
         HqOrders.setSpawn(RobotType.TANK, SPAWN_ON);
 
         //--Set orders
-        HqOrders.setDefaultFor(RobotType.SOLDIER, Order.DefendMiners);
-
-        int tankCount = rc.readBroadcast(Channel.TANK_COUNT);
-        if (tankCount > 9) {
-            HqOrders.setPriorityFor(10, RobotType.SOLDIER, Order.SupportTanks);
-            HqOrders.setDefaultFor(RobotType.TANK, Order.AttackEnemyStructure);
+        if (towersFormWall) {
+            HqOrders.setSpawn(RobotType.SOLDIER, SPAWN_OFF);
         }
         else {
-            HqOrders.setDefaultFor(RobotType.TANK, Order.Rally);
+            int soldierCount = rc.readBroadcast(Channel.SOLDIER_COUNT);
+            HqOrders.setSpawn(RobotType.SOLDIER, soldierCount < 40 ? SPAWN_ON : SPAWN_OFF);
+            HqOrders.setDefaultFor(RobotType.SOLDIER, Order.Swarm);
         }
+
+        HqOrders.setDefaultFor(RobotType.TANK, Order.AttackEnemyStructure);
     }
 
     private static void tryToAttack() throws GameActionException {

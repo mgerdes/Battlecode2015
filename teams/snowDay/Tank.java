@@ -51,97 +51,20 @@ public class Tank {
             case AttackEnemyStructure:
                 attackEnemyStructure();
                 break;
-            case Rally:
-                rally();
-                break;
         }
-    }
-
-    private static void rally() throws GameActionException {
-        MapLocation currentLocation = rc.getLocation();
-
-        if (rc.getSupplyLevel() < 600) {
-            if (currentLocation.distanceSquaredTo(myHq) < MAXIMUM_DISTANCE_SQUARED_TO_GO_TO_HQ_FOR_SUPPLY) {
-                SafeBug.setDestination(myHq);
-                Direction direction = SafeBug.getDirection(currentLocation);
-                if (rc.isCoreReady()
-                        && direction != Direction.NONE) {
-                    rc.move(direction);
-                }
-
-                return;
-            }
-            else {
-                Radio.iNeedSupply();
-            }
-        }
-
-        MapLocation rallyPoint = Radio.readMapLocationFromChannel(Channel.RALLY_POINT);
-
-        //--If there are launchers nearby, it is priority
-        RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.TANK.sensorRadiusSquared, enemyTeam);
-        int indexOfLauncher = Helper.getIndexOfClosestRobot(RobotType.LAUNCHER, enemiesInSensorRange, currentLocation);
-        if (indexOfLauncher != -1) {
-            MapLocation tankLocation = enemiesInSensorRange[indexOfLauncher].location;
-            if (currentLocation.distanceSquaredTo(tankLocation) > RobotType.TANK.attackRadiusSquared) {
-                if (!rc.isCoreReady()) {
-                    return;
-                }
-
-                SafeBug.setDestination(tankLocation);
-                Direction d = SafeBug.getDirection(currentLocation);
-                if (d != Direction.NONE) {
-                    rc.move(d);
-                }
-            }
-            else {
-                if (rc.isWeaponReady()) {
-                    rc.attackLocation(tankLocation);
-                }
-            }
-
-            return;
-        }
-
-        //--If there are no nearby enemies, move closer to structure
-        RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.TANK.attackRadiusSquared, enemyTeam);
-        int enemyCount = enemiesInAttackRange.length;
-        if (enemyCount == 0) {
-            SafeBug.setDestination(rallyPoint);
-            Direction direction = SafeBug.getDirection(currentLocation);
-            if (rc.isCoreReady()
-                    && direction != Direction.NONE) {
-                rc.move(direction);
-            }
-
-            return;
-        }
-
-        //--There are enemies. Attack the closest one
-        if (!rc.isWeaponReady()) {
-            return;
-        }
-
-        int closestRobotIndex = Helper.getIndexOfClosestRobot(enemiesInAttackRange, currentLocation);
-        rc.attackLocation(enemiesInAttackRange[closestRobotIndex].location);
     }
 
     private static void attackEnemyStructure() throws GameActionException {
         MapLocation currentLocation = rc.getLocation();
 
-        if (rc.getSupplyLevel() < 600) {
-            if (currentLocation.distanceSquaredTo(myHq) < MAXIMUM_DISTANCE_SQUARED_TO_GO_TO_HQ_FOR_SUPPLY) {
-                SafeBug.setDestination(myHq);
-                Direction direction = SafeBug.getDirection(currentLocation);
-                if (rc.isCoreReady()
-                        && direction != Direction.NONE) {
-                    rc.move(direction);
-                }
-
+        if (rc.getSupplyLevel() < 600
+                && currentLocation.distanceSquaredTo(myHq) < MAXIMUM_DISTANCE_SQUARED_TO_GO_TO_HQ_FOR_SUPPLY) {
+            SafeBug.setDestination(myHq);
+            Direction direction = SafeBug.getDirection(currentLocation);
+            if (rc.isCoreReady()
+                    && direction != Direction.NONE) {
+                rc.move(direction);
                 return;
-            }
-            else {
-                Radio.iNeedSupply();
             }
         }
 
@@ -173,10 +96,20 @@ public class Tank {
         }
 
         //--If there are no nearby enemies, move closer to structure
+        //--If we have 10 tanks with us, we will begin attacking
+        //  otherwise, we will stay outside of enemy shooting range
         RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.TANK.attackRadiusSquared, enemyTeam);
         int enemyCount = enemiesInAttackRange.length;
         if (enemyCount == 0) {
             SafeBug.setDestination(structureToAttack);
+
+            RobotInfo[] friendles = rc.senseNearbyRobots(RobotType.TANK.sensorRadiusSquared, myTeam);
+            int nearbyTanks = Helper.getRobotsOfType(friendles, RobotType.TANK);
+            if (nearbyTanks < 5
+                && currentLocation.distanceSquaredTo(structureToAttack) <= 36) {
+                    return;
+                }
+
             Direction direction = SafeBug.getDirection(currentLocation, structureToAttack);
             if (rc.isCoreReady()
                     && direction != Direction.NONE) {
