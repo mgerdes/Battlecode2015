@@ -1,5 +1,6 @@
 package team030;
 
+import team030.communication.HqOrders;
 import team030.communication.Radio;
 import team030.constants.Building;
 import team030.communication.Channel;
@@ -18,8 +19,6 @@ public class HQ {
 
     private static final int HQ_TRY_ATTACK_AFTER_ROUND = 100;
     private static final int HQ_BROADCAST_ATTACK_LOCATION_AFTER_ROUND = 100;
-
-    private static final int LAUNCHERS_REQUIRED_FOR_ATTACK = 3;
 
     private static final int SPAWN_ON = 1;
     private static final int SPAWN_OFF = 0;
@@ -49,7 +48,8 @@ public class HQ {
         BuildingQueue.init(rcC);
         Radio.init(rcC);
         SupplySharing.init(rcC);
-        MessageBoard.init(rcC);
+        HqOrders.init(rcC);
+        MapAnalysis.init(rcC);
 
         analyzeMap();
         initializeChannels();
@@ -187,13 +187,14 @@ public class HQ {
         }
 
         System.out.printf(
-                "hqDist: %d\ncount %d\ntower2tower: %f\ntower2Hq: %f\noreNearHQ: %f\nsymmetryType: %s\n",
+                "hqDist: %d\ncount %d\ntower2tower: %f\ntower2Hq: %f\noreNearHQ: %f\nsymmetryType: %s\ntowersFromWall: %s\n",
                 distanceBetweenHq,
                 towerCount,
                 averageTowerToTowerDistance,
                 averageTowerToHqDistance,
                 oreNearHq,
-                symmetryString);
+                symmetryString,
+                MapAnalysis.towersFormWall(myTowers));
     }
 
     private static int getSymmetryType() {
@@ -246,19 +247,24 @@ public class HQ {
 
     private static void setInitialBuildings() throws GameActionException {
         BuildingQueue.addBuilding(Building.MINER_FACTORY);
-        BuildingQueue.addBuilding(Building.HELIPAD);
         BuildingQueue.addBuilding(Building.BARRACKS);
         BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
-        BuildingQueue.addBuilding(Building.AEROSPACE_LAB);
+        BuildingQueue.addBuilding(Building.TANK_FACTORY);
+        BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
+        BuildingQueue.addBuilding(Building.TANK_FACTORY);
+        BuildingQueue.addBuilding(Building.BARRACKS);
     }
 
     private static void queueBuildings() throws GameActionException {
         queueSupplyTowers();
 
-        if (rc.getTeamOre() > RobotType.AEROSPACELAB.oreCost) {
+        //--We want to have a bunch of tank factories, but we should
+        //  give our initial buildings enough time to build
+        if (Clock.getRoundNum() > 700
+                && rc.getTeamOre() > RobotType.TANKFACTORY.oreCost) {
             BuildingQueue.addBuildingWithPostDelay(
-                    Building.AEROSPACE_LAB,
-                    (int) (RobotType.AEROSPACELAB.buildTurns * 1.3));
+                    Building.TANK_FACTORY,
+                    (int) (RobotType.TANKFACTORY.buildTurns * 1.3));
         }
     }
 
@@ -324,40 +330,27 @@ public class HQ {
     }
 
     private static void updateSpawningAndOrders() throws GameActionException {
-        int currentRound = Clock.getRoundNum();
-
-        int launcherCount = rc.readBroadcast(Channel.LAUNCHER_COUNT);
-        boolean doTheBigAttack = launcherCount >= LAUNCHERS_REQUIRED_FOR_ATTACK;
-
         //--Spawn up to 35 miners
         int minerCount = rc.readBroadcast(Channel.MINER_COUNT);
-        MessageBoard.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
-
-        //--Spawn up to 20 drones
-        int droneCount = rc.readBroadcast(Channel.DRONE_COUNT);
-        int droneMax = 20;
-        MessageBoard.setSpawn(RobotType.DRONE, droneCount < droneMax ? SPAWN_ON : SPAWN_OFF);
+        HqOrders.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
 
         //--Spawn up to 20 soldiers
-        int soldierCount = rc.readBroadcast(Channel.SOLDIER_COUNT);
-        int soldierMax = 20;
-        MessageBoard.setSpawn(RobotType.SOLDIER, soldierCount < soldierMax ? SPAWN_ON : SPAWN_OFF);
+        HqOrders.setSpawn(RobotType.SOLDIER, SPAWN_ON);
 
-        //--Spawn launchers!
-        MessageBoard.setSpawn(RobotType.LAUNCHER, SPAWN_ON);
+        //--Spawn tanks!
+        HqOrders.setSpawn(RobotType.TANK, SPAWN_ON);
 
         //--Set orders
-        if (doTheBigAttack) {
-            MessageBoard.setDefaultOrder(RobotType.LAUNCHER, Order.AttackEnemyStructure);
+        HqOrders.setDefaultFor(RobotType.SOLDIER, Order.DefendMiners);
+
+        int tankCount = rc.readBroadcast(Channel.TANK_COUNT);
+        if (tankCount > 9) {
+            HqOrders.setPriorityFor(10, RobotType.SOLDIER, Order.SupportTanks);
+            HqOrders.setDefaultFor(RobotType.TANK, Order.AttackEnemyStructure);
         }
         else {
-            MessageBoard.setDefaultOrder(RobotType.LAUNCHER, Order.Rally);
+            HqOrders.setDefaultFor(RobotType.TANK, Order.Rally);
         }
-
-        MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.DefendMiners);
-
-        MessageBoard.setPriorityOrder(1, RobotType.DRONE, Order.MoveSupply);
-        MessageBoard.setDefaultOrder(RobotType.DRONE, Order.Swarm);
     }
 
     private static void tryToAttack() throws GameActionException {

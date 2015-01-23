@@ -1,5 +1,5 @@
 package team030.constants;
 
 public enum Order {
-    NoOrder, Swarm, DefendMiners, Rally, AttackEnemyStructure, MoveSupply, SurveyMap
+    NoOrder, Swarm, DefendMiners, Rally, AttackEnemyStructure, MoveSupply, SupportTanks, SurveyMap
 }

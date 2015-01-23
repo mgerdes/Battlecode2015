@@ -1,14 +1,13 @@
-package team030;
+package team030.communication;
 
 import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
-import team030.communication.Channel;
 import team030.constants.Config;
 import team030.constants.Order;
 
-public class MessageBoard {
+public class HqOrders {
     private static RobotController rc;
 
     private static Order[] orders;
@@ -34,6 +33,9 @@ public class MessageBoard {
             case LAUNCHER:
                 updateChannelIfDifferent(Channel.MORE_LAUNCHERS, value);
                 break;
+            case TANK:
+                updateChannelIfDifferent(Channel.MORE_TANKS, value);
+                break;
         }
     }
 
@@ -47,12 +49,14 @@ public class MessageBoard {
                 return rc.readBroadcast(Channel.MORE_DRONES) == 1;
             case LAUNCHER:
                 return rc.readBroadcast(Channel.MORE_LAUNCHERS) == 1;
+            case TANK:
+                return rc.readBroadcast(Channel.MORE_TANKS) == 1;
         }
 
         return false;
     }
 
-    public static void setDefaultOrder(RobotType type, Order order) throws GameActionException {
+    public static void setDefaultFor(RobotType type, Order order) throws GameActionException {
         switch (type) {
             case SOLDIER:
                 updateChannelIfDifferent(Channel.SOLDIER_DEFAULT_ORDER, order.ordinal());
@@ -63,10 +67,13 @@ public class MessageBoard {
             case LAUNCHER:
                 updateChannelIfDifferent(Channel.LAUNCHER_DEFAULT_ORDERS, order.ordinal());
                 break;
+            case TANK:
+                updateChannelIfDifferent(Channel.TANK_DEFAULT_ORDERS, order.ordinal());
+                break;
         }
     }
 
-    public static void setPriorityOrder(int count, RobotType type, Order order) throws GameActionException {
+    public static void setPriorityFor(int count, RobotType type, Order order) throws GameActionException {
         switch (type) {
             case SOLDIER:
                 setPriorityOrderForChannel(Channel.SOLDIER_PRIORITY_ORDERS, count, order);
@@ -76,6 +83,9 @@ public class MessageBoard {
                 break;
             case LAUNCHER:
                 setPriorityOrderForChannel(Channel.LAUNCHER_PRIORITY_ORDERS, count, order);
+                break;
+            case TANK:
+                setPriorityOrderForChannel(Channel.TANK_PRIORITY_ORDERS, count, order);
                 break;
         }
     }
@@ -94,7 +104,10 @@ public class MessageBoard {
                 return getPriorityOrDefaultOrder(
                         Channel.LAUNCHER_PRIORITY_ORDERS,
                         Channel.LAUNCHER_DEFAULT_ORDERS);
-
+            case TANK:
+                return getPriorityOrDefaultOrder(
+                        Channel.TANK_PRIORITY_ORDERS,
+                        Channel.TANK_DEFAULT_ORDERS);
         }
 
         return Order.NoOrder;

@@ -2,6 +2,7 @@ package team030;
 
 import battlecode.common.*;
 import team030.communication.Channel;
+import team030.communication.HqOrders;
 import team030.communication.Radio;
 import team030.constants.Order;
 import team030.navigation.SafeBug;
@@ -28,7 +29,7 @@ public class Soldier {
         SafeBug.init(rcC);
         SupplySharing.init(rcC);
         Radio.init(rcC);
-        MessageBoard.init(rcC);
+        HqOrders.init(rcC);
 
         loop();
     }
@@ -47,13 +48,47 @@ public class Soldier {
     private static void doYourThing() throws GameActionException {
         SupplySharing.share();
 
-        Order order = MessageBoard.getOrder(rc.getType());
+        Order order = HqOrders.getOrder(rc.getType());
 
         switch (order) {
             case DefendMiners:
                 defendMiners();
                 break;
+            case SupportTanks:
+                supportTanks();
+                break;
         }
+    }
+
+    private static void supportTanks() throws GameActionException {
+        //--Go to the structure we will attack
+        //--Use safe nav so we don't get blown up by a tower
+
+        MapLocation currentLocation = rc.getLocation();
+
+        RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.SOLDIER.attackRadiusSquared, enemyTeam);
+        int enemyCount = enemiesInAttackRange.length;
+        if (enemyCount > 0) {
+            int closestEnemy = Helper.getIndexOfClosestRobot(enemiesInAttackRange, currentLocation);
+            if (rc.isWeaponReady()) {
+                rc.attackLocation(enemiesInAttackRange[closestEnemy].location);
+                return;
+            }
+        }
+
+        if (!rc.isCoreReady()) {
+            return;
+        }
+
+        MapLocation structureToAttack = Radio.readMapLocationFromChannel(Channel.STRUCTURE_TO_ATTACK);
+        SafeBug.setDestination(structureToAttack);
+
+        Direction d = SafeBug.getDirection(currentLocation);
+        if (d == Direction.NONE) {
+            return;
+        }
+
+        rc.move(d);
     }
 
     private static void defendMiners() throws GameActionException {
