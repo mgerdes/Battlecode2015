@@ -334,7 +334,7 @@ public class HQ {
         int minerCount = rc.readBroadcast(Channel.MINER_COUNT);
         HqOrders.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
 
-        //--Spawn up to 20 drones in early game.
+        //--Spawn up to 20 drones in early game if towers do not form a wall
         //--When we have 2 launchers, only make up to 2 drones
         int launcherCount = rc.readBroadcast(Channel.LAUNCHER_COUNT);
         int droneCount = rc.readBroadcast(Channel.DRONE_COUNT);
@@ -342,7 +342,7 @@ public class HQ {
                 && droneCount > 1) {
             HqOrders.setSpawn(RobotType.DRONE, SPAWN_OFF);
         }
-        else {
+        else if (!towersFormWall) {
             int droneMax = 20;
             HqOrders.setSpawn(RobotType.DRONE, droneCount < droneMax ? SPAWN_ON : SPAWN_OFF);
         }
