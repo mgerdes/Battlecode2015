@@ -2,6 +2,7 @@ package droneTest;
 
 import droneTest.communication.Channel;
 import droneTest.communication.HqOrders;
+import droneTest.communication.Radio;
 import droneTest.util.Debug;
 import droneTest.util.Helper;
 import battlecode.common.*;
@@ -11,9 +12,11 @@ public class Spawner {
     private static RobotType[] typesBuiltHere;
     private static int[] robotCountChannels;
     private static Team myTeam;
+    private static RobotType myType;
 
     public static void init(RobotController rcC) {
         rc = rcC;
+        myType = rcC.getType();
 
         myTeam = rc.getTeam();
 
@@ -32,8 +35,6 @@ public class Spawner {
                 }
 
                 broadcastRobotCounts();
-
-
             } catch (Exception e) {
                 e.printStackTrace();
             }

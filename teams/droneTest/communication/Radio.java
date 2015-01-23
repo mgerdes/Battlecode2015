@@ -113,18 +113,28 @@ public class Radio {
         }
     }
 
-    public static void iAmASupplyTower() throws GameActionException {
+    public static void iAmABuilding(RobotType buildling) throws GameActionException {
+        int buildingCountChannel = 0;
+        int buildingRoundUpdatedChannel = 0;
+
         //--If count is expired, set to 1
         //--Otherwise increment the count by 1
-        int lastUpdated = rc.readBroadcast(Channel.SUPPLY_DEPOT_ROUND_UPDATED);
+        switch (buildling) {
+            case SUPPLYDEPOT:
+                buildingCountChannel = Channel.SUPPLY_DEPOT_COUNT;
+                buildingRoundUpdatedChannel = Channel.SUPPLY_DEPOT_ROUND_UPDATED;
+                break;
+        }
+
         int currentRound = Clock.getRoundNum();
+        int lastUpdated = rc.readBroadcast(buildingRoundUpdatedChannel);
         if (lastUpdated < currentRound) {
-            rc.broadcast(Channel.SUPPLY_DEPOT_ROUND_UPDATED, currentRound);
-            rc.broadcast(Channel.SUPPLY_DEPOT_COUNT, 1);
+            rc.broadcast(buildingRoundUpdatedChannel, currentRound);
+            rc.broadcast(buildingCountChannel, 1);
         }
         else {
-            int currentCount = rc.readBroadcast(Channel.SUPPLY_DEPOT_COUNT);
-            rc.broadcast(Channel.SUPPLY_DEPOT_COUNT, currentCount + 1);
+            int currentCount = rc.readBroadcast(buildingCountChannel);
+            rc.broadcast(buildingCountChannel, currentCount + 1);
         }
     }
 
@@ -212,5 +222,14 @@ public class Radio {
         int x = rc.readBroadcast(Channel.ENEMY_SPOTTED_LOCATION_X);
         int y = rc.readBroadcast(Channel.ENEMY_SPOTTED_LOCATION_Y);
         return new MapLocation(x, y);
+    }
+
+    public static int getBuildingCount(RobotType building) throws GameActionException {
+        switch (building) {
+            case SUPPLYDEPOT:
+                return rc.readBroadcast(Channel.SUPPLY_DEPOT_COUNT);
+        }
+
+        return 0;
     }
 }

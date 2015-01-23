@@ -47,7 +47,7 @@ public class Channel {
     public static final int TANK_COUNT = 104;
 
     //--Building counts
-    public static final int SUPPLY_DEPOT_COUNT = 200;
+    protected static final int SUPPLY_DEPOT_COUNT = 200;
     protected static final int SUPPLY_DEPOT_ROUND_UPDATED = 201;
 
     //--Production orders

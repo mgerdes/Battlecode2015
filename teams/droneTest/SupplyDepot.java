@@ -1,6 +1,7 @@
 package droneTest;
 
 import battlecode.common.RobotController;
+import battlecode.common.RobotType;
 import droneTest.communication.Radio;
 
 public class SupplyDepot {
@@ -17,7 +18,7 @@ public class SupplyDepot {
     private static void loop() {
         while (true) {
             try {
-                Radio.iAmASupplyTower();
+                Radio.iAmABuilding(RobotType.SUPPLYDEPOT);
             } catch (Exception e) {
                 e.printStackTrace();
             }

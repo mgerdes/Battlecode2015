@@ -316,14 +316,15 @@ public class HQ {
                 + rc.readBroadcast(Channel.SOLDIER_COUNT) * RobotType.SOLDIER.supplyUpkeep
                 + rc.readBroadcast(Channel.DRONE_COUNT) * RobotType.DRONE.supplyUpkeep;
 
-        int numberOfSupplyTowers = rc.readBroadcast(Channel.SUPPLY_DEPOT_COUNT);
+        int numberOfSupplyDepots = Radio.getBuildingCount(RobotType.SUPPLYDEPOT);
 
         double supplyProduction = GameConstants.SUPPLY_GEN_BASE
                 * (GameConstants.SUPPLY_GEN_MULTIPLIER
-                + Math.pow(numberOfSupplyTowers, GameConstants.SUPPLY_GEN_EXPONENT));
+                + Math.pow(numberOfSupplyDepots, GameConstants.SUPPLY_GEN_EXPONENT));
 
         if (supplyProduction < supplyConsumption * 1.1) {
-            BuildingQueue.addBuildingWithPostDelay(Building.SUPPLY_DEPOT, RobotType.SUPPLYDEPOT.buildTurns);
+            BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
+            BuildingQueue.addBuildingWithPostDelay(Building.SUPPLY_DEPOT, RobotType.SUPPLYDEPOT.buildTurns * 2);
         }
     }
 
@@ -382,6 +383,8 @@ public class HQ {
         if (rc.getTeamOre() < RobotType.BEAVER.oreCost) {
             return false;
         }
+
+        int minerFactoryCount = Radio.getBuildingCount(RobotType.MINERFACTORY);
 
         //--In early game we want one beaver.
         //--When we have enough miners, we want two beavers
