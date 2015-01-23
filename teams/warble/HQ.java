@@ -256,7 +256,8 @@ public class HQ {
     private static void queueBuildings() throws GameActionException {
         queueSupplyTowers();
 
-        if (rc.getTeamOre() > RobotType.AEROSPACELAB.oreCost) {
+        if (Clock.getRoundNum() > 600
+                && rc.getTeamOre() > RobotType.AEROSPACELAB.oreCost) {
             BuildingQueue.addBuildingWithPostDelay(
                     Building.AEROSPACE_LAB,
                     (int) (RobotType.AEROSPACELAB.buildTurns * 1.3));
