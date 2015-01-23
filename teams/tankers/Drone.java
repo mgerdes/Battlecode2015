@@ -480,7 +480,7 @@ public class Drone {
             boolean[] iCanShoot = new boolean[2];
             int myRange = RobotType.DRONE.attackRadiusSquared;
             iCanShoot[0] = myRange >= currentLocation.distanceSquaredTo(robotsCanAttackMe[0].location);
-            iCanShoot[1] = myRange >= currentLocation.distanceSquaredTo(robotsCanAttackMe[0].location);
+            iCanShoot[1] = myRange >= currentLocation.distanceSquaredTo(robotsCanAttackMe[1].location);
             if (!iCanShoot[0]
                     && !iCanShoot[1]) {
                 return;
