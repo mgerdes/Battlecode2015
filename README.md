@@ -1,30 +1,27 @@
-### Strategy Summary: justInTime
+### Strategy Ideas for Qualifying/Seeding Tournament
 
 #### Justification of units
 ##### Drones
-Even after release 1.1, drones are a great unit. They are a fast and can fly over all terrains. This makes them effective at surveying territory and moving supplies across the map. They are also useful for pestering enemy miners and beavers. They are built from the Helipad, which is needed for Launchers
+Drones can still be used for an early swarm or for pestering, but only in certain situations. The distance between the HQ needs to be small, and the towers need to be far enough apart that units can pass through. Drones are still valuable for surveying and supply, but other units can take on these roles. Other units cannot survey over VOID patches, but this level or accuracy is not always valuable. The weakening of launchers has also made drones weaker. If we do not use launchers, there is no need for the Helipad.
 ##### Launchers
-The spash damage from the missiles is effective against large clumps of units. Many bots will be using large clumps of units, especially mid/late game. These launchers will help take out masses of units quickly.
+After the 1.2 release, launchers have been considerably weakened. When they are carrying 6 missiles, they can deal a lot of damage in a short period. When they are out of missiles, they are a pretty weak unit, only generating a missile every 8 turns (2.25 damage / turn). Managing missile count will be critical to using launchers, and noticing missile count will be very helpful in defending against launchers.
 ##### Soldiers
-These are the cheapest and quickest fighting unit. They match the drone's range, so they are effective at defending from early drone rushes. If a quick rush comes, they can be produced quickly for defense.
+Soldiers have become the bread and butter fighting unit. They will have value in early game as pestering units and defending from rushes. In later game, they are very well paired with launchers and tanks.
+Their quick and weak attack is a good counter against missiles, because a missile will blow up after three shots. When fighting launchers, the soldiers can focus on the missiles until the launchers have a low missile supply, then they can move into close range and finish off the launchers.
+#### Tanks
+Tanks are pretty nice. When grouped with soldiers, they can effectively counter launchers.
 
 #### Building order
 * Miner Factory
-* Helipad
 * Barracks
-* Aerospace lab
+* Tank Factory
 
 #### Early Game
-* Building around 10 drones to pester enemy miners and beavers
-* Have one drone survey the map
-* Use towers to watch for incoming enemies
-* Build around 20 soldiers to defend the miners
+* ?
 
 #### Mid Game
-* Build launchers, soldiers, and drones
-* Move units into position
+* ?
 
 #### End Game
-* Attack with launchers in the front line
-* Use drones for a flank attack. Take out miners or an unguarded tower.
+* ?
 
