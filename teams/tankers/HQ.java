@@ -20,8 +20,6 @@ public class HQ {
     private static final int HQ_TRY_ATTACK_AFTER_ROUND = 100;
     private static final int HQ_BROADCAST_ATTACK_LOCATION_AFTER_ROUND = 100;
 
-    private static final int LAUNCHERS_REQUIRED_FOR_ATTACK = 3;
-
     private static final int SPAWN_ON = 1;
     private static final int SPAWN_OFF = 0;
 
@@ -51,6 +49,7 @@ public class HQ {
         Radio.init(rcC);
         SupplySharing.init(rcC);
         HqOrders.init(rcC);
+        MapAnalysis.init(rcC);
 
         analyzeMap();
         initializeChannels();
@@ -188,13 +187,14 @@ public class HQ {
         }
 
         System.out.printf(
-                "hqDist: %d\ncount %d\ntower2tower: %f\ntower2Hq: %f\noreNearHQ: %f\nsymmetryType: %s\n",
+                "hqDist: %d\ncount %d\ntower2tower: %f\ntower2Hq: %f\noreNearHQ: %f\nsymmetryType: %s\ntowersFromWall: %s\n",
                 distanceBetweenHq,
                 towerCount,
                 averageTowerToTowerDistance,
                 averageTowerToHqDistance,
                 oreNearHq,
-                symmetryString);
+                symmetryString,
+                MapAnalysis.towersFormWall(myTowers));
     }
 
     private static int getSymmetryType() {
