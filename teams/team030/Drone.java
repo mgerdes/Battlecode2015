@@ -448,7 +448,7 @@ public class Drone {
 
         //--Find the enemies that can attack me
         RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.DRONE.sensorRadiusSquared, enemyTeam);
-        RobotInfo[] robotsCanAttackMe = getRobotsCanAttackLocation(enemiesInSensorRange, currentLocation);
+        RobotInfo[] robotsCanAttackMe = Helper.getRobotsCanAttackLocation(enemiesInSensorRange, currentLocation);
         int canAttackMeCount = robotsCanAttackMe.length;
 
         //--If more than two enemies can attack me, move away
@@ -577,7 +577,7 @@ public class Drone {
 
         //--Check if the direction will be safe
         MapLocation next = currentLocation.add(direction);
-        RobotInfo[] robotsCanAttackDestination = getRobotsCanAttackLocation(enemiesInSensorRange, next);
+        RobotInfo[] robotsCanAttackDestination = Helper.getRobotsCanAttackLocation(enemiesInSensorRange, next);
         int canAttackDestinationCount = robotsCanAttackDestination.length;
         if (canAttackDestinationCount > 1) {
             return;
@@ -593,64 +593,6 @@ public class Drone {
         }
 
         rc.move(direction);
-    }
-
-    private static MapLocation[] getLocationsCanAttackLocation(RobotInfo[] robots, MapLocation location) {
-        int allRobotCount = robots.length;
-        int attackRobotCount = 0;
-        boolean[] canAttack = new boolean[allRobotCount];
-
-        for (int i = 0; i < allRobotCount; i++) {
-            if (robots[i].location.distanceSquaredTo(location) <= robots[i].type.attackRadiusSquared) {
-                attackRobotCount++;
-                canAttack[i] = true;
-            }
-        }
-
-        MapLocation[] locationsCanAttack = new MapLocation[attackRobotCount];
-        int index = 0;
-        for (int i = 0; i < allRobotCount; i++) {
-            if (canAttack[i]) {
-                locationsCanAttack[index++] = robots[i].location;
-            }
-        }
-
-        return locationsCanAttack;
-    }
-
-    private static RobotInfo[] getRobotsCanAttackLocation(RobotInfo[] robots, MapLocation location) {
-        int allRobotCount = robots.length;
-        int attackRobotCount = 0;
-        boolean[] canAttack = new boolean[allRobotCount];
-
-        for (int i = 0; i < allRobotCount; i++) {
-            if (robots[i].location.distanceSquaredTo(location) <= robots[i].type.attackRadiusSquared) {
-                attackRobotCount++;
-                canAttack[i] = true;
-            }
-        }
-
-        RobotInfo[] robotsCanAttack = new RobotInfo[attackRobotCount];
-        int index = 0;
-        for (int i = 0; i < allRobotCount; i++) {
-            if (canAttack[i]) {
-                robotsCanAttack[index++] = robots[i];
-            }
-        }
-
-        return robotsCanAttack;
-    }
-
-    private static boolean canAttackNextTurn(RobotInfo robot) {
-        //--If a robot has supply, next turn its weapon delay will be decremented by 1,
-        //  otherwise, it will be decremented by 0.5
-        return (robot.supplyLevel > 0
-                && robot.weaponDelay < 2)
-                || robot.weaponDelay < 1.5;
-        //--NOTE: This is not accurate for robots that have less supply than their
-        //  supply upkeep. In that case, their weapon delay is decremented by a value
-        //  between 0 and 0.5. That is a rare situation, and it will only happen
-        //  for one round, so I am ignoring it.
     }
 
     private static void swarm() throws GameActionException {

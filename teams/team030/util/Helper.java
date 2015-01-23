@@ -89,6 +89,29 @@ public class Helper {
         return index;
     }
 
+    public static RobotInfo[] getRobotsCanAttackLocation(RobotInfo[] robots, MapLocation location) {
+        int allRobotCount = robots.length;
+        int attackRobotCount = 0;
+        boolean[] canAttack = new boolean[allRobotCount];
+
+        for (int i = 0; i < allRobotCount; i++) {
+            if (robots[i].location.distanceSquaredTo(location) <= robots[i].type.attackRadiusSquared) {
+                attackRobotCount++;
+                canAttack[i] = true;
+            }
+        }
+
+        RobotInfo[] robotsCanAttack = new RobotInfo[attackRobotCount];
+        int index = 0;
+        for (int i = 0; i < allRobotCount; i++) {
+            if (canAttack[i]) {
+                robotsCanAttack[index++] = robots[i];
+            }
+        }
+
+        return robotsCanAttack;
+    }
+
     public static Direction getDirection(int n) {
         if (n < 0) {
             n = n + 8;
