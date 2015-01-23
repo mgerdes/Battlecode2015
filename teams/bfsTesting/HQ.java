@@ -355,8 +355,7 @@ public class HQ {
         }
 
         MessageBoard.setDefaultOrder(RobotType.SOLDIER, Order.DefendMiners);
-
-        MessageBoard.setPriorityOrder(1, RobotType.DRONE, Order.MoveSupply);
+        MessageBoard.setPriorityOrder(1, RobotType.DRONE, Order.SurveyMap);
         MessageBoard.setDefaultOrder(RobotType.DRONE, Order.Swarm);
     }
 
