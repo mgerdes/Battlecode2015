@@ -22,6 +22,7 @@ public class Drone {
     private static Direction awayFromEnemyHq;
     private static Team myTeam;
 
+    private static final int MAXIMUM_DISTANCE_SQUARED_TO_GO_TO_HQ_FOR_SUPPLY = 100;
 
     private static int symmetry = 0;
 
@@ -93,7 +94,59 @@ public class Drone {
                 Debug.setString(0, "moving supply...", rc);
                 moveSupply();
                 break;
+            case AttackEnemyStructure:
+                Debug.setString(0, "attacking structure...", rc);
+                attackEnemyStructure();
+                break;
         }
+    }
+
+    private static void attackEnemyStructure() throws GameActionException {
+        MapLocation currentLocation = rc.getLocation();
+
+        if (rc.getSupplyLevel() < 600
+                && currentLocation.distanceSquaredTo(myHqLocation) < MAXIMUM_DISTANCE_SQUARED_TO_GO_TO_HQ_FOR_SUPPLY) {
+            SafeBug.setDestination(myHqLocation);
+            Direction direction = SafeBug.getDirection(currentLocation);
+            if (rc.isCoreReady()
+                    && direction != Direction.NONE) {
+                rc.move(direction);
+                return;
+            }
+        }
+
+        MapLocation structureToAttack = Radio.readMapLocationFromChannel(Channel.STRUCTURE_TO_ATTACK);
+
+        //--If there are no nearby enemies, move closer to structure
+        //--If we have 10 tanks with us, we will begin attacking
+        //  otherwise, we will stay outside of enemy shooting range
+        RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.DRONE.attackRadiusSquared, enemyTeam);
+        int enemyCount = enemiesInAttackRange.length;
+        if (enemyCount == 0) {
+            SafeBug.setDestination(structureToAttack);
+
+            int currentRound = Clock.getRoundNum();
+            if (currentRound < 500
+                    && currentLocation.distanceSquaredTo(structureToAttack) <= 36) {
+                return;
+            }
+
+            Direction direction = SafeBug.getDirection(currentLocation, structureToAttack);
+            if (rc.isCoreReady()
+                    && direction != Direction.NONE) {
+                rc.move(direction);
+            }
+
+            return;
+        }
+
+        //--There are enemies. Attack the closest one
+        if (!rc.isWeaponReady()) {
+            return;
+        }
+
+        int closestRobotIndex = Helper.getIndexOfClosestRobot(enemiesInAttackRange, currentLocation);
+        rc.attackLocation(enemiesInAttackRange[closestRobotIndex].location);
     }
 
     private static void moveSupply() throws GameActionException {

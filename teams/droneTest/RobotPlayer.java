@@ -32,6 +32,9 @@ public class RobotPlayer {
             case TANK:
                 Tank.run(rc);
                 break;
+            case LAUNCHER:
+                Launcher.run(rc);
+                break;
             default: //--All buildings other than towers and HQ
                 Spawner.init(rc);
                 break;
