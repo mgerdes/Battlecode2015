@@ -69,6 +69,26 @@ public class Helper {
         return index;
     }
 
+    public static int getIndexOfClosestRobot(RobotType type,
+                                             RobotInfo[] robots,
+                                             MapLocation location) {
+        int count = robots.length;
+        int smallestDistance = 1000000;
+        int index = -1;
+        for (int i = 0; i < count; i++) {
+            if (robots[i].type != type) {
+                continue;
+            }
+
+            int distance = location.distanceSquaredTo(robots[i].location);
+            if (distance < smallestDistance) {
+                index = i;
+            }
+        }
+
+        return index;
+    }
+
     public static Direction getDirection(int n) {
         if (n < 0) {
             n = n + 8;
@@ -249,5 +269,16 @@ public class Helper {
         }
 
         return Direction.NONE;
+    }
+
+    public static int getFirstIndexOfType(RobotInfo[] robots, RobotType type) {
+        int count = robots.length;
+        for (int i = 0; i < count; i++) {
+            if (robots[i].type == type) {
+                return i;
+            }
+        }
+
+        return -1;
     }
 }

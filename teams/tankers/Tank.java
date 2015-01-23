@@ -73,12 +73,37 @@ public class Tank {
             }
         }
 
-        RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.TANK.attackRadiusSquared, enemyTeam);
+        MapLocation structureToAttack = Radio.readMapLocationFromChannel(Channel.STRUCTURE_TO_ATTACK);
 
-        //--If there are no nearby enemies, move closer
+        //--If there are launchers nearby, it is priority
+        RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.TANK.sensorRadiusSquared, enemyTeam);
+        int indexOfLauncher = Helper.getIndexOfClosestRobot(RobotType.LAUNCHER, enemiesInSensorRange, currentLocation);
+        if (indexOfLauncher != -1) {
+            MapLocation tankLocation = enemiesInSensorRange[indexOfLauncher].location;
+            if (currentLocation.distanceSquaredTo(tankLocation) > RobotType.TANK.attackRadiusSquared) {
+                if (!rc.isCoreReady()) {
+                    return;
+                }
+
+                SafeBug.setDestination(tankLocation);
+                Direction d = SafeBug.getDirection(currentLocation, structureToAttack);
+                if (d != Direction.NONE) {
+                    rc.move(d);
+                }
+            }
+            else {
+                if (rc.isWeaponReady()) {
+                    rc.attackLocation(tankLocation);
+                }
+            }
+
+            return;
+        }
+
+        //--If there are no nearby enemies, move closer to structure
+        RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.TANK.attackRadiusSquared, enemyTeam);
         int enemyCount = enemiesInAttackRange.length;
         if (enemyCount == 0) {
-            MapLocation structureToAttack = Radio.readMapLocationFromChannel(Channel.STRUCTURE_TO_ATTACK);
             SafeBug.setDestination(structureToAttack);
             Direction direction = SafeBug.getDirection(currentLocation, structureToAttack);
             if (rc.isCoreReady()
