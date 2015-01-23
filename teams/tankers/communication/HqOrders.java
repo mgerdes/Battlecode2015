@@ -33,6 +33,9 @@ public class HqOrders {
             case LAUNCHER:
                 updateChannelIfDifferent(Channel.MORE_LAUNCHERS, value);
                 break;
+            case TANK:
+                updateChannelIfDifferent(Channel.MORE_TANKS, value);
+                break;
         }
     }
 
@@ -46,6 +49,8 @@ public class HqOrders {
                 return rc.readBroadcast(Channel.MORE_DRONES) == 1;
             case LAUNCHER:
                 return rc.readBroadcast(Channel.MORE_LAUNCHERS) == 1;
+            case TANK:
+                return rc.readBroadcast(Channel.MORE_TANKS) == 1;
         }
 
         return false;
@@ -62,6 +67,9 @@ public class HqOrders {
             case LAUNCHER:
                 updateChannelIfDifferent(Channel.LAUNCHER_DEFAULT_ORDERS, order.ordinal());
                 break;
+            case TANK:
+                updateChannelIfDifferent(Channel.TANK_DEFAULT_ORDERS, order.ordinal());
+                break;
         }
     }
 
@@ -75,6 +83,9 @@ public class HqOrders {
                 break;
             case LAUNCHER:
                 setPriorityOrderForChannel(Channel.LAUNCHER_PRIORITY_ORDERS, count, order);
+                break;
+            case TANK:
+                setPriorityOrderForChannel(Channel.TANK_PRIORITY_ORDERS, count, order);
                 break;
         }
     }
@@ -93,7 +104,10 @@ public class HqOrders {
                 return getPriorityOrDefaultOrder(
                         Channel.LAUNCHER_PRIORITY_ORDERS,
                         Channel.LAUNCHER_DEFAULT_ORDERS);
-
+            case TANK:
+                return getPriorityOrDefaultOrder(
+                        Channel.TANK_PRIORITY_ORDERS,
+                        Channel.TANK_DEFAULT_ORDERS);
         }
 
         return Order.NoOrder;

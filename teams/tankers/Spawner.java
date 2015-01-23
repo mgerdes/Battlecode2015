@@ -92,6 +92,11 @@ public class Spawner {
             case AEROSPACELAB:
                 typesBuiltHere = new RobotType[]{RobotType.LAUNCHER};
                 robotCountChannels = new int[]{Channel.LAUNCHER_COUNT};
+                break;
+            case TANKFACTORY:
+                typesBuiltHere = new RobotType[]{RobotType.TANK};
+                robotCountChannels = new int[]{Channel.TANK_COUNT};
+                break;
         }
     }
 }

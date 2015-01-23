@@ -247,20 +247,19 @@ public class HQ {
 
     private static void setInitialBuildings() throws GameActionException {
         BuildingQueue.addBuilding(Building.MINER_FACTORY);
-        BuildingQueue.addBuilding(Building.HELIPAD);
         BuildingQueue.addBuilding(Building.BARRACKS);
         BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
-        BuildingQueue.addBuilding(Building.AEROSPACE_LAB);
+        BuildingQueue.addBuilding(Building.TANK_FACTORY);
     }
 
     private static void queueBuildings() throws GameActionException {
         queueSupplyTowers();
 
         if (Clock.getRoundNum() > 600
-                && rc.getTeamOre() > RobotType.AEROSPACELAB.oreCost) {
+                && rc.getTeamOre() > RobotType.TANKFACTORY.oreCost) {
             BuildingQueue.addBuildingWithPostDelay(
-                    Building.AEROSPACE_LAB,
-                    (int) (RobotType.AEROSPACELAB.buildTurns * 1.3));
+                    Building.TANK_FACTORY,
+                    (int) (RobotType.TANKFACTORY.buildTurns * 1.3));
         }
     }
 
@@ -330,34 +329,17 @@ public class HQ {
         int minerCount = rc.readBroadcast(Channel.MINER_COUNT);
         HqOrders.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
 
-        //--Spawn up to 20 drones in early game.
-        //--When we have 2 launchers, only make up to 2 drones
-        int launcherCount = rc.readBroadcast(Channel.LAUNCHER_COUNT);
-        int droneCount = rc.readBroadcast(Channel.DRONE_COUNT);
-        if (launcherCount > 1
-                && droneCount > 1) {
-            HqOrders.setSpawn(RobotType.DRONE, SPAWN_OFF);
-        }
-        else {
-            int droneMax = 20;
-            HqOrders.setSpawn(RobotType.DRONE, droneCount < droneMax ? SPAWN_ON : SPAWN_OFF);
-        }
-
         //--Spawn up to 20 soldiers
         int soldierCount = rc.readBroadcast(Channel.SOLDIER_COUNT);
         int soldierMax = 20;
         HqOrders.setSpawn(RobotType.SOLDIER, soldierCount < soldierMax ? SPAWN_ON : SPAWN_OFF);
 
-        //--Spawn launchers!
-        HqOrders.setSpawn(RobotType.LAUNCHER, SPAWN_ON);
+        //--Spawn tanks!
+        HqOrders.setSpawn(RobotType.TANK, SPAWN_ON);
 
         //--Set orders
-        HqOrders.setDefaultFor(RobotType.LAUNCHER, Order.AttackEnemyStructure);
-
         HqOrders.setDefaultFor(RobotType.SOLDIER, Order.DefendMiners);
-
-        HqOrders.setPriorityFor(1, RobotType.DRONE, Order.MoveSupply);
-        HqOrders.setDefaultFor(RobotType.DRONE, Order.Swarm);
+        HqOrders.setDefaultFor(RobotType.TANK, Order.AttackEnemyStructure);
     }
 
     private static void tryToAttack() throws GameActionException {

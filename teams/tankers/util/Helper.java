@@ -51,6 +51,24 @@ public class Helper {
         return count;
     }
 
+    public static int getIndexOfClosestRobot(RobotInfo[] robots, MapLocation location) {
+        int count = robots.length;
+        if (count == 1) {
+            return 0;
+        }
+
+        int smallestDistance = location.distanceSquaredTo(robots[0].location);
+        int index = 0;
+        for (int i = 1; i < count; i++) {
+            int distance = location.distanceSquaredTo(robots[i].location);
+            if (distance < smallestDistance) {
+                index = i;
+            }
+        }
+
+        return index;
+    }
+
     public static Direction getDirection(int n) {
         if (n < 0) {
             n = n + 8;
