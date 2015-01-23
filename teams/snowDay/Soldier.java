@@ -54,7 +54,41 @@ public class Soldier {
             case DefendMiners:
                 defendMiners();
                 break;
+            case SupportTanks:
+                supportTanks();
+                break;
         }
+    }
+
+    private static void supportTanks() throws GameActionException {
+        //--Go to the structure we will attack
+        //--Use safe nav so we don't get blown up by a tower
+
+        MapLocation currentLocation = rc.getLocation();
+
+        RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.SOLDIER.attackRadiusSquared, enemyTeam);
+        int enemyCount = enemiesInAttackRange.length;
+        if (enemyCount > 0) {
+            int closestEnemy = Helper.getIndexOfClosestRobot(enemiesInAttackRange, currentLocation);
+            if (rc.isWeaponReady()) {
+                rc.attackLocation(enemiesInAttackRange[closestEnemy].location);
+                return;
+            }
+        }
+
+        if (!rc.isCoreReady()) {
+            return;
+        }
+
+        MapLocation structureToAttack = Radio.readMapLocationFromChannel(Channel.STRUCTURE_TO_ATTACK);
+        SafeBug.setDestination(structureToAttack);
+
+        Direction d = SafeBug.getDirection(currentLocation);
+        if (d == Direction.NONE) {
+            return;
+        }
+
+        rc.move(d);
     }
 
     private static void defendMiners() throws GameActionException {

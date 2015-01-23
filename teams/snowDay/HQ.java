@@ -250,12 +250,17 @@ public class HQ {
         BuildingQueue.addBuilding(Building.BARRACKS);
         BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
         BuildingQueue.addBuilding(Building.TANK_FACTORY);
+        BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
+        BuildingQueue.addBuilding(Building.TANK_FACTORY);
+        BuildingQueue.addBuilding(Building.BARRACKS);
     }
 
     private static void queueBuildings() throws GameActionException {
         queueSupplyTowers();
 
-        if (Clock.getRoundNum() > 600
+        //--We want to have a bunch of tank factories, but we should
+        //  give our initial buildings enough time to build
+        if (Clock.getRoundNum() > 700
                 && rc.getTeamOre() > RobotType.TANKFACTORY.oreCost) {
             BuildingQueue.addBuildingWithPostDelay(
                     Building.TANK_FACTORY,
@@ -330,16 +335,22 @@ public class HQ {
         HqOrders.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
 
         //--Spawn up to 20 soldiers
-        int soldierCount = rc.readBroadcast(Channel.SOLDIER_COUNT);
-        int soldierMax = 20;
-        HqOrders.setSpawn(RobotType.SOLDIER, soldierCount < soldierMax ? SPAWN_ON : SPAWN_OFF);
+        HqOrders.setSpawn(RobotType.SOLDIER, SPAWN_ON);
 
         //--Spawn tanks!
         HqOrders.setSpawn(RobotType.TANK, SPAWN_ON);
 
         //--Set orders
         HqOrders.setDefaultFor(RobotType.SOLDIER, Order.DefendMiners);
-        HqOrders.setDefaultFor(RobotType.TANK, Order.AttackEnemyStructure);
+
+        int tankCount = rc.readBroadcast(Channel.TANK_COUNT);
+        if (tankCount > 9) {
+            HqOrders.setPriorityFor(10, RobotType.SOLDIER, Order.SupportTanks);
+            HqOrders.setDefaultFor(RobotType.TANK, Order.AttackEnemyStructure);
+        }
+        else {
+            HqOrders.setDefaultFor(RobotType.TANK, Order.Rally);
+        }
     }
 
     private static void tryToAttack() throws GameActionException {
