@@ -57,10 +57,9 @@ public class PathBuilder {
         int relativeY = getRelativeMapLocationY(enemyHq.y);
         rc.broadcast(Channel.POI[towerList.length], getHashedLocation(relativeX, relativeY));
         rc.broadcast(Channel.NUMBER_OF_POIS, towerList.length + 1);
+        rc.broadcast(Channel.BFS_LOOP_STATE, -1);
 
         beginBuild(0);
-
-        rc.broadcast(Channel.BFS_LOOP_STATE, -1);
     }
 
     public static void build(int bytecodeLimit) throws GameActionException {
@@ -101,8 +100,8 @@ public class PathBuilder {
             MapLocation currentLocation = new MapLocation(currentX, currentY);
 
             for (; i < 8; i++) {
-                int approximateByteCodeCost = 200;
-                if (Clock.getBytecodeNum() + approximateByteCodeCost < bytecodeLimit) {
+                int approximateMaxByteCodeCost = 205; // Each iteration of loop below is ~75, beginBuild is ~130
+                if (Clock.getBytecodeNum() + approximateMaxByteCodeCost < bytecodeLimit) {
                     int nextX = currentX + xOffsets[i];
                     int nextY = currentY + yOffsets[i];
                     int nextLocationHashed = getHashedLocation(nextX, nextY);
@@ -122,20 +121,19 @@ public class PathBuilder {
                     return;
                 }
             }
-
             loopState = -1;
         }
 
-        updateBackOfQueue(); // cost ~ 25
-        rc.broadcast(Channel.BFS_LOOP_STATE, -1); // cost ~ 25
         endBuild(currentPOI);
     }
 
+    // cost ~ 130
     private static void beginBuild(int poi) throws GameActionException {
-        resetQueue();
+        rc.broadcast(Channel.BFS_LOOP_STATE, -1);
         rc.broadcast(Channel.CURRENT_POI, poi);
-        enqueue(rc.readBroadcast(Channel.POI[poi]));
-        updateBackOfQueue();
+
+        resetQueue(); // cost ~ 50
+        enqueue(rc.readBroadcast(Channel.POI[poi])); // cost ~ 30
     }
 
     private static void endBuild(int poi) throws GameActionException {
