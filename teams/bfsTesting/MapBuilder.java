@@ -44,11 +44,10 @@ public class MapBuilder {
         wasBroadcast = new boolean[mapWidth][mapHeight];
     }
 
+    //--This method should be called by one robot
+    //--It will broadcast all of the terrain tiles that it can either sense or infer from symmetry
+    //--Unknown tiles are broadcast one at a time to Channel.LOCATION_TO_SURVEY
     public static boolean processUntilComplete(int bytecodeLimit) throws GameActionException {
-        //--Broadcast terrain tiles
-        //--When we reach an unknown, check its symmetrical point
-        //--If both are unknown, return that location (the one that we can go to easier)
-
         int initialBytecodeValue = Clock.getBytecodeNum();
         int finalBytecodeValue = initialBytecodeValue + bytecodeLimit;
         for (; xLoop < mapWidth; xLoop++) {
@@ -65,10 +64,13 @@ public class MapBuilder {
                 MapLocation locationToCheck = getAbsoluteMapLocationForRelativeCoordinates(xLoop, yLoop);
                 MapLocation reflected = getReflectedMapLocation(locationToCheck);
                 TerrainTile tile = rc.senseTerrainTile(locationToCheck);
+
+                //--If tile is unknown check reflected tile
                 if (tile == TerrainTile.UNKNOWN) {
                     tile = rc.senseTerrainTile(reflected);
                 }
 
+                //--If reflected tile is unknown, broadcast the location
                 if (tile == TerrainTile.UNKNOWN) {
                     MapLocation closerToOurHq =
                             myHq.distanceSquaredTo(locationToCheck) < myHq.distanceSquaredTo(reflected) ?
