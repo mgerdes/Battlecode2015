@@ -163,7 +163,8 @@ public class Drone {
             else {
                 Debug.setString(1, "going to " + destination.toString(), rc);
 
-                SafeBug.setDestination(destination);
+                //--Fly directly east of the location so that other locations can be revealed
+                SafeBug.setDestination(destination.add(Direction.EAST, 5));
                 Direction direction = SafeBug.getDirection(rc.getLocation());
                 if (direction != Direction.NONE) {
                     rc.move(direction);
