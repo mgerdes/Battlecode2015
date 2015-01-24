@@ -30,6 +30,7 @@ public class Miner {
         Bug.init(rcC);
         SupplySharing.init(rcC);
         Radio.init(rcC);
+        PathBuilder.init(rcC);
 
         loop();
     }
@@ -50,6 +51,11 @@ public class Miner {
 
         if (rc.getSupplyLevel() < 200) {
             Radio.iNeedSupply();
+        }
+
+        if (rc.readBroadcast(Channel.READY_FOR_BFS) == 1
+                && !PathBuilder.isComplete()) {
+            PathBuilder.build(7000);
         }
 
         MapLocation currentLocation = rc.getLocation();

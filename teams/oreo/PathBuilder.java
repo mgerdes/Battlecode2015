@@ -7,11 +7,15 @@ import oreo.communication.Radio;
 public class PathBuilder {
     static RobotController rc;
 
+    private static TerrainTile[] terrainTiles;
+
     static int[] xOffsets = {1,0,-1, 0,-1,1,-1, 1};
     static int[] yOffsets = {0,1, 0,-1,-1,1, 1,-1};
 
     public static void init(RobotController rcin) {
         rc = rcin;
+
+        terrainTiles = TerrainTile.values();
     }
 
     public static Direction getDirection(int hashedMapLocation, int poi) throws GameActionException {
@@ -141,10 +145,13 @@ public class PathBuilder {
         return new MapLocation(x + xOffset, y + yOffset);
     }
 
-    //--TODO store TerrainTile.values().
     private static TerrainTile getTerrainTile(int hashedMapLocation) throws GameActionException {
         int tileNumber = rc.readBroadcast(Channel.NW_CORNER_TERRAIN_TILE + hashedMapLocation);
-        return TerrainTile.values()[tileNumber];
+        if (tileNumber == 0) {
+            return TerrainTile.UNKNOWN;
+        }
+
+        return terrainTiles[tileNumber - 1];
     }
 
     private static boolean wasVisited(int hashedMapLocation, int poi) throws GameActionException {

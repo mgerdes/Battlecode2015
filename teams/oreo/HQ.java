@@ -23,6 +23,10 @@ public class HQ {
     private static final int SPAWN_ON = 1;
     private static final int SPAWN_OFF = 0;
 
+    private static boolean printedMapDataForDebug;
+    private static boolean mapBuilderInitialized;
+    private static boolean allTerrainTilesBroadcast;
+
     //--Map analysis data
     private static int distanceBetweenHq;
     private static int towerCount;
@@ -31,9 +35,6 @@ public class HQ {
     private static double oreNearHq;
     private static MapLocation[] enemyTowers;
     private static MapLocation[] myTowers;
-    private static boolean printedMapDataForDebug;
-    private static boolean mapBuilderInitialized;
-    private static boolean allTerrainTilesBroadcast;
     private static boolean towersFormWall;
 
     public static void run(RobotController rcC) throws GameActionException {
@@ -51,6 +52,7 @@ public class HQ {
         SupplySharing.init(rcC);
         HqOrders.init(rcC);
         MapAnalysis.init(rcC);
+        PathBuilder.init(rcC);
 
         analyzeMap();
         initializeChannels();
@@ -95,24 +97,19 @@ public class HQ {
             }
         }
 
-        broadcastAllTerrainTiles();
+        broadcastMapInformation();
     }
 
-    private static void broadcastAllTerrainTiles() throws GameActionException {
-        if (rc.readBroadcast(Channel.PERIMETER_SURVEY_COMPLETE) != 1) {
+    private static void broadcastMapInformation() throws GameActionException {
+        if (allTerrainTilesBroadcast
+                || rc.readBroadcast(Channel.PERIMETER_SURVEY_COMPLETE) != 1) {
             return;
         }
 
         if (!mapBuilderInitialized) {
-            MapBuilder.init(rc.readBroadcast(Channel.MAP_WIDTH),
-                            rc.readBroadcast(Channel.MAP_HEIGHT),
-                            Radio.readMapLocationFromChannel(Channel.NW_MAP_CORNER),
-                            rc.readBroadcast(Channel.MAP_SYMMETRY),
-                            myHqLocation,
-                            rc);
+            MapBuilder.init(rc);
             mapBuilderInitialized = true;
         }
-
 
         if (!printedMapDataForDebug) {
             System.out.printf("\nMapWidth: %d, MapHeight %s\n",
@@ -139,6 +136,11 @@ public class HQ {
             if (Clock.getBytecodeNum() < 1000) {
                 System.out.println("bytecodes exceeded?");
             }
+        }
+
+        if (allTerrainTilesBroadcast) {
+            PathBuilder.setup(enemyTowers, enemyHqLocation);
+            rc.broadcast(Channel.READY_FOR_BFS, 1);
         }
     }
 
@@ -254,7 +256,7 @@ public class HQ {
         BuildingQueue.addBuilding(Building.BARRACKS);
         BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
         BuildingQueue.addBuilding(Building.HELIPAD);
-        
+
         //--Building everything for testing
         BuildingQueue.addBuilding(Building.AEROSPACE_LAB);
         BuildingQueue.addBuilding(Building.TANK_FACTORY);
@@ -331,6 +333,16 @@ public class HQ {
         int minerCount = rc.readBroadcast(Channel.MINER_COUNT);
         HqOrders.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
 
+        //--Drones
+        int droneCount = rc.readBroadcast(Channel.DRONE_COUNT);
+        HqOrders.setSpawn(RobotType.DRONE, droneCount == 0 ? SPAWN_ON : SPAWN_OFF);
+        if (rc.readBroadcast(Channel.PERIMETER_SURVEY_COMPLETE) == 0) {
+            HqOrders.setDefaultFor(RobotType.DRONE, Order.SurveyMap);
+        }
+        else {
+            HqOrders.setDefaultFor(RobotType.DRONE, Order.MoveSupply);
+        }
+
         //--Soldiers
         int soldierCount = rc.readBroadcast(Channel.SOLDIER_COUNT);
         HqOrders.setSpawn(RobotType.SOLDIER, soldierCount < 40 ? SPAWN_ON : SPAWN_OFF);
@@ -394,7 +406,7 @@ public class HQ {
         }
 
         //--Build the second beaver after we have started a mining factory
-        return rc.checkDependencyProgress(RobotType.MINER) != DependencyProgress.NONE;
+        return rc.checkDependencyProgress(RobotType.MINERFACTORY) != DependencyProgress.NONE;
     }
 
     private static void spawn(RobotType type) throws GameActionException {

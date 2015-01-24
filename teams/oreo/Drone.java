@@ -27,8 +27,6 @@ public class Drone {
 
     private static boolean deliveringSupply = false;
 
-    private static boolean sizeAndCornersBroadcasted = false;
-
     private static boolean reflectionFoundFirstEdge = false;
     private static boolean reflectionFoundSegment = false;
     private static boolean onFullPass = false;
@@ -101,16 +99,22 @@ public class Drone {
             return;
         }
 
-        int robotID = Radio.getRobotIdThatNeedsSupply();
-        if (robotID == 0) {
-            //--There is no robot to supply, we call this method to get the default order.
-            doYourThing();
-            return;
-        }
-
         MapLocation currentLocation = rc.getLocation();
         RobotInfo[] enemiesInSensor = rc.senseNearbyRobots(RobotType.DRONE.sensorRadiusSquared, enemyTeam);
         RobotType[] enemiesToIgnore = new RobotType[]{RobotType.BEAVER, RobotType.DRONE};
+
+        int robotID = Radio.getRobotIdThatNeedsSupply();
+
+        //--If there is no robot to supply, go home
+        if (robotID == 0) {
+            SafeBug.setDestination(myHqLocation);
+            Direction direction = SafeBug.getDirection(currentLocation, null, enemiesInSensor, enemiesToIgnore);
+            if (direction != Direction.NONE) {
+                rc.move(direction);
+            }
+
+            return;
+        }
 
         double currentSupply = rc.getSupplyLevel();
         //--Go back to HQ if we are delivering supply and we have less than 1000
@@ -158,22 +162,6 @@ public class Drone {
             return;
         }
 
-        if (sizeAndCornersBroadcasted) {
-            MapLocation destination = Radio.readMapLocationFromChannel(Channel.LOCATION_TO_SURVEY);
-            if (destination == null) {
-                return;
-            }
-            else {
-                Debug.setString(1, "going to " + destination.toString(), rc);
-
-                SafeBug.setDestination(destination);
-                Direction direction = SafeBug.getDirection(rc.getLocation());
-                if (direction != Direction.NONE) {
-                    rc.move(direction);
-                }
-            }
-        }
-
         if (symmetry == Symmetry.UNKNOWN) {
             symmetry = rc.readBroadcast(Channel.MAP_SYMMETRY);
         }
@@ -208,7 +196,6 @@ public class Drone {
             Radio.setMapLocationOnChannel(new MapLocation(westEdge, southEdge), Channel.SW_MAP_CORNER);
             Radio.setMapLocationOnChannel(new MapLocation(westEdge, northEdge), Channel.NW_MAP_CORNER);
             rc.broadcast(Channel.PERIMETER_SURVEY_COMPLETE, 1);
-            sizeAndCornersBroadcasted = true;
         }
     }
 
@@ -327,7 +314,6 @@ public class Drone {
 
             Direction cornerDirection = getCornerDirection(currentLocation);
             broadcastFourCorners(currentLocation, cornerDirection, mapWidth, mapHeight);
-            sizeAndCornersBroadcasted = true;
             return;
         }
 
