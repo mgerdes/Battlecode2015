@@ -13,6 +13,9 @@ public class MapBuilder {
     private static int minX;
     private static int minY;
 
+    private static int totalTileCount;
+    private static int tilesBroadcastCount;
+
     private static MapLocation myHq;
 
     private static int symmetryType;
@@ -20,8 +23,7 @@ public class MapBuilder {
     private static int xLoop = 0;
     private static int yLoop = 0;
 
-    private static int debugWaitingForLocation = 0;
-    private static int debugStopForBytecodes = 0;
+    public static boolean broadcastSurveyLocationThisTurn;
 
     private static final int MAX_BYTECODES_CONSUMED_IN_ONE_LOOP_PASS = 220;
 
@@ -42,6 +44,9 @@ public class MapBuilder {
         rc = rcC;
 
         wasBroadcast = new boolean[mapWidth][mapHeight];
+
+        totalTileCount = mapHeightC * mapWidthC;
+        tilesBroadcastCount = 0;
     }
 
     //--This method should be called by one robot
@@ -50,10 +55,17 @@ public class MapBuilder {
     public static boolean processUntilComplete(int bytecodeLimit) throws GameActionException {
         int initialBytecodeValue = Clock.getBytecodeNum();
         int finalBytecodeValue = initialBytecodeValue + bytecodeLimit;
+        broadcastSurveyLocationThisTurn = false;
+
+        //--Start the loop where we left off
         for (; xLoop < mapWidth; xLoop++) {
             for (; yLoop < mapHeight; yLoop++) {
                 if (Clock.getBytecodeNum() > finalBytecodeValue - MAX_BYTECODES_CONSUMED_IN_ONE_LOOP_PASS) {
-                    debugStopForBytecodes++;
+                    System.out.printf(
+                            "%d, %d: Broadcast %f percent of tiles\n",
+                            xLoop,
+                            yLoop,
+                            (double) tilesBroadcastCount / totalTileCount * 100);
                     return false;
                 }
 
@@ -70,18 +82,25 @@ public class MapBuilder {
                     tile = rc.senseTerrainTile(reflected);
                 }
 
-                //--If reflected tile is unknown, broadcast the location
+                //--If reflected tile is unknown, we may broadcast the location
                 if (tile == TerrainTile.UNKNOWN) {
+                    if (broadcastSurveyLocationThisTurn) {
+                        continue;
+                    }
+
+                    //--If a survey location that was broadcast is still unknown, do not overwrite it
+                    MapLocation currentSurveyLocation = Radio.readMapLocationFromChannel(Channel.LOCATION_TO_SURVEY);
+                    if (currentSurveyLocation != null
+                            && !wasBroadcast[currentSurveyLocation.x - minX][currentSurveyLocation.y - minY]) {
+                        continue;
+                    }
+
                     MapLocation closerToOurHq =
-                            myHq.distanceSquaredTo(locationToCheck) < myHq.distanceSquaredTo(reflected) ?
-                            locationToCheck
+                            myHq.distanceSquaredTo(locationToCheck) < myHq.distanceSquaredTo(reflected)
+                            ? locationToCheck
                             : reflected;
                     Radio.setMapLocationOnChannel(closerToOurHq, Channel.LOCATION_TO_SURVEY);
-
-//                    System.out.println("need location original " + locationToCheck);
-//                    System.out.println("need location reflected " + closerToOurHq);
-                    debugWaitingForLocation++;
-                    return false;
+                    broadcastSurveyLocationThisTurn = true;
                 }
                 else {
                     int offsetForFirstLocation = getHashForRelativeCoordinates(xLoop, yLoop);
@@ -94,20 +113,17 @@ public class MapBuilder {
                             tile.ordinal());
                     wasBroadcast[getXValue(offsetForFirstLocation)][getYValue(offsetForFirstLocation)] = true;
                     wasBroadcast[getXValue(offsetForReflectedLocation)][getYValue(offsetForReflectedLocation)] = true;
+                    tilesBroadcastCount += 2;
                 }
             }
 
-            if (xLoop < mapWidth - 1) {
-                yLoop = 0;
-            }
+            yLoop = 0;
         }
 
-        System.out.printf(
-                "\nWaited for location %d times\nBytecode break %d times\n",
-                debugWaitingForLocation,
-                debugStopForBytecodes);
+        xLoop = 0;
 
-        return true;
+        System.out.printf("Broadcast %f percent of tiles\n", (double) tilesBroadcastCount / totalTileCount * 100);
+        return tilesBroadcastCount == totalTileCount;
     }
 
     private static MapLocation getAbsoluteMapLocationForRelativeCoordinates(int x, int y) {
