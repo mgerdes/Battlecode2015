@@ -2,6 +2,7 @@ package oreo;
 
 import battlecode.common.*;
 import oreo.communication.Channel;
+import oreo.communication.Encoding;
 import oreo.communication.Radio;
 
 public class PathBuilder {
@@ -23,15 +24,6 @@ public class PathBuilder {
         rc = rcin;
     }
 
-    public static Direction getDirection(int hashedMapLocation, int poi) throws GameActionException {
-        int broadcastedValue = rc.readBroadcast(Channel.NW_CORNER_BFS_DIRECTIONS + hashedMapLocation);
-        int direction = ((int)(broadcastedValue / (Math.pow(10, poi))) % 10) - 1;
-        if (direction == -1) {
-            return Direction.NONE;
-        }
-        return Direction.values()[direction];
-    }
-
     public static void initMapData() throws GameActionException {
         NWCorner = Radio.readMapLocationFromChannel(Channel.NW_MAP_CORNER);
         mapWidth = rc.readBroadcast(Channel.MAP_WIDTH);
@@ -51,11 +43,11 @@ public class PathBuilder {
         for (int i = 0; i < towerList.length; i++) {
             int relativeX = getRelativeMapLocationX(towerList[i].x);
             int relativeY = getRelativeMapLocationY(towerList[i].y);
-            rc.broadcast(Channel.POI[i], getHashedLocation(relativeX, relativeY));
+            rc.broadcast(Channel.POI[i], Encoding.getHashedLocation(relativeX, relativeY));
         }
         int relativeX = getRelativeMapLocationX(enemyHq.x);
         int relativeY = getRelativeMapLocationY(enemyHq.y);
-        rc.broadcast(Channel.POI[towerList.length], getHashedLocation(relativeX, relativeY));
+        rc.broadcast(Channel.POI[towerList.length], Encoding.getHashedLocation(relativeX, relativeY));
         rc.broadcast(Channel.NUMBER_OF_POIS, towerList.length + 1);
         rc.broadcast(Channel.BFS_LOOP_STATE, -1);
 
@@ -93,8 +85,8 @@ public class PathBuilder {
                 i = getLoopIndex(loopState);
             }
 
-            int currentX = getXCoordinate(currentLocationHashed);
-            int currentY = getYCoordinate(currentLocationHashed);
+            int currentX = Encoding.getXCoordinate(currentLocationHashed);
+            int currentY = Encoding.getYCoordinate(currentLocationHashed);
 
             //--Can use relative locations because directionTo will also remain relative.
             MapLocation currentLocation = new MapLocation(currentX, currentY);
@@ -104,7 +96,7 @@ public class PathBuilder {
                 if (Clock.getBytecodeNum() + approximateMaxByteCodeCost < bytecodeLimit) {
                     int nextX = currentX + xOffsets[i];
                     int nextY = currentY + yOffsets[i];
-                    int nextLocationHashed = getHashedLocation(nextX, nextY);
+                    int nextLocationHashed = Encoding.getHashedLocation(nextX, nextY);
 
                     if (nextX >= 0 && nextX <= mapWidth && nextY >= 0 && nextY <= mapHeight
                             && getTerrainTile(nextLocationHashed) == TerrainTile.NORMAL
@@ -198,18 +190,6 @@ public class PathBuilder {
         rc.broadcast(channelToBroadcastTo, valueToBroadcast);
     }
 
-    public static int getHashedLocation(int x, int y) {
-        return 120 * x + y;
-    }
-
-    private static int getXCoordinate(int hashedMapLocation) {
-        return hashedMapLocation / 120;
-    }
-
-    private static int getYCoordinate(int hashedMapLocation) {
-        return hashedMapLocation % 120;
-    }
-
     // Queue for BFS
     private static void enqueue(int value) throws GameActionException {
         //System.out.println("enqueued " + value + " to " + backOfQueue);
@@ -238,51 +218,5 @@ public class PathBuilder {
         rc.broadcast(Channel.BFS_QUEUE_BACK, Channel.BFS_QUEUE_START);
         rc.broadcast(Channel.BFS_QUEUE_FRONT, Channel.BFS_QUEUE_START);
         backOfQueue = Channel.BFS_QUEUE_START;
-    }
-
-    public static void printDirectionField(int poi) throws GameActionException {
-        int mapLocationHashed = rc.readBroadcast(Channel.POI[poi]);
-        int xc = getXCoordinate(mapLocationHashed);
-        int yc = getYCoordinate(mapLocationHashed);
-
-        for (int y = 0; y <= mapHeight; y++) {
-            for (int x = 0; x <= mapWidth; x++) {
-                if (x == xc && y == yc) {
-                    System.out.print("X");
-                    continue;
-                }
-                switch(getDirection(getHashedLocation(x, y), poi)) {
-                    case EAST:
-                        System.out.print(">");
-                        break;
-                    case WEST:
-                        System.out.print("<");
-                        break;
-                    case NORTH:
-                        System.out.print("^");
-                        break;
-                    case SOUTH:
-                        System.out.print("v");
-                        break;
-                    case NORTH_EAST:
-                        System.out.print("/");
-                        break;
-                    case NORTH_WEST:
-                        System.out.print("\\");
-                        break;
-                    case SOUTH_EAST:
-                        System.out.print("\\");
-                        break;
-                    case SOUTH_WEST:
-                        System.out.print("/");
-                        break;
-                    default:
-                        System.out.print("?");
-                }
-            }
-            System.out.println();
-        }
-        System.out.println();
-        System.out.println();
     }
 }

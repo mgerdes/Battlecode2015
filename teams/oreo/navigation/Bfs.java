@@ -4,11 +4,12 @@ import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
-import oreo.PathBuilder;
 import oreo.communication.Channel;
+import oreo.communication.Encoding;
 import oreo.communication.Radio;
 
 public class Bfs {
+    private static RobotController rc;
 
     private static MapLocation nwCorner;
 
@@ -16,6 +17,7 @@ public class Bfs {
     private static int minY;
 
     public static void init(RobotController rcIn) {
+        rc = rcIn;
         Radio.init(rcIn);
     }
 
@@ -32,9 +34,67 @@ public class Bfs {
         int y = currentLocation.y - minY;
 
         //--Read the channel corresponding to the relative current location
-        int hashedMapLocation = PathBuilder.getHashedLocation(x, y);
+        int hashedMapLocation = Encoding.getHashedLocation(x, y);
 
         //--Return the direction corresponding to the point of interest
-        return PathBuilder.getDirection(hashedMapLocation, pointOfInterest);
+        return getDirection(hashedMapLocation, pointOfInterest);
+    }
+
+    public static Direction getDirection(int hashedMapLocation, int poi) throws GameActionException {
+        int broadcastedValue = rc.readBroadcast(Channel.NW_CORNER_BFS_DIRECTIONS + hashedMapLocation);
+        int direction = ((int)(broadcastedValue / (Math.pow(10, poi))) % 10) - 1;
+        if (direction == -1) {
+            return Direction.NONE;
+        }
+        return Direction.values()[direction];
+    }
+
+    public static void printDirectionField(int poi) throws GameActionException {
+        int mapLocationHashed = rc.readBroadcast(Channel.POI[poi]);
+        int xc = Encoding.getXCoordinate(mapLocationHashed);
+        int yc = Encoding.getYCoordinate(mapLocationHashed);
+
+        int mapWidth = rc.readBroadcast(Channel.MAP_WIDTH);
+        int mapHeight = rc.readBroadcast(Channel.MAP_HEIGHT);
+
+        for (int y = 0; y <= mapHeight; y++) {
+            for (int x = 0; x <= mapWidth; x++) {
+                if (x == xc && y == yc) {
+                    System.out.print("X");
+                    continue;
+                }
+                switch(getDirection(Encoding.getHashedLocation(x, y), poi)) {
+                    case EAST:
+                        System.out.print(">");
+                        break;
+                    case WEST:
+                        System.out.print("<");
+                        break;
+                    case NORTH:
+                        System.out.print("^");
+                        break;
+                    case SOUTH:
+                        System.out.print("v");
+                        break;
+                    case NORTH_EAST:
+                        System.out.print("/");
+                        break;
+                    case NORTH_WEST:
+                        System.out.print("\\");
+                        break;
+                    case SOUTH_EAST:
+                        System.out.print("\\");
+                        break;
+                    case SOUTH_WEST:
+                        System.out.print("/");
+                        break;
+                    default:
+                        System.out.print("?");
+                }
+            }
+            System.out.println();
+        }
+        System.out.println();
+        System.out.println();
     }
 }
