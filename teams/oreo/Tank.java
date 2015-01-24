@@ -5,6 +5,7 @@ import oreo.communication.Channel;
 import oreo.communication.HqOrders;
 import oreo.communication.Radio;
 import oreo.constants.Order;
+import oreo.navigation.Bfs;
 import oreo.navigation.SafeBug;
 import oreo.util.Helper;
 
@@ -24,7 +25,9 @@ public class Tank {
         enemyTeam = myTeam.opponent();
         myHq = rc.senseHQLocation();
 
+        Bfs.init(rcC);
         SafeBug.init(rcC);
+        PathBuilder.init(rcC);
         SupplySharing.init(rcC);
         Radio.init(rcC);
         HqOrders.init(rcC);
@@ -44,14 +47,20 @@ public class Tank {
     }
 
     private static void doYourThing() throws GameActionException {
-        SupplySharing.shareOnlyWithType(RobotType.TANK);
-
-        Order order = HqOrders.getOrder(RobotType.TANK);
-        switch (order) {
-            case AttackEnemyStructure:
-                attackEnemyStructure();
-                break;
+        MapLocation currentLocation = rc.getLocation();
+        Direction bfs = Bfs.getDirection(currentLocation, 6);
+        if (rc.isCoreReady()) {
+            rc.move(bfs);
         }
+
+//        SupplySharing.shareOnlyWithType(RobotType.TANK);
+//
+//        Order order = HqOrders.getOrder(RobotType.TANK);
+//        switch (order) {
+//            case AttackEnemyStructure:
+//                attackEnemyStructure();
+//                break;
+//        }
     }
 
     private static void attackEnemyStructure() throws GameActionException {
@@ -68,7 +77,8 @@ public class Tank {
             }
         }
 
-        MapLocation structureToAttack = Radio.readMapLocationFromChannel(Channel.STRUCTURE_TO_ATTACK);
+        int poiToAttack = rc.readBroadcast(Channel.POI_TO_ATTACK);
+        MapLocation structureToAttack = null;
 
         //--If there are launchers nearby, it is priority
         RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.TANK.sensorRadiusSquared, enemyTeam);

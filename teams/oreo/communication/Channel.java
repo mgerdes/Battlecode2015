@@ -2,7 +2,6 @@ package oreo.communication;
 
 public class Channel {
     //--Locations (all need 2 channels)
-    public static final int STRUCTURE_TO_ATTACK = 0;
     public static final int RALLY_POINT = 2;
     public static final int OUR_TOWER_WITH_LOWEST_VOID_COUNT = 4;
     public static final int NE_MAP_CORNER = 6;

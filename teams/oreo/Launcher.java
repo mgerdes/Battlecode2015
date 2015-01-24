@@ -19,6 +19,8 @@ public class Launcher {
     private static final int MAXIMUM_DISTANCE_SQUARED_TO_GO_TO_HQ_FOR_SUPPLY = 100;
 
     public static void run(RobotController rcC) {
+        rcC.disintegrate();
+
         rc = rcC;
 
         myTeam = rc.getTeam();
@@ -78,7 +80,7 @@ public class Launcher {
 
         //--If there are no nearby enemies, move closer
         if (enemiesInSensorRange.length == 0) {
-            MapLocation structureToAttack = Radio.readMapLocationFromChannel(Channel.STRUCTURE_TO_ATTACK);
+            MapLocation structureToAttack = null;
             SafeBug.setDestination(structureToAttack);
             Direction direction = SafeBug.getDirection(currentLocation, structureToAttack);
 

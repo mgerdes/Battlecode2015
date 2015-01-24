@@ -292,7 +292,6 @@ public class HQ {
         //--else return enemy HQ
         MapLocation[] enemyTowerLocations = rc.senseEnemyTowerLocations();
         if (enemyTowerLocations.length == 0) {
-            Radio.setMapLocationOnChannel(enemyHqLocation, Channel.STRUCTURE_TO_ATTACK);
             return;
         }
 
@@ -306,7 +305,6 @@ public class HQ {
             }
         }
 
-        Radio.setMapLocationOnChannel(enemyTowerLocations[index], Channel.STRUCTURE_TO_ATTACK);
     }
 
     private static void queueSupplyTowers() throws GameActionException {

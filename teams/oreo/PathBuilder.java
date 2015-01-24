@@ -198,7 +198,7 @@ public class PathBuilder {
         rc.broadcast(channelToBroadcastTo, valueToBroadcast);
     }
 
-    private static int getHashedLocation(int x, int y) {
+    public static int getHashedLocation(int x, int y) {
         return 120 * x + y;
     }
 
