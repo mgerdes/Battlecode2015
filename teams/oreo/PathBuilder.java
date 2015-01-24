@@ -45,6 +45,7 @@ public class PathBuilder {
             int relativeY = getRelativeMapLocationY(towerList[i].y);
             rc.broadcast(Channel.POI[i], Encoding.getHashedLocation(relativeX, relativeY));
         }
+
         int relativeX = getRelativeMapLocationX(enemyHq.x);
         int relativeY = getRelativeMapLocationY(enemyHq.y);
         rc.broadcast(Channel.POI[towerList.length], Encoding.getHashedLocation(relativeX, relativeY));

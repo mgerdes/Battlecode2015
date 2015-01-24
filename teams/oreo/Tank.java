@@ -47,6 +47,10 @@ public class Tank {
     }
 
     private static void doYourThing() throws GameActionException {
+        if (Clock.getRoundNum() < 1000) {
+            return;
+        }
+
         MapLocation currentLocation = rc.getLocation();
         Direction bfs = Bfs.getDirection(currentLocation, 6);
         if (rc.isCoreReady()) {
