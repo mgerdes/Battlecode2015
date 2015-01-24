@@ -75,6 +75,7 @@ public class HQ {
         RobotInfo[] friendlyRobots = rc.senseNearbyRobots(1000000, myTeam);
 
         updateSpawningAndOrders();
+        queueSupplyTowers();
         queueBuildings();
 
         updateRallyPoint();
@@ -252,23 +253,15 @@ public class HQ {
         BuildingQueue.addBuilding(Building.MINER_FACTORY);
         BuildingQueue.addBuilding(Building.BARRACKS);
         BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
+        BuildingQueue.addBuilding(Building.HELIPAD);
+        
+        //--Building everything for testing
+        BuildingQueue.addBuilding(Building.AEROSPACE_LAB);
         BuildingQueue.addBuilding(Building.TANK_FACTORY);
-        BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
-        BuildingQueue.addBuilding(Building.TANK_FACTORY);
-        BuildingQueue.addBuilding(Building.BARRACKS);
     }
 
     private static void queueBuildings() throws GameActionException {
-        queueSupplyTowers();
-
-        //--We want to have a bunch of tank factories, but we should
-        //  give our initial buildings enough time to build
-        if (Clock.getRoundNum() > 700
-                && rc.getTeamOre() > RobotType.TANKFACTORY.oreCost) {
-            BuildingQueue.addBuildingWithPostDelay(
-                    Building.TANK_FACTORY,
-                    (int) (RobotType.TANKFACTORY.buildTurns * 1.3));
-        }
+        //--Add building on the fly
     }
 
     private static void updateRallyPoint() throws GameActionException {
@@ -319,7 +312,8 @@ public class HQ {
         int supplyConsumption = rc.readBroadcast(Channel.LAUNCHER_COUNT) * RobotType.LAUNCHER.supplyUpkeep
                 + rc.readBroadcast(Channel.MINER_COUNT) * RobotType.MINER.supplyUpkeep
                 + rc.readBroadcast(Channel.SOLDIER_COUNT) * RobotType.SOLDIER.supplyUpkeep
-                + rc.readBroadcast(Channel.DRONE_COUNT) * RobotType.DRONE.supplyUpkeep;
+                + rc.readBroadcast(Channel.DRONE_COUNT) * RobotType.DRONE.supplyUpkeep
+                + rc.readBroadcast(Channel.TANK_COUNT) * RobotType.TANK.supplyUpkeep;
 
         int numberOfSupplyTowers = rc.readBroadcast(Channel.SUPPLY_DEPOT_COUNT);
 
@@ -333,23 +327,21 @@ public class HQ {
     }
 
     private static void updateSpawningAndOrders() throws GameActionException {
-        //--Spawn up to 35 miners
+        //--Miners
         int minerCount = rc.readBroadcast(Channel.MINER_COUNT);
         HqOrders.setSpawn(RobotType.MINER, minerCount < 35 ? SPAWN_ON : SPAWN_OFF);
 
-        //--Spawn tanks!
+        //--Soldiers
+        int soldierCount = rc.readBroadcast(Channel.SOLDIER_COUNT);
+        HqOrders.setSpawn(RobotType.SOLDIER, soldierCount < 40 ? SPAWN_ON : SPAWN_OFF);
+        HqOrders.setDefaultFor(RobotType.SOLDIER, Order.Swarm);
+
+        //--Launchers
+        HqOrders.setSpawn(RobotType.LAUNCHER, SPAWN_ON);
+        HqOrders.setDefaultFor(RobotType.LAUNCHER, Order.AttackEnemyStructure);
+
+        //--Tanks
         HqOrders.setSpawn(RobotType.TANK, SPAWN_ON);
-
-        //--Set orders
-        if (towersFormWall) {
-            HqOrders.setSpawn(RobotType.SOLDIER, SPAWN_OFF);
-        }
-        else {
-            int soldierCount = rc.readBroadcast(Channel.SOLDIER_COUNT);
-            HqOrders.setSpawn(RobotType.SOLDIER, soldierCount < 40 ? SPAWN_ON : SPAWN_OFF);
-            HqOrders.setDefaultFor(RobotType.SOLDIER, Order.Swarm);
-        }
-
         HqOrders.setDefaultFor(RobotType.TANK, Order.AttackEnemyStructure);
     }
 
@@ -401,8 +393,8 @@ public class HQ {
             return false;
         }
 
-        int minerCount = rc.readBroadcast(Channel.MINER_COUNT);
-        return minerCount > 10;
+        //--Build the second beaver after we have started a mining factory
+        return rc.checkDependencyProgress(RobotType.MINER) != DependencyProgress.NONE;
     }
 
     private static void spawn(RobotType type) throws GameActionException {
