@@ -232,8 +232,8 @@ public class PathBuilder {
         backOfQueue = Channel.BFS_QUEUE_START;
     }
 
-    public static void printDirectionField() throws GameActionException {
-        int mapLocationHashed = rc.readBroadcast(Channel.POI[0]);
+    public static void printDirectionField(int poi) throws GameActionException {
+        int mapLocationHashed = rc.readBroadcast(Channel.POI[poi]);
         int xc = getXCoordinate(mapLocationHashed);
         int yc = getYCoordinate(mapLocationHashed);
 
@@ -243,7 +243,7 @@ public class PathBuilder {
                     System.out.print("X");
                     continue;
                 }
-                switch(getDirection(getHashedLocation(x, y), 0)) {
+                switch(getDirection(getHashedLocation(x, y), poi)) {
                     case EAST:
                         System.out.print(">");
                         break;
