@@ -42,6 +42,8 @@ public class Drone {
 
     private static boolean mapEncoderInitialized = false;
 
+    private static boolean surveyingAndGettingSupply = false;
+
     public static void run(RobotController rcC) {
         rc = rcC;
 
@@ -76,7 +78,6 @@ public class Drone {
         switch (order) {
             case SurveyMap:
                 Debug.setString(0, "surveying...", rc);
-                SupplySharing.share();
                 surveyMap();
                 break;
             case Swarm:
@@ -153,7 +154,31 @@ public class Drone {
     }
 
     private static void surveyMap() throws GameActionException {
-        if (!rc.isCoreReady()) {
+        //--Make sure we have enough supply to work
+        if (surveyingAndGettingSupply) {
+            if (rc.getSupplyLevel() > 1500) {
+                surveyingAndGettingSupply = false;
+            }
+            else {
+                SafeBug.setDestination(myHqLocation);
+                Direction direction = SafeBug.getDirection(rc.getLocation());
+                if (direction != Direction.NONE) {
+                    rc.move(direction);
+                }
+
+                return;
+            }
+        }
+
+        if (!surveyingAndGettingSupply
+                && rc.getSupplyLevel() < 500) {
+            surveyingAndGettingSupply = true;
+            SafeBug.setDestination(myHqLocation);
+            Direction direction = SafeBug.getDirection(rc.getLocation());
+            if (direction != Direction.NONE) {
+                rc.move(direction);
+            }
+
             return;
         }
 
@@ -162,11 +187,14 @@ public class Drone {
                 MapEncoder.init(rc);
             }
 
+            //--Are there any locations to survey?
             int locationQueueHead = rc.readBroadcast(Channel.SURVEY_LOCATION_QUEUE_HEAD);
             if (locationQueueHead == 0) {
+                Debug.setString(2, "nowhere to survey", rc);
                 return;
             }
 
+            //--Check if the location to survey is visible
             int locationQueueTail = rc.readBroadcast(Channel.SURVEY_LOCATION_QUEUE_TAIL);
             int hashedMapLocation = rc.readBroadcast(locationQueueHead);
             MapLocation destination = MapEncoder.getAbsoluteMapLocationFromHash(hashedMapLocation);
@@ -174,38 +202,33 @@ public class Drone {
             //--Try to read the map location
             TerrainTile destinationTile = rc.senseTerrainTile(destination);
 
-            //--If it is unknown, go closer
-            if (destinationTile == TerrainTile.UNKNOWN) {
-                Debug.setString(1, "going to " + destination.toString(), rc);
-                SafeBug.setDestination(destination);
-
-                Direction direction = SafeBug.getDirection(rc.getLocation());
-                if (direction != Direction.NONE) {
-                    rc.move(direction);
-                }
-
-                return;
-            }
-
-            //--If it is known, broadcast the tile and its reflection
-            //--Then increment the head by one
-            do {
-                int offset = MapEncoder.getHashForAbsoluteMapLocation(destination);
-                rc.broadcast(Channel.NW_CORNER_TERRAIN_TILE + offset, destinationTile.ordinal());
-                int reflectedOffset = MapEncoder.getReflectedChannelOffset(offset);
+            //--If we can read this location, keep reading!
+            while (destinationTile != TerrainTile.UNKNOWN) {
+                rc.broadcast(Channel.NW_CORNER_TERRAIN_TILE + hashedMapLocation, destinationTile.ordinal());
+                int reflectedOffset = MapEncoder.getReflectedChannelOffset(hashedMapLocation);
                 rc.broadcast(Channel.NW_CORNER_TERRAIN_TILE + reflectedOffset, destinationTile.ordinal());
                 locationQueueHead++;
 
-                //--Try to do another
+                //--get the next one
                 hashedMapLocation = rc.readBroadcast(locationQueueHead);
                 destination = MapEncoder.getAbsoluteMapLocationFromHash(hashedMapLocation);
                 destinationTile = rc.senseTerrainTile(destination);
-            } while (Clock.getBytecodesLeft() > 500
-                        && destinationTile != TerrainTile.UNKNOWN
-                        && locationQueueHead < locationQueueTail);
+            }
 
-            //--Update queue head
             rc.broadcast(Channel.SURVEY_LOCATION_QUEUE_HEAD, locationQueueHead);
+
+            //--The location is not visible, let's go there!
+            if (!rc.isCoreReady()) {
+                return;
+            }
+
+            Debug.setString(1, "going to " + destination.toString(), rc);
+            SafeBug.setDestination(destination);
+
+            Direction direction = SafeBug.getDirection(rc.getLocation());
+            if (direction != Direction.NONE) {
+                rc.move(direction);
+            }
         }
 
         if (symmetry == Symmetry.UNKNOWN) {
