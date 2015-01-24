@@ -35,6 +35,9 @@ public class HQ {
     private static boolean printedMapDataForDebug;
     private static boolean mapBuilderInitialized;
     private static boolean allTerrainTilesBroadcast;
+    private static boolean pathBuilderSetup;
+
+    private static int lastRound = 0;
 
     public static void run(RobotController rcC) throws GameActionException {
         rc = rcC;
@@ -50,6 +53,7 @@ public class HQ {
         Radio.init(rcC);
         SupplySharing.init(rcC);
         MessageBoard.init(rcC);
+        PathBuilder.init(rcC);
 
         analyzeMap();
         initializeChannels();
@@ -93,6 +97,13 @@ public class HQ {
             }
         }
 
+        if (Clock.getRoundNum() > 800) {
+            if (!pathBuilderSetup) {
+                PathBuilder.setup(enemyTowers, enemyHqLocation);
+                pathBuilderSetup = true;
+            }
+        }
+
         broadcastAllTerrainTiles();
     }
 
@@ -113,10 +124,10 @@ public class HQ {
                               rc.readBroadcast(Channel.MAP_HEIGHT));
 
             System.out.printf("\nNE %s\nSE %s\nSW %s\nNW %s\n",
-                              Radio.readMapLocationFromChannel(Channel.NE_MAP_CORNER),
-                              Radio.readMapLocationFromChannel(Channel.SE_MAP_CORNER),
-                              Radio.readMapLocationFromChannel(Channel.SW_MAP_CORNER),
-                              Radio.readMapLocationFromChannel(Channel.NW_MAP_CORNER));
+                    Radio.readMapLocationFromChannel(Channel.NE_MAP_CORNER),
+                    Radio.readMapLocationFromChannel(Channel.SE_MAP_CORNER),
+                    Radio.readMapLocationFromChannel(Channel.SW_MAP_CORNER),
+                    Radio.readMapLocationFromChannel(Channel.NW_MAP_CORNER));
 
             printedMapDataForDebug = true;
         }
