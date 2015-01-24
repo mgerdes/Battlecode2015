@@ -40,6 +40,8 @@ public class Drone {
     private static int valueAtBeginningOfPass;
     private static Direction segmentTravelDirection;
 
+    private static boolean mapEncoderInitialized = false;
+
     public static void run(RobotController rcC) {
         rc = rcC;
 
@@ -156,20 +158,54 @@ public class Drone {
         }
 
         if (sizeAndCornersBroadcasted) {
-            MapLocation destination = Radio.readMapLocationFromChannel(Channel.LOCATION_TO_SURVEY);
-            if (destination == null) {
+            if (!mapEncoderInitialized) {
+                MapEncoder.init(rc);
+            }
+
+            int locationQueueHead = rc.readBroadcast(Channel.SURVEY_LOCATION_QUEUE_HEAD);
+            if (locationQueueHead == 0) {
                 return;
             }
-            else {
-                Debug.setString(1, "going to " + destination.toString(), rc);
 
-                //--Fly directly east of the location so that other locations can be revealed
-                SafeBug.setDestination(destination.add(Direction.EAST, 5));
+            int locationQueueTail = rc.readBroadcast(Channel.SURVEY_LOCATION_QUEUE_TAIL);
+            int hashedMapLocation = rc.readBroadcast(locationQueueHead);
+            MapLocation destination = MapEncoder.getAbsoluteMapLocationFromHash(hashedMapLocation);
+
+            //--Try to read the map location
+            TerrainTile destinationTile = rc.senseTerrainTile(destination);
+
+            //--If it is unknown, go closer
+            if (destinationTile == TerrainTile.UNKNOWN) {
+                Debug.setString(1, "going to " + destination.toString(), rc);
+                SafeBug.setDestination(destination);
+
                 Direction direction = SafeBug.getDirection(rc.getLocation());
                 if (direction != Direction.NONE) {
                     rc.move(direction);
                 }
+
+                return;
             }
+
+            //--If it is known, broadcast the tile and its reflection
+            //--Then increment the head by one
+            do {
+                int offset = MapEncoder.getHashForAbsoluteMapLocation(destination);
+                rc.broadcast(Channel.NW_CORNER_TERRAIN_TILE + offset, destinationTile.ordinal());
+                int reflectedOffset = MapEncoder.getReflectedChannelOffset(offset);
+                rc.broadcast(Channel.NW_CORNER_TERRAIN_TILE + reflectedOffset, destinationTile.ordinal());
+                locationQueueHead++;
+
+                //--Try to do another
+                hashedMapLocation = rc.readBroadcast(locationQueueHead);
+                destination = MapEncoder.getAbsoluteMapLocationFromHash(hashedMapLocation);
+                destinationTile = rc.senseTerrainTile(destination);
+            } while (Clock.getBytecodesLeft() > 500
+                        && destinationTile != TerrainTile.UNKNOWN
+                        && locationQueueHead < locationQueueTail);
+
+            //--Update queue head
+            rc.broadcast(Channel.SURVEY_LOCATION_QUEUE_HEAD, locationQueueHead);
         }
 
         if (symmetry == Symmetry.UNKNOWN) {
@@ -184,11 +220,11 @@ public class Drone {
             findCornerAndBroadcastMapDataForRotationalSymmetry();
         }
         else {
-            surveryAndBroadcastDataForReflectedMap();
+            surveyAndBroadcastDataForReflectedMap();
         }
     }
 
-    private static void surveryAndBroadcastDataForReflectedMap() throws GameActionException {
+    private static void surveyAndBroadcastDataForReflectedMap() throws GameActionException {
         //--The distance between our hq and the wall will tell us one of the map dimensions
         //--Then travel back and forth in the other direction to find the other map dimension
         if (!reflectionFoundFirstEdge) {

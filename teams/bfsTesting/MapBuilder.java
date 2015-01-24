@@ -10,43 +10,40 @@ public class MapBuilder {
 
     private static int mapWidth;
     private static int mapHeight;
-    private static int minX;
-    private static int minY;
 
     private static int totalTileCount;
     private static int tilesBroadcastCount;
 
     private static MapLocation myHq;
 
-    private static int symmetryType;
 
     private static int xLoop = 0;
     private static int yLoop = 0;
 
-    public static boolean broadcastSurveyLocationThisTurn;
+    public static int queueTail;
 
     private static final int MAX_BYTECODES_CONSUMED_IN_ONE_LOOP_PASS = 220;
 
     private static boolean[][] wasBroadcast;
 
-    public static void init(int mapWidthC,
-                            int mapHeightC,
-                            MapLocation nwCornerC,
-                            int symmetryTypeC,
-                            MapLocation myHqC,
-                            RobotController rcC) {
-        mapWidth = mapWidthC;
-        mapHeight = mapHeightC;
-        minX = nwCornerC.x;
-        minY = nwCornerC.y;
-        symmetryType = symmetryTypeC;
+    public static void init(MapLocation myHqC,
+                            RobotController rcC) throws GameActionException {
+
+        mapWidth = rcC.readBroadcast(Channel.MAP_WIDTH);
+        mapHeight = rcC.readBroadcast(Channel.MAP_HEIGHT);
         myHq = myHqC;
         rc = rcC;
 
+        MapEncoder.init(mapWidth, mapHeight, rcC);
+
         wasBroadcast = new boolean[mapWidth][mapHeight];
 
-        totalTileCount = mapHeightC * mapWidthC;
+        totalTileCount = mapHeight * mapWidth;
         tilesBroadcastCount = 0;
+        queueTail = Channel.SURVEY_LOCATION_QUEUE_START;
+
+        //--Initialize queue head
+        rc.broadcast(Channel.SURVEY_LOCATION_QUEUE_HEAD, Channel.SURVEY_LOCATION_QUEUE_START);
     }
 
     //--This method should be called by one robot
@@ -55,17 +52,14 @@ public class MapBuilder {
     public static boolean processUntilComplete(int bytecodeLimit) throws GameActionException {
         int initialBytecodeValue = Clock.getBytecodeNum();
         int finalBytecodeValue = initialBytecodeValue + bytecodeLimit;
-        broadcastSurveyLocationThisTurn = false;
 
         //--Start the loop where we left off
         for (; xLoop < mapWidth; xLoop++) {
             for (; yLoop < mapHeight; yLoop++) {
+                //--Stop when we run out of bytecodes
                 if (Clock.getBytecodeNum() > finalBytecodeValue - MAX_BYTECODES_CONSUMED_IN_ONE_LOOP_PASS) {
-                    System.out.printf(
-                            "%d, %d: Broadcast %f percent of tiles\n",
-                            xLoop,
-                            yLoop,
-                            (double) tilesBroadcastCount / totalTileCount * 100);
+                    System.out.printf("Queue tail is %d\n", queueTail);
+                    rc.broadcast(Channel.SURVEY_LOCATION_QUEUE_TAIL, queueTail);
                     return false;
                 }
 
@@ -73,8 +67,8 @@ public class MapBuilder {
                     continue;
                 }
 
-                MapLocation locationToCheck = getAbsoluteMapLocationForRelativeCoordinates(xLoop, yLoop);
-                MapLocation reflected = getReflectedMapLocation(locationToCheck);
+                MapLocation locationToCheck = MapEncoder.getAbsoluteMapLocationForRelativeCoordinates(xLoop, yLoop);
+                MapLocation reflected = MapEncoder.getReflectedMapLocation(locationToCheck);
                 TerrainTile tile = rc.senseTerrainTile(locationToCheck);
 
                 //--If tile is unknown check reflected tile
@@ -82,37 +76,27 @@ public class MapBuilder {
                     tile = rc.senseTerrainTile(reflected);
                 }
 
-                //--If reflected tile is unknown, we may broadcast the location
+                //--If reflected tile is unknown, broadcast the one closer to our HQ
                 if (tile == TerrainTile.UNKNOWN) {
-                    if (broadcastSurveyLocationThisTurn) {
-                        continue;
-                    }
-
-                    //--If a survey location that was broadcast is still unknown, do not overwrite it
-                    MapLocation currentSurveyLocation = Radio.readMapLocationFromChannel(Channel.LOCATION_TO_SURVEY);
-                    if (currentSurveyLocation != null
-                            && !wasBroadcast[currentSurveyLocation.x - minX][currentSurveyLocation.y - minY]) {
-                        continue;
-                    }
-
                     MapLocation closerToOurHq =
                             myHq.distanceSquaredTo(locationToCheck) < myHq.distanceSquaredTo(reflected)
                             ? locationToCheck
                             : reflected;
-                    Radio.setMapLocationOnChannel(closerToOurHq, Channel.LOCATION_TO_SURVEY);
-                    broadcastSurveyLocationThisTurn = true;
+                    rc.broadcast(queueTail++, MapEncoder.getHashForAbsoluteMapLocation(closerToOurHq));
                 }
                 else {
-                    int offsetForFirstLocation = getHashForRelativeCoordinates(xLoop, yLoop);
-                    int offsetForReflectedLocation = getReflectedChannelOffset(offsetForFirstLocation);
+                    int offsetForFirstLocation = MapEncoder.getHashForRelativeCoordinates(xLoop, yLoop);
+                    int offsetForReflectedLocation = MapEncoder.getReflectedChannelOffset(offsetForFirstLocation);
                     rc.broadcast(
                             Channel.NW_CORNER_TERRAIN_TILE + offsetForFirstLocation,
                             tile.ordinal());
                     rc.broadcast(
                             Channel.NW_CORNER_TERRAIN_TILE + offsetForReflectedLocation,
                             tile.ordinal());
-                    wasBroadcast[getXValue(offsetForFirstLocation)][getYValue(offsetForFirstLocation)] = true;
-                    wasBroadcast[getXValue(offsetForReflectedLocation)][getYValue(offsetForReflectedLocation)] = true;
+                    wasBroadcast[MapEncoder.getXValue(offsetForFirstLocation)]
+                            [MapEncoder.getYValue(offsetForFirstLocation)] = true;
+                    wasBroadcast[MapEncoder.getXValue(offsetForReflectedLocation)]
+                            [MapEncoder.getYValue(offsetForReflectedLocation)] = true;
                     tilesBroadcastCount += 2;
                 }
             }
@@ -120,57 +104,7 @@ public class MapBuilder {
             yLoop = 0;
         }
 
-        xLoop = 0;
-
         System.out.printf("Broadcast %f percent of tiles\n", (double) tilesBroadcastCount / totalTileCount * 100);
-        return tilesBroadcastCount == totalTileCount;
-    }
-
-    private static MapLocation getAbsoluteMapLocationForRelativeCoordinates(int x, int y) {
-        return new MapLocation(minX + x, minY + y);
-    }
-
-    public static MapLocation getReflectedMapLocation(MapLocation location) {
-        switch (symmetryType) {
-            case Symmetry.VERTICAL:
-                return new MapLocation(2 * minX + mapWidth - location.x - 1, location.y);
-            case Symmetry.HORIZONTAL:
-                return new MapLocation(location.x, 2 * minY + mapHeight - location.y - 1);
-            case Symmetry.ROTATION:
-                return new MapLocation(
-                        2 * minX + mapWidth - location.x - 1,
-                        2 * minY + mapHeight - location.y - 1);
-        }
-
-        return null;
-    }
-
-    public static int getReflectedChannelOffset(int relativeAddress) {
-        switch (symmetryType) {
-            case Symmetry.VERTICAL:
-                int verticalX = mapWidth - getXValue(relativeAddress) - 1;
-                return getHashForRelativeCoordinates(verticalX, getYValue(relativeAddress));
-            case Symmetry.HORIZONTAL:
-                int horizontalY = mapHeight - getYValue(relativeAddress) - 1;
-                return getHashForRelativeCoordinates(getXValue(relativeAddress), horizontalY);
-            case Symmetry.ROTATION:
-                int rotatedX = mapWidth - getXValue(relativeAddress) - 1;
-                int rotatedY = mapHeight - getYValue(relativeAddress) - 1;
-                return getHashForRelativeCoordinates(rotatedX, rotatedY);
-        }
-
-        return -1;
-    }
-
-    private static int getXValue(int channel) {
-        return channel / 120;
-    }
-
-    private static int getYValue(int channel) {
-        return channel % 120;
-    }
-
-    private static int getHashForRelativeCoordinates(int x, int y) {
-        return 120 * x + y;
+        return true;
     }
 }

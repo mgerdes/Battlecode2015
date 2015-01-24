@@ -45,16 +45,17 @@ public class Launcher {
 
     private static void doYourThing() throws GameActionException {
         SupplySharing.shareOnlyWithType(RobotType.LAUNCHER);
+        attackEnemyStructure();
 
-        Order order = MessageBoard.getOrder(RobotType.LAUNCHER);
-        switch (order) {
-            case Rally:
-                rally();
-                break;
-            case AttackEnemyStructure:
-                attackEnemyStructure();
-                break;
-        }
+//        Order order = MessageBoard.getOrder(RobotType.LAUNCHER);
+//        switch (order) {
+//            case Rally:
+//                rally();
+//                break;
+//            case AttackEnemyStructure:
+//                attackEnemyStructure();
+//                break;
+//        }
     }
 
     private static void rally() throws GameActionException {

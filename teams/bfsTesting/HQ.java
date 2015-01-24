@@ -102,12 +102,7 @@ public class HQ {
         }
 
         if (!mapBuilderInitialized) {
-            MapBuilder.init(rc.readBroadcast(Channel.MAP_WIDTH),
-                            rc.readBroadcast(Channel.MAP_HEIGHT),
-                            Radio.readMapLocationFromChannel(Channel.NW_MAP_CORNER),
-                            rc.readBroadcast(Channel.MAP_SYMMETRY),
-                            myHqLocation,
-                            rc);
+            MapBuilder.init(myHqLocation, rc);
             mapBuilderInitialized = true;
         }
 
@@ -122,12 +117,6 @@ public class HQ {
                               Radio.readMapLocationFromChannel(Channel.SE_MAP_CORNER),
                               Radio.readMapLocationFromChannel(Channel.SW_MAP_CORNER),
                               Radio.readMapLocationFromChannel(Channel.NW_MAP_CORNER));
-
-            System.out.println("my hq" + myHqLocation);
-            System.out.println("my hq" + MapBuilder.getReflectedMapLocation(enemyHqLocation));
-
-            System.out.println("enemy hq" + enemyHqLocation);
-            System.out.println("enemy hq" + MapBuilder.getReflectedMapLocation(myHqLocation));
 
             printedMapDataForDebug = true;
         }
