@@ -30,6 +30,7 @@ public class Miner {
         Bug.init(rcC);
         SupplySharing.init(rcC);
         Radio.init(rcC);
+        PathBuilder.init(rcC);
 
         loop();
     }
@@ -94,6 +95,9 @@ public class Miner {
                 rc.mine();
             }
         }
+
+        if (Clock.getRoundNum() > 810)
+            PathBuilder.build(Clock.getBytecodesLeft());
     }
 
     private static Direction findDirectionMostAwayFromOurHqWithOre(MapLocation currentLocation) {

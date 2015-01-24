@@ -10,14 +10,34 @@ public class PathBuilder {
     static int[] xOffsets = {1,0,-1, 0,-1,1,-1, 1};
     static int[] yOffsets = {0,1, 0,-1,-1,1, 1,-1};
 
+    static int backOfQueue;
+
+    // locally stored map data
+    static boolean initedMapData;
+    static MapLocation NWCorner;
+    static int mapWidth;
+    static int mapHeight;
+    static TerrainTile[] terrainTiles;
+
     public static void init(RobotController rcin) {
         rc = rcin;
     }
 
     public static Direction getDirection(int hashedMapLocation, int poi) throws GameActionException {
         int broadcastedValue = rc.readBroadcast(Channel.NW_CORNER_BFS_DIRECTIONS + hashedMapLocation);
-        int direction = (int)(broadcastedValue / (Math.pow(10, poi - 1))) % 10 - 1;
+        int direction = ((int)(broadcastedValue / (Math.pow(10, poi))) % 10) - 1;
+        if (direction == -1) {
+            return Direction.NONE;
+        }
         return Direction.values()[direction];
+    }
+
+    public static void initMapData() throws GameActionException {
+        NWCorner = Radio.readMapLocationFromChannel(Channel.NW_MAP_CORNER);
+        mapWidth = rc.readBroadcast(Channel.MAP_WIDTH);
+        mapHeight = rc.readBroadcast(Channel.MAP_HEIGHT);
+        initedMapData = true;
+        terrainTiles = TerrainTile.values();
     }
 
     public static void setup(MapLocation[] towerList, MapLocation enemyHq) throws GameActionException {
@@ -26,6 +46,8 @@ public class PathBuilder {
 
         //--broadcast all of destinations (point of interests)
         //--broad the number of POI
+        if (!initedMapData) initMapData();
+
         for (int i = 0; i < towerList.length; i++) {
             int relativeX = getRelativeMapLocationX(towerList[i].x);
             int relativeY = getRelativeMapLocationY(towerList[i].y);
@@ -34,24 +56,41 @@ public class PathBuilder {
         int relativeX = getRelativeMapLocationX(enemyHq.x);
         int relativeY = getRelativeMapLocationY(enemyHq.y);
         rc.broadcast(Channel.POI[towerList.length], getHashedLocation(relativeX, relativeY));
-        rc.broadcast(Channel.NUMBER_OF_POIS, towerList.length);
-
-        beginBuild(1);
-
+        rc.broadcast(Channel.NUMBER_OF_POIS, towerList.length + 1);
         rc.broadcast(Channel.BFS_LOOP_STATE, -1);
+
+        beginBuild(0);
     }
 
     public static void build(int bytecodeLimit) throws GameActionException {
-        int currentPOI = rc.readBroadcast(Channel.CURRENT_POI);
+        if (!initedMapData) initMapData();
+
         int loopState = rc.readBroadcast(Channel.BFS_LOOP_STATE);
 
-        while (!isQueueEmpty() || loopState != -1 /* not sure if this is needed */) {
+        int currentPOI = rc.readBroadcast(Channel.CURRENT_POI);
+        if (currentPOI == rc.readBroadcast(Channel.NUMBER_OF_POIS)) {
+            return;
+        }
 
+        backOfQueue = rc.readBroadcast(Channel.BFS_QUEUE_BACK);
+
+        // debuging
+        //int loopStateLocation = getCurrentLocationHashed(loopState);
+        //System.out.println("Current poi : " + currentPOI);
+        //System.out.println("loop state index : " + getLoopIndex(loopState));
+        //System.out.println("loop state current position : "
+        //        + getXCoordinate(loopStateLocation) + ", "
+        //        + getYCoordinate(loopStateLocation));
+        //System.out.println("Current destination: " + rc.readBroadcast(Channel.POI[currentPOI - 1]));
+
+        while (!isQueueEmpty()) {
             int currentLocationHashed;
+            int i = 0;
             if (loopState == -1) {
                 currentLocationHashed = dequeue();
             } else {
                 currentLocationHashed = getCurrentLocationHashed(loopState);
+                i = getLoopIndex(loopState);
             }
 
             int currentX = getXCoordinate(currentLocationHashed);
@@ -60,50 +99,50 @@ public class PathBuilder {
             //--Can use relative locations because directionTo will also remain relative.
             MapLocation currentLocation = new MapLocation(currentX, currentY);
 
-            for (int i = 0; i < 8; i++) {
-                if (loopState != -1) {
-                    i = getLoopIndex(loopState);
-                }
-                int approximateByteCodeCost = 200;
-                if (Clock.getBytecodeNum() + approximateByteCodeCost < bytecodeLimit) {
+            for (; i < 8; i++) {
+                int approximateMaxByteCodeCost = 230; // Each iteration of loop below is ~75, beginBuild is ~155
+                if (Clock.getBytecodeNum() + approximateMaxByteCodeCost < bytecodeLimit) {
                     int nextX = currentX + xOffsets[i];
                     int nextY = currentY + yOffsets[i];
                     int nextLocationHashed = getHashedLocation(nextX, nextY);
-                    if (getTerrainTile(nextLocationHashed) == TerrainTile.NORMAL
+
+                    if (nextX >= 0 && nextX <= mapWidth && nextY >= 0 && nextY <= mapHeight
+                            && getTerrainTile(nextLocationHashed) == TerrainTile.NORMAL
                             && !wasVisited(nextLocationHashed, currentPOI)) { // cost ~ 10
                         MapLocation nextLocation = new MapLocation(nextX, nextY);
                         Direction directionToGo = nextLocation.directionTo(currentLocation); // cost ~ 10
                         broadcastDirection(directionToGo.ordinal(), nextLocationHashed, currentPOI); // cost ~ 30
-                        enqueue(nextLocationHashed); // cost ~ 55
+                        enqueue(nextLocationHashed); // cost ~ 25
                     }
-                }
-                else {
+                } else {
                     int loopStateToBroadcast = getLoopState(i, currentLocationHashed);
+                    updateBackOfQueue(); // cost ~ 25
                     rc.broadcast(Channel.BFS_LOOP_STATE, loopStateToBroadcast); // cost ~ 25
                     return;
                 }
-                if (loopState != -1) {
-                    rc.broadcast(Channel.BFS_LOOP_STATE, -1); // cost ~ 25
-                }
             }
+            loopState = -1;
         }
 
         endBuild(currentPOI);
     }
 
+    // cost ~ 155
     private static void beginBuild(int poi) throws GameActionException {
-        resetQueue();
+        rc.broadcast(Channel.BFS_LOOP_STATE, -1);
         rc.broadcast(Channel.CURRENT_POI, poi);
-        enqueue(rc.readBroadcast(Channel.POI[poi - 1]));
+
+        resetQueue(); // cost ~ 50
+        enqueue(rc.readBroadcast(Channel.POI[poi])); // cost ~ 30
+        updateBackOfQueue(); // cost ~ 25
     }
 
     private static void endBuild(int poi) throws GameActionException {
-        if (poi + 1 < rc.readBroadcast(Channel.NUMBER_OF_POIS)) {
+        System.out.println("Finished BFS number " + poi);
+        if (poi + 1 < rc.readBroadcast(Channel.NUMBER_OF_POIS))
             beginBuild(poi + 1);
-        } else {
-            // Having a current POI of 1 higher then the number of POIs signifies building is complete.
+        else
             rc.broadcast(Channel.CURRENT_POI, poi + 1);
-        }
     }
 
     public static boolean isComplete() throws GameActionException {
@@ -124,39 +163,34 @@ public class PathBuilder {
     }
 
     private static int getRelativeMapLocationX(int absoluteX) throws GameActionException {
-        MapLocation NWCorner = Radio.readMapLocationFromChannel(Channel.NW_MAP_CORNER);
         return absoluteX - NWCorner.x;
     }
 
     private static int getRelativeMapLocationY(int absoluteY) throws GameActionException {
-        MapLocation NWCorner = Radio.readMapLocationFromChannel(Channel.NW_MAP_CORNER);
         return absoluteY - NWCorner.y;
     }
 
-    //--TODO NWCorner should be saved somewhere to avoid same readBroadcast call.
     private static MapLocation getAbsoluteMapLocation(int x, int y) throws GameActionException {
-        MapLocation NWCorner = Radio.readMapLocationFromChannel(Channel.NW_MAP_CORNER);
         int xOffset = NWCorner.x;
         int yOffset = NWCorner.y;
         return new MapLocation(x + xOffset, y + yOffset);
     }
 
-    //--TODO store TerrainTile.values().
     private static TerrainTile getTerrainTile(int hashedMapLocation) throws GameActionException {
         int tileNumber = rc.readBroadcast(Channel.NW_CORNER_TERRAIN_TILE + hashedMapLocation);
-        return TerrainTile.values()[tileNumber];
+        return terrainTiles[tileNumber];
     }
 
     private static boolean wasVisited(int hashedMapLocation, int poi) throws GameActionException {
         int value = rc.readBroadcast(Channel.NW_CORNER_BFS_DIRECTIONS + hashedMapLocation);
-        int direction = (int)(value / (Math.pow(10, poi - 1))) % 10;
+        int direction = (int)(value / (Math.pow(10, poi))) % 10;
         return direction != 0;
     }
 
     private static void broadcastDirection(int direction, int hashedMapLocation, int currentPOI) throws GameActionException {
         int channelToBroadcastTo = Channel.NW_CORNER_BFS_DIRECTIONS + hashedMapLocation;
         int currentValue = rc.readBroadcast(channelToBroadcastTo);
-        int valueToBroadcast = currentValue + (direction + 1) * (int)Math.pow(10, (currentPOI - 1));
+        int valueToBroadcast = currentValue + (direction + 1) * (int)Math.pow(10, (currentPOI));
         rc.broadcast(channelToBroadcastTo, valueToBroadcast);
     }
 
@@ -174,24 +208,77 @@ public class PathBuilder {
 
     // Queue for BFS
     private static void enqueue(int value) throws GameActionException {
-        int backOfQueue = rc.readBroadcast(Channel.BFS_QUEUE_BACK);
-        rc.broadcast(backOfQueue + 1, value);
-        rc.broadcast(Channel.BFS_QUEUE_BACK, backOfQueue + 1);
+        //System.out.println("enqueued " + value + " to " + backOfQueue);
+        rc.broadcast(backOfQueue, value);
+        backOfQueue++;
+    }
+
+    private static void updateBackOfQueue() throws GameActionException {
+        //System.out.println("back of queue updated to " + backOfQueue);
+        rc.broadcast(Channel.BFS_QUEUE_BACK, backOfQueue);
     }
 
     private static int dequeue() throws GameActionException {
         int frontOfQueue = rc.readBroadcast(Channel.BFS_QUEUE_FRONT);
         int returnValue = rc.readBroadcast(frontOfQueue);
+        //System.out.println("dequeued " + returnValue + " to " + frontOfQueue);
         rc.broadcast(Channel.BFS_QUEUE_FRONT, frontOfQueue + 1);
         return returnValue;
     }
 
     private static boolean isQueueEmpty() throws GameActionException {
-        return rc.readBroadcast(Channel.BFS_QUEUE_BACK) == rc.readBroadcast(Channel.BFS_QUEUE_FRONT);
+        return backOfQueue == rc.readBroadcast(Channel.BFS_QUEUE_FRONT);
     }
 
     private static void resetQueue() throws GameActionException {
         rc.broadcast(Channel.BFS_QUEUE_BACK, Channel.BFS_QUEUE_START);
         rc.broadcast(Channel.BFS_QUEUE_FRONT, Channel.BFS_QUEUE_START);
+        backOfQueue = Channel.BFS_QUEUE_START;
+    }
+
+    public static void printDirectionField(int poi) throws GameActionException {
+        int mapLocationHashed = rc.readBroadcast(Channel.POI[poi]);
+        int xc = getXCoordinate(mapLocationHashed);
+        int yc = getYCoordinate(mapLocationHashed);
+
+        for (int y = 0; y <= mapHeight; y++) {
+            for (int x = 0; x <= mapWidth; x++) {
+                if (x == xc && y == yc) {
+                    System.out.print("X");
+                    continue;
+                }
+                switch(getDirection(getHashedLocation(x, y), poi)) {
+                    case EAST:
+                        System.out.print(">");
+                        break;
+                    case WEST:
+                        System.out.print("<");
+                        break;
+                    case NORTH:
+                        System.out.print("^");
+                        break;
+                    case SOUTH:
+                        System.out.print("v");
+                        break;
+                    case NORTH_EAST:
+                        System.out.print("/");
+                        break;
+                    case NORTH_WEST:
+                        System.out.print("\\");
+                        break;
+                    case SOUTH_EAST:
+                        System.out.print("\\");
+                        break;
+                    case SOUTH_WEST:
+                        System.out.print("/");
+                        break;
+                    default:
+                        System.out.print("?");
+                }
+            }
+            System.out.println();
+        }
+        System.out.println();
+        System.out.println();
     }
 }
