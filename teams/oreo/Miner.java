@@ -55,7 +55,7 @@ public class Miner {
 
         if (rc.readBroadcast(Channel.READY_FOR_BFS) == 1
                 && !PathBuilder.isComplete()) {
-            PathBuilder.build(7000);
+            PathBuilder.build(9000);
         }
 
         MapLocation currentLocation = rc.getLocation();
