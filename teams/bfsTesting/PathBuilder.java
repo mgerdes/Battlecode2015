@@ -60,6 +60,7 @@ public class PathBuilder {
         rc.broadcast(Channel.BFS_LOOP_STATE, -1);
 
         beginBuild(0);
+        updateBackOfQueue();
     }
 
     public static void build(int bytecodeLimit) throws GameActionException {
@@ -138,7 +139,10 @@ public class PathBuilder {
 
     private static void endBuild(int poi) throws GameActionException {
         System.out.println("Finished BFS number " + poi);
-        beginBuild(poi + 1);
+        if (poi + 1 < rc.readBroadcast(Channel.NUMBER_OF_POIS))
+            beginBuild(poi + 1);
+        else
+            rc.broadcast(Channel.CURRENT_POI, poi + 1);
     }
 
     public static boolean isComplete() throws GameActionException {

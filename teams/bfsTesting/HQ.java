@@ -102,6 +102,9 @@ public class HQ {
                 PathBuilder.setup(enemyTowers, enemyHqLocation);
                 pathBuilderSetup = true;
             }
+            if (Clock.getBytecodeNum() > lastRound + 100) {
+                //PathBuilder.printDirectionField(0);
+            }
         }
 
         broadcastAllTerrainTiles();
