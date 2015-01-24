@@ -24,67 +24,72 @@ public class Channel {
     public static final int NUMBER_OF_POIS = 37;
 
     //--Path building info
-    public static final int CURRENT_POI = 80;
-    public static final int LAST_LOCATION_RELATIVE = 81;
+    public static final int CURRENT_POI = 50;
+    public static final int LAST_LOCATION_RELATIVE = 51;
 
     //--Misc
-    public static final int MINER_DISTANCE_SQUARED_TO_HQ = 90;
-    public static final int TOWER_VOID_COUNT = 91;
-    public static final int PERIMETER_SURVEY_COMPLETE = 92;
-    public static final int MAP_WIDTH = 93;
-    public static final int MAP_HEIGHT = 94;
-    public static final int MAP_SYMMETRY = 95;
-    public static final int POI_TO_ATTACK = 96;
-    public static final int ALL_TERRAIN_TILES_BROADCASTED = 97;
-    protected static final int NEED_SUPPLY_ROBOT_ID = 98;
-    protected static final int NEED_SUPPLY_CONTEXT = 99;
+    public static final int MINER_DISTANCE_SQUARED_TO_HQ = 60;
+    public static final int TOWER_VOID_COUNT = 61;
+    public static final int PERIMETER_SURVEY_COMPLETE = 62;
+    public static final int MAP_WIDTH = 63;
+    public static final int MAP_HEIGHT = 64;
+    public static final int MAP_SYMMETRY = 65;
+    public static final int POI_TO_ATTACK = 66;
+    public static final int ALL_TERRAIN_TILES_BROADCASTED = 67;
+    protected static final int NEED_SUPPLY_ROBOT_ID = 68;
+    protected static final int NEED_SUPPLY_CONTEXT = 69;
 
     //--Unit counts
-    public static final int DRONE_COUNT = 100;
-    public static final int MINER_COUNT = 101;
-    public static final int SOLDIER_COUNT = 102;
-    public static final int LAUNCHER_COUNT = 103;
+    public static final int DRONE_COUNT = 80;
+    public static final int MINER_COUNT = 81;
+    public static final int SOLDIER_COUNT = 82;
+    public static final int LAUNCHER_COUNT = 83;
 
     //--Building counts
-    public static final int SUPPLY_DEPOT_COUNT = 200;
-    protected static final int SUPPLY_DEPOT_ROUND_UPDATED = 201;
+    public static final int SUPPLY_DEPOT_COUNT = 90;
+    protected static final int SUPPLY_DEPOT_ROUND_UPDATED = 91;
 
     //--Production orders
-    public static final int MORE_MINERS = 500;
-    public static final int MORE_DRONES = 501;
-    public static final int MORE_SOLDIERS = 502;
-    public static final int MORE_LAUNCHERS = 503;
+    public static final int MORE_MINERS = 100;
+    public static final int MORE_DRONES = 101;
+    public static final int MORE_SOLDIERS = 102;
+    public static final int MORE_LAUNCHERS = 103;
 
     //--Building Queue
-    public static final int BUILDING_QUEUE_START = 3000;
-    public static final int NEXT_BUILDING_POINTER = 4000;
-    public static final int QUEUE_END_POINTER = 4001;
+    public static final int NEXT_BUILDING_POINTER = 198;
+    public static final int QUEUE_END_POINTER = 199;
+    public static final int BUILDING_QUEUE_START = 200; //--349
 
     //--Distress!
-    protected static final int DISTRESS_SIGNAL_ROUND_NUMBER = 5000;
-    protected static final int DISTRESS_SIGNAL_CREATOR = 5001;
-    protected static final int DISTRESS_LOCATION_X = 5002;
-    protected static final int DISTRESS_LOCATION_Y = 5003;
+    protected static final int DISTRESS_SIGNAL_ROUND_NUMBER = 350;
+    protected static final int DISTRESS_SIGNAL_CREATOR = 351;
+    protected static final int DISTRESS_LOCATION_X = 352;
+    protected static final int DISTRESS_LOCATION_Y = 353;
 
-    protected static final int ENEMY_SPOTTED_CONTEXT = 5100;
-    protected static final int ENEMY_SPOTTED_LOCATION_X = 5101;
-    protected static final int ENEMY_SPOTTED_LOCATION_Y = 5102;
+    protected static final int ENEMY_SPOTTED_CONTEXT = 360;
+    protected static final int ENEMY_SPOTTED_LOCATION_X = 361;
+    protected static final int ENEMY_SPOTTED_LOCATION_Y = 362;
 
     //--Message board
 
-    public static final int SOLDIER_PRIORITY_ORDERS = 6000;
-    public static final int DRONE_PRIORITY_ORDERS = 6020;
-    public static final int LAUNCHER_PRIORITY_ORDERS = 6030;
+    public static final int SOLDIER_PRIORITY_ORDERS = 400;
+    public static final int DRONE_PRIORITY_ORDERS = 420;
+    public static final int LAUNCHER_PRIORITY_ORDERS = 430;
 
-    public static final int SOLDIER_DEFAULT_ORDER = 7000;
-    public static final int DRONE_DEFAULT_ORDERS = 7002;
-    public static final int LAUNCHER_DEFAULT_ORDERS = 7030;
+    public static final int SOLDIER_DEFAULT_ORDER = 500;
+    public static final int DRONE_DEFAULT_ORDERS = 501;
+    public static final int LAUNCHER_DEFAULT_ORDERS = 502;
+
+    //--Survey location queue
+    public static final int SURVEY_LOCATION_QUEUE_HEAD = 6198;
+    public static final int SURVEY_LOCATION_QUEUE_TAIL = 6199;
+    public static final int SURVEY_LOCATION_QUEUE_START = 6200; //--20599
 
     //--Terrain tile storage
-    public static final int NW_CORNER_TERRAIN_TILE = 10000; //--24400
+    public static final int NW_CORNER_TERRAIN_TILE = 20600; //--34999
 
     //--BFS storage
-    public static final int NW_CORNER_BFS_DIRECTIONS = 30000; //--44400
+    public static final int NW_CORNER_BFS_DIRECTIONS = 35000; //--49399
 
     //--BFS queue
     public static final int BFS_LOOP_STATE = 49997;
