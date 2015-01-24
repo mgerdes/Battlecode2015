@@ -60,7 +60,6 @@ public class PathBuilder {
         rc.broadcast(Channel.BFS_LOOP_STATE, -1);
 
         beginBuild(0);
-        updateBackOfQueue();
     }
 
     public static void build(int bytecodeLimit) throws GameActionException {
@@ -101,7 +100,7 @@ public class PathBuilder {
             MapLocation currentLocation = new MapLocation(currentX, currentY);
 
             for (; i < 8; i++) {
-                int approximateMaxByteCodeCost = 205; // Each iteration of loop below is ~75, beginBuild is ~130
+                int approximateMaxByteCodeCost = 230; // Each iteration of loop below is ~75, beginBuild is ~155
                 if (Clock.getBytecodeNum() + approximateMaxByteCodeCost < bytecodeLimit) {
                     int nextX = currentX + xOffsets[i];
                     int nextY = currentY + yOffsets[i];
@@ -128,13 +127,14 @@ public class PathBuilder {
         endBuild(currentPOI);
     }
 
-    // cost ~ 130
+    // cost ~ 155
     private static void beginBuild(int poi) throws GameActionException {
         rc.broadcast(Channel.BFS_LOOP_STATE, -1);
         rc.broadcast(Channel.CURRENT_POI, poi);
 
         resetQueue(); // cost ~ 50
         enqueue(rc.readBroadcast(Channel.POI[poi])); // cost ~ 30
+        updateBackOfQueue(); // cost ~ 25
     }
 
     private static void endBuild(int poi) throws GameActionException {
