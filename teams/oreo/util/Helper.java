@@ -112,6 +112,19 @@ public class Helper {
         return robotsCanAttack;
     }
 
+    public static int getRobotCountCanAttackLocation(RobotInfo[] robots, MapLocation location) {
+        int allRobotCount = robots.length;
+        int canAttackCount = 0;
+
+        for (int i = 0; i < allRobotCount; i++) {
+            if (robots[i].location.distanceSquaredTo(location) <= robots[i].type.attackRadiusSquared) {
+                canAttackCount++;
+            }
+        }
+
+        return canAttackCount;
+    }
+
     public static boolean canBeAttackedByTowers(MapLocation location, MapLocation[] towerLocations) {
         int towerCount = towerLocations.length;
         for (int i = 0; i < towerCount; i++) {
