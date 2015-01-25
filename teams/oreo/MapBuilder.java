@@ -20,7 +20,7 @@ public class MapBuilder {
     private static int xLoop = 0;
     private static int yLoop = 0;
 
-    private static final int MAX_BYTECODES_CONSUMED_IN_ONE_LOOP_PASS = 220;
+    private static final int MAX_BYTECODES_CONSUMED_IN_ONE_LOOP_PASS = 240;
     private static boolean[][] wasBroadcast;
 
     public static void init(RobotController rcC) throws GameActionException {
