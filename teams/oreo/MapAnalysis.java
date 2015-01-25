@@ -14,7 +14,7 @@ public class MapAnalysis {
     private static int startingTower;
     private static int endingTower;
 
-    private static final int MAXIMUM_TOWER_SEPARATION_DISTANCE_SQUARED = 81;
+    private static final int MAXIMUM_TOWER_SEPARATION_DISTANCE_SQUARED = 85;
 
     public static void init(RobotController rcC) {
         rc = rcC;
@@ -64,7 +64,7 @@ public class MapAnalysis {
     }
 
     private static boolean towersAreConnected(int current, int i) {
-        return towerLocations[current].distanceSquaredTo(towerLocations[i]) < MAXIMUM_TOWER_SEPARATION_DISTANCE_SQUARED;
+        return towerLocations[current].distanceSquaredTo(towerLocations[i]) <= MAXIMUM_TOWER_SEPARATION_DISTANCE_SQUARED;
     }
 
     private static boolean getStartingAndEndingTowers(MapLocation[] towerLocations) {
