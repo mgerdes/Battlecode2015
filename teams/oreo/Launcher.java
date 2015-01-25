@@ -5,6 +5,8 @@ import oreo.communication.Channel;
 import oreo.communication.HqOrders;
 import oreo.communication.Radio;
 import oreo.constants.Order;
+import oreo.navigation.BasicNav;
+import oreo.navigation.Bfs;
 import oreo.navigation.SafeBug;
 import oreo.util.Helper;
 
@@ -19,8 +21,6 @@ public class Launcher {
     private static final int MAXIMUM_DISTANCE_SQUARED_TO_GO_TO_HQ_FOR_SUPPLY = 100;
 
     public static void run(RobotController rcC) {
-        rcC.disintegrate();
-
         rc = rcC;
 
         myTeam = rc.getTeam();
@@ -31,6 +31,8 @@ public class Launcher {
         SupplySharing.init(rcC);
         Radio.init(rcC);
         HqOrders.init(rcC);
+        Bfs.init(rcC);
+        BasicNav.init(rcC);
 
         loop();
     }
@@ -80,9 +82,18 @@ public class Launcher {
 
         //--If there are no nearby enemies, move closer
         if (enemiesInSensorRange.length == 0) {
-            MapLocation structureToAttack = null;
-            SafeBug.setDestination(structureToAttack);
-            Direction direction = SafeBug.getDirection(currentLocation, structureToAttack);
+            int poiToAttack = rc.readBroadcast(Channel.POI_TO_ATTACK);
+            MapLocation structureToAttack = Radio.readMapLocationFromChannel(Channel.POI_ABSOLUTE[poiToAttack]);
+            Direction direction = Bfs.getDirection(currentLocation, poiToAttack);
+            if (direction != Direction.NONE) {
+                direction = BasicNav.getNavigableDirectionClosestTo(direction);
+            }
+
+            //--If bfs doesn't work, use bug direction
+            if (direction == Direction.NONE) {
+                SafeBug.setDestination(structureToAttack);
+                direction = SafeBug.getDirection(currentLocation, structureToAttack);
+            }
 
             //--See if our missiles would be close enough to attack
             MapLocation missileLocation = currentLocation.add(direction);

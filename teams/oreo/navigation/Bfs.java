@@ -29,6 +29,11 @@ public class Bfs {
         if (nwCorner == null) {
             nwCorner = Radio.readMapLocationFromChannel(Channel.NW_MAP_CORNER);
 
+            //--Survey is not complete yet
+            if (nwCorner == null) {
+                return Direction.NONE;
+            }
+
             minX = nwCorner.x;
             minY = nwCorner.y;
         }

@@ -41,6 +41,7 @@ public class Drone {
 
     //--Used by surveyor
     private static Direction followDirection;
+    private static boolean wasOnWall;
 
     public static void run(RobotController rcC) {
         rc = rcC;
@@ -326,7 +327,8 @@ public class Drone {
         }
 
         //--Go away from enemy Hq until we hit a wall
-        if (isOnWall(currentLocation)) {
+        if (!wasOnWall
+                && isOnWall(currentLocation)) {
             if (followDirection == null) {
                 followDirection = awayFromEnemyHq;
                 while (!rc.canMove(followDirection)) {
@@ -335,6 +337,7 @@ public class Drone {
             }
 
             SafeBug.setDestination(currentLocation.add(followDirection, 100));
+            wasOnWall = true;
         }
         else {
             MapLocation destination = myHqLocation.add(awayFromEnemyHq, 100);
@@ -536,7 +539,7 @@ public class Drone {
                 if (!isCoreReady) {
                     return;
                 }
-                
+
                 Direction away = Helper.getDirectionAwayFrom(robotsCanAttackMe, currentLocation);
                 if (away == Direction.NONE) {
                     //--Should we try to attack here since we can't move?
@@ -566,7 +569,8 @@ public class Drone {
             }
             else {
                 if (isCoreReady) {
-                    Direction away = BasicNav.getNavigableDirectionClosestTo(enemyLocation.directionTo(currentLocation));
+                    Direction away =
+                            BasicNav.getNavigableDirectionClosestTo(enemyLocation.directionTo(currentLocation));
                     if (away != Direction.NONE) {
                         rc.move(away);
                     }
@@ -582,7 +586,7 @@ public class Drone {
             return;
         }
 
-        RobotType[] typesToIgnore = new RobotType[] {RobotType.BEAVER, RobotType.MINER};
+        RobotType[] typesToIgnore = new RobotType[]{RobotType.BEAVER, RobotType.MINER};
         Direction direction = SafeBug.getDirection(currentLocation, null, enemiesInSensorRange, typesToIgnore);
         if (direction == Direction.NONE) {
             return;

@@ -18,10 +18,6 @@ public class Radio {
         myId = rc.getID();
     }
 
-    public static boolean isBfsReady(int pointOfInterest) throws GameActionException {
-        return rc.readBroadcast(Channel.CURRENT_POI) >= pointOfInterest;
-    }
-
     public static void iNeedSupply() throws GameActionException {
         //--We are signalling one robot that needs supply
         //--When one unit needs supply, their request cannot be overriden unless
