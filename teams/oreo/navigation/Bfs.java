@@ -16,9 +16,13 @@ public class Bfs {
     private static int minX;
     private static int minY;
 
+    private static Direction[] directions;
+
     public static void init(RobotController rcIn) {
         rc = rcIn;
         Radio.init(rcIn);
+
+        directions = Direction.values();
     }
 
     public static Direction getDirection(MapLocation currentLocation, int pointOfInterest) throws GameActionException {
@@ -46,7 +50,8 @@ public class Bfs {
         if (direction == -1) {
             return Direction.NONE;
         }
-        return Direction.values()[direction];
+
+        return directions[direction];
     }
 
     public static void printDirectionField(int poi) throws GameActionException {

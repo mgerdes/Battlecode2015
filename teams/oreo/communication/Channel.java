@@ -9,13 +9,7 @@ public class Channel {
     public static final int SW_MAP_CORNER = 10;
     public static final int NW_MAP_CORNER = 12;
 
-    public static final int ENEMY_TOWER_1 = 14;
-    public static final int ENEMY_TOWER_2 = 16;
-    public static final int ENEMY_TOWER_3 = 18;
-    public static final int ENEMY_TOWER_4 = 20;
-    public static final int ENEMY_TOWER_5 = 22;
-    public static final int ENEMY_TOWER_6 = 24;
-    public static final int ENEMY_HQ = 26;
+    public static final int[] POI_ABSOLUTE = {14,16,18,20,22,24,26};
 
     public static final int LOCATION_TO_SURVEY = 28;
 

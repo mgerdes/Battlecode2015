@@ -39,6 +39,9 @@ public class Drone {
     private static int valueAtBeginningOfPass;
     private static Direction segmentTravelDirection;
 
+    //--Used by surveyor
+    private static Direction followDirection;
+
     public static void run(RobotController rcC) {
         rc = rcC;
 
@@ -322,17 +325,27 @@ public class Drone {
             return;
         }
 
-        int dx = myHqLocation.x - enemyHqLocation.x;
-        int dy = myHqLocation.y - enemyHqLocation.y;
-        MapLocation destination = myHqLocation.add(dx * 1000, dy * 1000);
-        SafeBug.setDestination(destination);
+        //--Go away from enemy Hq until we hit a wall
+        if (isOnWall(currentLocation)) {
+            if (followDirection == null) {
+                followDirection = awayFromEnemyHq;
+                while (!rc.canMove(followDirection)) {
+                    followDirection = followDirection.rotateLeft();
+                }
+            }
 
-        //--Need to pass in enemies for extra safety
-        Direction directionTowardsCorner = SafeBug.getDirection(currentLocation);
-        Debug.setString(2, "direction is " + directionTowardsCorner.toString(), rc);
+            SafeBug.setDestination(currentLocation.add(followDirection, 100));
+        }
+        else {
+            MapLocation destination = myHqLocation.add(awayFromEnemyHq, 100);
+            SafeBug.setDestination(destination);
+        }
 
-        if (directionTowardsCorner != Direction.NONE) {
-            rc.move(directionTowardsCorner);
+        Direction bugDirection = SafeBug.getDirection(currentLocation);
+        Debug.setString(2, "direction is " + bugDirection.toString(), rc);
+
+        if (bugDirection != Direction.NONE) {
+            rc.move(bugDirection);
         }
     }
 
@@ -390,12 +403,26 @@ public class Drone {
         return Direction.SOUTH_EAST;
     }
 
-    private static boolean isMapCorner(MapLocation currentLocation) {
+    private static boolean isMapCorner(MapLocation location) {
         int edgeCount = 0;
         for (int i = 0; i < 8; i += 2) {
-            if (rc.senseTerrainTile(currentLocation.add(Helper.getDirection(i))) == TerrainTile.OFF_MAP) {
+            if (rc.senseTerrainTile(location.add(Helper.getDirection(i))) == TerrainTile.OFF_MAP) {
                 edgeCount++;
                 if (edgeCount > 1) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean isOnWall(MapLocation location) {
+        int edgeCount = 0;
+        for (int i = 0; i < 8; i += 2) {
+            if (rc.senseTerrainTile(location.add(Helper.getDirection(i))) == TerrainTile.OFF_MAP) {
+                edgeCount++;
+                if (edgeCount > 0) {
                     return true;
                 }
             }

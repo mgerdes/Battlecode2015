@@ -33,7 +33,7 @@ public class HQ {
     private static double averageTowerToTowerDistance;
     private static double averageTowerToHqDistance;
     private static double oreNearHq;
-    private static MapLocation[] enemyTowers;
+    private static MapLocation[] originalEnemyTowers;
     private static MapLocation[] myTowers;
     private static boolean towersFormWall;
 
@@ -44,8 +44,9 @@ public class HQ {
         enemyTeam = myTeam.opponent();
         myHqLocation = rc.getLocation(); //--This is the HQ!
         enemyHqLocation = rc.senseEnemyHQLocation();
-        enemyTowers = rc.senseEnemyTowerLocations();
+        originalEnemyTowers = rc.senseEnemyTowerLocations();
         myTowers = rc.senseTowerLocations();
+        towerCount = myTowers.length;
 
         BuildingQueue.init(rcC);
         Radio.init(rcC);
@@ -72,6 +73,10 @@ public class HQ {
     }
 
     private static void doYourThing() throws GameActionException {
+        if (Clock.getRoundNum() == 2) {
+            broadcastAbsolutePoiCoordinates();
+        }
+
         SupplySharing.shareMore();
 
         RobotInfo[] friendlyRobots = rc.senseNearbyRobots(1000000, myTeam);
@@ -98,6 +103,14 @@ public class HQ {
         }
 
         broadcastMapInformation();
+    }
+
+    private static void broadcastAbsolutePoiCoordinates() throws GameActionException {
+        for (int i = 0; i < towerCount; i++) {
+            Radio.setMapLocationOnChannel(originalEnemyTowers[i], Channel.POI_ABSOLUTE[i]);
+        }
+
+        Radio.setMapLocationOnChannel(enemyHqLocation, Channel.POI_ABSOLUTE[towerCount]);
     }
 
     private static void broadcastMapInformation() throws GameActionException {
@@ -139,9 +152,20 @@ public class HQ {
         }
 
         if (allTerrainTilesBroadcast) {
-            PathBuilder.setup(enemyTowers, enemyHqLocation);
+            PathBuilder.setup(originalEnemyTowers, enemyHqLocation);
             rc.broadcast(Channel.READY_FOR_BFS, 1);
         }
+    }
+
+    private static int getPoiNumberForEnemyTower(MapLocation location) {
+        //--Assuming that the location is an enemy tower
+        for (int i = 0; i < towerCount; i++) {
+            if (originalEnemyTowers[i].equals(location)) {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     private static void initializeChannels() throws GameActionException {
@@ -150,13 +174,12 @@ public class HQ {
 
     private static void analyzeMap() throws GameActionException {
         distanceBetweenHq = myHqLocation.distanceSquaredTo(enemyHqLocation);
-        towerCount = enemyTowers.length;
 
         double sumDistance = 0;
         int numberOfDistances = 0;
         for (int i = 0; i < towerCount; i++) {
             for (int j = i; j < towerCount; j++) {
-                sumDistance += enemyTowers[i].distanceSquaredTo(enemyTowers[j]);
+                sumDistance += originalEnemyTowers[i].distanceSquaredTo(originalEnemyTowers[j]);
                 numberOfDistances++;
             }
         }
@@ -171,7 +194,7 @@ public class HQ {
 
         sumDistance = 0;
         for (int i = 0; i < towerCount; i++) {
-            sumDistance += enemyTowers[i].distanceSquaredTo(enemyHqLocation);
+            sumDistance += originalEnemyTowers[i].distanceSquaredTo(enemyHqLocation);
         }
 
         averageTowerToHqDistance = sumDistance / towerCount;
@@ -214,7 +237,7 @@ public class HQ {
         if (hqSameX) {
             //--For all of my towers, enemy must have one with same x value
             for (MapLocation tower : myTowers) {
-                if (!oneHasMatchingX(enemyTowers, tower.x)) {
+                if (!oneHasMatchingX(originalEnemyTowers, tower.x)) {
                     return Symmetry.ROTATION;
                 }
             }
@@ -222,7 +245,7 @@ public class HQ {
         else {
             //--For all of my towers, enemy must have one with same y value
             for (MapLocation tower : myTowers) {
-                if (!oneHasMatchingY(enemyTowers, tower.y)) {
+                if (!oneHasMatchingY(originalEnemyTowers, tower.y)) {
                     return Symmetry.ROTATION;
                 }
             }
@@ -280,31 +303,26 @@ public class HQ {
     }
 
     private static void broadcastAttackLocation() throws GameActionException {
-        //--With the navigation code, we will broadcast PointOfInterest value
-        //  instead of a map location
-
-
-
-
-
         //--if enemy has towers
         //    return the closest one to our HQ
         //--else return enemy HQ
-        MapLocation[] enemyTowerLocations = rc.senseEnemyTowerLocations();
-        if (enemyTowerLocations.length == 0) {
+        MapLocation[] currentEnemyTowers = rc.senseEnemyTowerLocations();
+        if (currentEnemyTowers.length == 0) {
+            rc.broadcast(Channel.POI_TO_ATTACK, towerCount);
             return;
         }
 
         int index = 0;
         int minDistance = Integer.MAX_VALUE;
-        for (int i = 0; i < enemyTowerLocations.length; i++) {
-            int thisDistance = myHqLocation.distanceSquaredTo(enemyTowerLocations[i]);
+        for (int i = 0; i < currentEnemyTowers.length; i++) {
+            int thisDistance = myHqLocation.distanceSquaredTo(currentEnemyTowers[i]);
             if (thisDistance < minDistance) {
                 minDistance = thisDistance;
                 index = i;
             }
         }
 
+        rc.broadcast(Channel.POI_TO_ATTACK, getPoiNumberForEnemyTower(currentEnemyTowers[index]));
     }
 
     private static void queueSupplyTowers() throws GameActionException {
