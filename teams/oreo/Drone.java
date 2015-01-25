@@ -331,16 +331,21 @@ public class Drone {
                 && isOnWall(currentLocation)) {
             if (followDirection == null) {
                 followDirection = awayFromEnemyHq;
-                while (!rc.canMove(followDirection)) {
-                    followDirection = followDirection.rotateLeft();
-                }
             }
 
+            while (!rc.canMove(followDirection)) {
+                followDirection = followDirection.rotateLeft();
+            }
+            
             SafeBug.setDestination(currentLocation.add(followDirection, 100));
             wasOnWall = true;
         }
         else {
-            MapLocation destination = myHqLocation.add(awayFromEnemyHq, 100);
+            if (followDirection == null) {
+                followDirection = awayFromEnemyHq;
+            }
+
+            MapLocation destination = myHqLocation.add(followDirection, 100);
             SafeBug.setDestination(destination);
         }
 
