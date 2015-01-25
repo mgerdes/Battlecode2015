@@ -21,6 +21,7 @@ public class Channel {
     public static final int LAST_LOCATION_RELATIVE = 81;
 
     //--Misc
+    public static final int ORE_ESTIMATE = 89;
     public static final int MINER_DISTANCE_SQUARED_TO_HQ = 90;
     public static final int TOWER_VOID_COUNT = 91;
     public static final int PERIMETER_SURVEY_COMPLETE = 92;
