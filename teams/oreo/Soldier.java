@@ -7,6 +7,7 @@ import oreo.communication.Radio;
 import oreo.constants.Order;
 import oreo.navigation.BasicNav;
 import oreo.navigation.SafeBug;
+import oreo.util.Debug;
 import oreo.util.Helper;
 
 public class Soldier {
@@ -27,6 +28,7 @@ public class Soldier {
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
 
+        BasicNav.init(rcC);
         SafeBug.init(rcC);
         SupplySharing.init(rcC);
         Radio.init(rcC);
@@ -77,6 +79,7 @@ public class Soldier {
 
         //--If more than two enemies can attack me, move away
         if (canAttackMeCount > 2) {
+            Debug.setString(1, "over two enemies can attack me", rc);
             if (!isCoreReady) {
                 return;
             }
@@ -101,6 +104,7 @@ public class Soldier {
         //    Run away if I cannot shoot either of them
         //    Run away if I have no friends that can shoot one of them
         if (canAttackMeCount == 2) {
+            Debug.setString(1, "2 enemies can attack me", rc);
             boolean[] iCanShoot = new boolean[2];
             int myRange = RobotType.SOLDIER.attackRadiusSquared;
             iCanShoot[0] = myRange >= currentLocation.distanceSquaredTo(robotsCanAttackMe[0].location);
@@ -125,6 +129,7 @@ public class Soldier {
 
             //--We can shoot one of the enemies, but we a need a friend to help
             if (friendCanHelp) {
+                Debug.setString(1, "2 enemies can attack me and friend can help", rc);
                 //--Attack the enemy with the lowest HP
                 if (!isWeaponReady) {
                     return;
