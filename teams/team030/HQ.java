@@ -403,16 +403,26 @@ public class HQ {
             HqOrders.setDefaultFor(RobotType.DRONE, Order.MoveSupply);
         }
 
-        //--Soldiers
+        //--Soldier rush is only valuable when they can go through the towers
+        //  or the towers are very close to the HQ
+        int smallSoldierForce = 20;
+        int largeSoldierForce = 100;
+
+        if (towersFormWall
+                && averageTowerToHqDistance > 180) {
+            smallSoldierForce = 0;
+        }
+
+        //--Small or large soldier force depends on our troop levels
+        int soldierMax = smallSoldierForce;
         int soldierCount = rc.readBroadcast(Channel.SOLDIER_COUNT);
-        int soldierMax = 100;
         if (buildStrategy == BuildStrategy.LAUNCHERS
-                && rc.readBroadcast(Channel.LAUNCHER_COUNT) < 5) {
-            soldierMax = 20;
+                && rc.readBroadcast(Channel.LAUNCHER_COUNT) > 4) {
+            soldierMax = largeSoldierForce;
         }
         else if (buildStrategy == BuildStrategy.TANKS
-                && rc.readBroadcast(Channel.TANK_COUNT) < 8) {
-            soldierMax = 20;
+                && rc.readBroadcast(Channel.TANK_COUNT) > 7) {
+            soldierMax = largeSoldierForce;
         }
 
         HqOrders.setSpawn(RobotType.SOLDIER, soldierCount < soldierMax ? SPAWN_ON : SPAWN_OFF);
@@ -420,7 +430,14 @@ public class HQ {
 
         //--Launchers
         HqOrders.setSpawn(RobotType.LAUNCHER, SPAWN_ON);
-        HqOrders.setDefaultFor(RobotType.LAUNCHER, Order.AttackEnemyStructure);
+        int launcherCount = rc.readBroadcast(Channel.LAUNCHER_COUNT);
+        int fightingUnits = soldierCount + launcherCount;
+        if (fightingUnits < 15) {
+            HqOrders.setDefaultFor(RobotType.LAUNCHER, Order.WaitByOurHq);
+        }
+        else {
+            HqOrders.setDefaultFor(RobotType.LAUNCHER, Order.AttackEnemyStructure);
+        }
 
         //--Tanks
         HqOrders.setSpawn(RobotType.TANK, SPAWN_ON);

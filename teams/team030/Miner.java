@@ -84,8 +84,10 @@ public class Miner {
                     direction = SafeBug.getDirection(currentLocation);
                 }
 
-                rc.move(direction);
-                return;
+                if (direction != Direction.NONE) {
+                    rc.move(direction);
+                    return;
+                }
             }
             else if (rc.senseOre(currentLocation) == 0) {
                 Direction direction = findDirectionMostAwayFromEnemyHqWithOre(currentLocation);
@@ -94,8 +96,10 @@ public class Miner {
                     direction = SafeBug.getDirection(currentLocation);
                 }
 
-                rc.move(direction);
-                return;
+                if (direction != Direction.NONE) {
+                    rc.move(direction);
+                    return;
+                }
             }
             else {
                 rc.mine();

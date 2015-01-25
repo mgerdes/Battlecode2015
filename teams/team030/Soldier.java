@@ -17,8 +17,6 @@ public class Soldier {
     private static Team myTeam;
     private static MapLocation myHqLocation;
 
-    private static final int MIN_DISTANCE_SQUARED_AWAY_FROM_HQ = 16;
-
     public static void run(RobotController rcC) {
         rc = rcC;
 
@@ -72,7 +70,30 @@ public class Soldier {
         //--Find the enemies that can attack me
         RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.SOLDIER.sensorRadiusSquared, enemyTeam);
         RobotInfo[] robotsCanAttackMe = Helper.getRobotsCanAttackLocation(enemiesInSensorRange, currentLocation);
+        RobotInfo[] friendlySoldiersInSensorRange = rc.senseNearbyRobots(RobotType.SOLDIER.sensorRadiusSquared, myTeam);
         int canAttackMeCount = robotsCanAttackMe.length;
+
+        //--If there is a commander, run away unless 2 friends can attack with me
+        if (Helper.getRobotsOfType(enemiesInSensorRange, RobotType.COMMANDER) > 0) {
+            MapLocation commanderLocation = null;
+            for (int i = 0; i < enemiesInSensorRange.length; i++) {
+                if (enemiesInSensorRange[i].type == RobotType.COMMANDER) {
+                    commanderLocation = enemiesInSensorRange[i].location;
+                }
+            }
+
+            if (Helper.getRobotCountCanAttackLocation(friendlySoldiersInSensorRange, commanderLocation) < 2) {
+                Direction away = commanderLocation.directionTo(currentLocation);
+                Direction navigableAway = BasicNav.getNavigableDirectionClosestTo(away);
+                if (navigableAway == Direction.NONE) {
+                    //--Should we try to attack here since we can't move?
+                    return;
+                }
+
+                rc.move(navigableAway);
+                return;
+            }
+        }
 
         //--If more than two enemies can attack me, move away
         if (canAttackMeCount > 2) {
@@ -112,11 +133,10 @@ public class Soldier {
             }
 
             boolean friendCanHelp = false;
-            RobotInfo[] friendliesInSensorRange = rc.senseNearbyRobots(RobotType.SOLDIER.sensorRadiusSquared, myTeam);
-            int friendlyCount = friendliesInSensorRange.length;
+            int friendlyCount = friendlySoldiersInSensorRange.length;
             for (int i = 0; i < friendlyCount; i++) {
-                int attackRadiusSqured = friendliesInSensorRange[i].type.attackRadiusSquared;
-                MapLocation friendlyLocation = friendliesInSensorRange[i].location;
+                int attackRadiusSqured = friendlySoldiersInSensorRange[i].type.attackRadiusSquared;
+                MapLocation friendlyLocation = friendlySoldiersInSensorRange[i].location;
                 if (attackRadiusSqured >= friendlyLocation.distanceSquaredTo(robotsCanAttackMe[0].location)
                         || attackRadiusSqured >= friendlyLocation.distanceSquaredTo(robotsCanAttackMe[1].location)) {
                     friendCanHelp = true;
@@ -221,3 +241,4 @@ public class Soldier {
         rc.move(direction);
     }
 }
+

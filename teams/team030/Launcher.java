@@ -19,6 +19,7 @@ public class Launcher {
 
     private static final int[] directions = new int[]{0, -1, 1, -2, 2};
     private static final int MAXIMUM_DISTANCE_SQUARED_TO_GO_TO_HQ_FOR_SUPPLY = 100;
+    private static MapLocation enemyHq;
 
     public static void run(RobotController rcC) {
         rc = rcC;
@@ -26,6 +27,7 @@ public class Launcher {
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
         myHq = rc.senseHQLocation();
+        enemyHq = rc.senseEnemyHQLocation();
 
         SafeBug.init(rcC);
         SupplySharing.init(rcC);
@@ -56,6 +58,21 @@ public class Launcher {
             case AttackEnemyStructure:
                 attackEnemyStructure();
                 break;
+            case WaitByOurHq:
+                waitByOurHq();
+                break;
+        }
+    }
+
+    private static void waitByOurHq() throws GameActionException {
+        MapLocation currentLocation = rc.getLocation();
+        if (myHq.distanceSquaredTo(currentLocation) < 25) {
+            SafeBug.setDestination(myHq.add(myHq.directionTo(enemyHq), 5));
+            Direction direction = SafeBug.getDirection(currentLocation);
+            if (rc.isCoreReady()
+                    && direction != Direction.NONE) {
+                rc.move(direction);
+            }
         }
     }
 
