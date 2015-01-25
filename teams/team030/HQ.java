@@ -2,10 +2,8 @@ package team030;
 
 import team030.communication.HqOrders;
 import team030.communication.Radio;
-import team030.constants.Building;
+import team030.constants.*;
 import team030.communication.Channel;
-import team030.constants.Order;
-import team030.constants.Symmetry;
 import team030.util.Helper;
 import battlecode.common.*;
 
@@ -16,6 +14,8 @@ public class HQ {
     private static Team myTeam;
     private static MapLocation myHqLocation;
     private static MapLocation enemyHqLocation;
+
+    private static int buildStrategy;
 
     private static final int HQ_TRY_ATTACK_AFTER_ROUND = 100;
     private static final int HQ_BROADCAST_ATTACK_LOCATION_AFTER_ROUND = 100;
@@ -36,6 +36,7 @@ public class HQ {
     private static MapLocation[] originalEnemyTowers;
     private static MapLocation[] myTowers;
     private static boolean towersFormWall;
+    private static int oreEstimate;
 
     public static void run(RobotController rcC) throws GameActionException {
         rc = rcC;
@@ -73,8 +74,14 @@ public class HQ {
     }
 
     private static void doYourThing() throws GameActionException {
-        if (Clock.getRoundNum() == 2) {
+        int roundNumber = Clock.getRoundNum();
+        if (roundNumber == 2) {
             broadcastAbsolutePoiCoordinates();
+        }
+
+        if (roundNumber == Config.COUNT_ORE_ROUND_NUMBER + 5) {
+            buildStrategy = getBuildStrategy();
+            queueSecondaryBuildings();
         }
 
         SupplySharing.shareMore();
@@ -83,7 +90,10 @@ public class HQ {
 
         updateSpawningAndOrders();
         queueSupplyTowers();
-        queueBuildings();
+
+        if (roundNumber > 200) {
+            queueBuildings();
+        }
 
         updateRallyPoint();
 
@@ -103,6 +113,19 @@ public class HQ {
         }
 
         broadcastMapInformation();
+    }
+
+    private static int getBuildStrategy() throws GameActionException {
+        oreEstimate = rc.readBroadcast(Channel.ORE_ESTIMATE);
+        System.out.printf("total ore estimate is %d\n", oreEstimate);
+        if (oreEstimate > 1000) {
+            System.out.println("going launchers");
+            return BuildStrategy.LAUNCHERS;
+        }
+        else {
+            System.out.println("going tanks");
+            return BuildStrategy.TANKS;
+        }
     }
 
     private static void broadcastAbsolutePoiCoordinates() throws GameActionException {
@@ -279,14 +302,35 @@ public class HQ {
         BuildingQueue.addBuilding(Building.BARRACKS);
         BuildingQueue.addBuilding(Building.SUPPLY_DEPOT);
         BuildingQueue.addBuilding(Building.HELIPAD);
+    }
 
-        //--Building everything for testing
-        BuildingQueue.addBuilding(Building.AEROSPACE_LAB);
-        BuildingQueue.addBuilding(Building.TANK_FACTORY);
+    private static void queueSecondaryBuildings() throws GameActionException {
+        if (buildStrategy == BuildStrategy.LAUNCHERS) {
+            BuildingQueue.addBuilding(Building.AEROSPACE_LAB);
+        }
+        else {
+            BuildingQueue.addBuilding(Building.TANK_FACTORY);
+        }
     }
 
     private static void queueBuildings() throws GameActionException {
         //--Add building on the fly
+        if (buildStrategy == BuildStrategy.LAUNCHERS
+                && rc.checkDependencyProgress(RobotType.AEROSPACELAB) == DependencyProgress.DONE) {
+            if (rc.getTeamOre() > RobotType.AEROSPACELAB.oreCost) {
+                BuildingQueue.addBuildingWithPostDelay(
+                        Building.AEROSPACE_LAB,
+                        (int) (RobotType.AEROSPACELAB.buildTurns * 1.5));
+            }
+        }
+        else {
+            if (rc.getTeamOre() > RobotType.TANKFACTORY.oreCost
+                    && rc.checkDependencyProgress(RobotType.TANKFACTORY) == DependencyProgress.DONE) {
+                BuildingQueue.addBuildingWithPostDelay(
+                        Building.TANK_FACTORY,
+                        (int) (RobotType.TANKFACTORY.buildTurns * 1.5));
+            }
+        }
     }
 
     private static void updateRallyPoint() throws GameActionException {
@@ -361,7 +405,17 @@ public class HQ {
 
         //--Soldiers
         int soldierCount = rc.readBroadcast(Channel.SOLDIER_COUNT);
-        HqOrders.setSpawn(RobotType.SOLDIER, soldierCount < 40 ? SPAWN_ON : SPAWN_OFF);
+        int soldierMax = 100;
+        if (buildStrategy == BuildStrategy.LAUNCHERS
+                && rc.readBroadcast(Channel.LAUNCHER_COUNT) < 5) {
+            soldierMax = 20;
+        }
+        else if (buildStrategy == BuildStrategy.TANKS
+                && rc.readBroadcast(Channel.TANK_COUNT) < 8) {
+            soldierMax = 20;
+        }
+
+        HqOrders.setSpawn(RobotType.SOLDIER, soldierCount < soldierMax ? SPAWN_ON : SPAWN_OFF);
         HqOrders.setDefaultFor(RobotType.SOLDIER, Order.Swarm);
 
         //--Launchers
