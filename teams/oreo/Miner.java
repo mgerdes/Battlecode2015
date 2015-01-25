@@ -5,7 +5,7 @@ import oreo.communication.Radio;
 import oreo.util.Debug;
 import oreo.util.Helper;
 import battlecode.common.*;
-import oreo.navigation.Bug;
+import oreo.navigation.SafeBug;
 
 public class Miner {
     private static RobotController rc;
@@ -27,7 +27,7 @@ public class Miner {
         Direction toEnemyHq = myHqLocation.directionTo(enemyHqLocation);
         defaultLocation = getDefaultLocation(toEnemyHq);
 
-        Bug.init(rcC);
+        SafeBug.init(rcC);
         SupplySharing.init(rcC);
         Radio.init(rcC);
         PathBuilder.init(rcC);
@@ -78,9 +78,10 @@ public class Miner {
             int minersThatAreVeryClose = Helper.getRobotsOfType(teammatesThatAreVeryClose, RobotType.MINER);
             if (minersThatAreVeryClose > 2) {
                 Direction direction = findDirectionMostAwayFromOurHqWithOre(currentLocation);
+                Debug.setString(1, "special method returned " + direction, rc);
                 if (direction == null) {
-                    Bug.setDestination(defaultLocation);
-                    direction = Bug.getDirection(currentLocation);
+                    SafeBug.setDestination(defaultLocation);
+                    direction = SafeBug.getDirection(currentLocation);
                 }
 
                 rc.move(direction);
@@ -89,8 +90,8 @@ public class Miner {
             else if (rc.senseOre(currentLocation) == 0) {
                 Direction direction = findDirectionMostAwayFromEnemyHqWithOre(currentLocation);
                 if (direction == null) {
-                    Bug.setDestination(defaultLocation);
-                    direction = Bug.getDirection(currentLocation);
+                    SafeBug.setDestination(defaultLocation);
+                    direction = SafeBug.getDirection(currentLocation);
                 }
 
                 rc.move(direction);
@@ -103,13 +104,17 @@ public class Miner {
     }
 
     private static Direction findDirectionMostAwayFromOurHqWithOre(MapLocation currentLocation) {
+        MapLocation[] enemyTowers = rc.senseEnemyTowerLocations();
+        int enemyTowerCount = enemyTowers.length;
         int directionAwayFromOurHq = Helper.getInt(myHqLocation.directionTo(currentLocation));
         int[] directions = new int[]{0, -1, 1, -2, 2, -3, 3, -4};
         for (int n : directions) {
             Direction direction = Helper.getDirection(directionAwayFromOurHq + n);
             MapLocation nextLocation = currentLocation.add(direction);
             if (rc.senseOre(nextLocation) > 0
-                    && rc.canMove(direction)) {
+                    && rc.canMove(direction)
+                    && !Helper.canBeAttackedByTowers(nextLocation, enemyTowers)
+                    && !Helper.canBeDamagedByHq(nextLocation, enemyHqLocation, enemyTowerCount)) {
                 return direction;
             }
         }
@@ -140,13 +145,17 @@ public class Miner {
     }
 
     private static Direction findDirectionMostAwayFromEnemyHqWithOre(MapLocation currentLocation) {
+        MapLocation[] enemyTowers = rc.senseEnemyTowerLocations();
+        int enemyTowerCount = enemyTowers.length;
         int directionAwayFromHq = Helper.getInt(enemyHqLocation.directionTo(myHqLocation));
         int[] directions = new int[]{0, -1, 1, -2, 2, -3, 3, -4};
         for (int n : directions) {
             Direction direction = Helper.getDirection(directionAwayFromHq + n);
             MapLocation nextLocation = currentLocation.add(direction);
             if (rc.senseOre(nextLocation) > 0
-                    && rc.canMove(direction)) {
+                    && rc.canMove(direction)
+                    && !Helper.canBeAttackedByTowers(nextLocation, enemyTowers)
+                    && !Helper.canBeDamagedByHq(nextLocation, enemyHqLocation, enemyTowerCount)) {
                 return direction;
             }
         }
