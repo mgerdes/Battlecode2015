@@ -239,7 +239,7 @@ public class Soldier {
             return;
         }
 
-        MapLocation structureToAttack = Radio.readMapLocationFromChannel(Channel.STRUCTURE_TO_ATTACK);
+        MapLocation structureToAttack = null;
         SafeBug.setDestination(structureToAttack);
 
         Direction d = SafeBug.getDirection(currentLocation);

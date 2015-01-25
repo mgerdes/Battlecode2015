@@ -29,6 +29,12 @@ public class RobotPlayer {
             case SOLDIER:
                 Soldier.run(rc);
                 break;
+            case LAUNCHER:
+                Launcher.run(rc);
+                break;
+            case MISSILE:
+                Missile.run(rc);
+                break;
             case TANK:
                 Tank.run(rc);
                 break;

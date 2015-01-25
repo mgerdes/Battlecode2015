@@ -5,7 +5,10 @@ import team030.communication.Channel;
 import team030.communication.HqOrders;
 import team030.communication.Radio;
 import team030.constants.Order;
+import team030.navigation.BasicNav;
+import team030.navigation.Bfs;
 import team030.navigation.SafeBug;
+import team030.util.Debug;
 import team030.util.Helper;
 
 public class Tank {
@@ -24,7 +27,10 @@ public class Tank {
         enemyTeam = myTeam.opponent();
         myHq = rc.senseHQLocation();
 
+        Bfs.init(rcC);
         SafeBug.init(rcC);
+        BasicNav.init(rcC);
+        PathBuilder.init(rcC);
         SupplySharing.init(rcC);
         Radio.init(rcC);
         HqOrders.init(rcC);
@@ -57,63 +63,57 @@ public class Tank {
     private static void attackEnemyStructure() throws GameActionException {
         MapLocation currentLocation = rc.getLocation();
 
-        if (rc.getSupplyLevel() < 600
-                && currentLocation.distanceSquaredTo(myHq) < MAXIMUM_DISTANCE_SQUARED_TO_GO_TO_HQ_FOR_SUPPLY) {
-            SafeBug.setDestination(myHq);
-            Direction direction = SafeBug.getDirection(currentLocation);
-            if (rc.isCoreReady()
-                    && direction != Direction.NONE) {
-                rc.move(direction);
-                return;
-            }
-        }
-
-        MapLocation structureToAttack = Radio.readMapLocationFromChannel(Channel.STRUCTURE_TO_ATTACK);
-
-        //--If there are launchers nearby, it is priority
-        RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.TANK.sensorRadiusSquared, enemyTeam);
-        int indexOfLauncher = Helper.getIndexOfClosestRobot(RobotType.LAUNCHER, enemiesInSensorRange, currentLocation);
-        if (indexOfLauncher != -1) {
-            MapLocation tankLocation = enemiesInSensorRange[indexOfLauncher].location;
-            if (currentLocation.distanceSquaredTo(tankLocation) > RobotType.TANK.attackRadiusSquared) {
-                if (!rc.isCoreReady()) {
+        if (rc.getSupplyLevel() < 600) {
+            if (currentLocation.distanceSquaredTo(myHq) < MAXIMUM_DISTANCE_SQUARED_TO_GO_TO_HQ_FOR_SUPPLY) {
+                SafeBug.setDestination(myHq);
+                Direction direction = SafeBug.getDirection(currentLocation);
+                if (rc.isCoreReady()
+                        && direction != Direction.NONE) {
+                    rc.move(direction);
                     return;
-                }
-
-                SafeBug.setDestination(tankLocation);
-                Direction d = SafeBug.getDirection(currentLocation, structureToAttack);
-                if (d != Direction.NONE) {
-                    rc.move(d);
                 }
             }
             else {
-                if (rc.isWeaponReady()) {
-                    rc.attackLocation(tankLocation);
-                }
+                Radio.iNeedSupply();
             }
-
-            return;
         }
 
         //--If there are no nearby enemies, move closer to structure
-        //--If we have 10 tanks with us, we will begin attacking
-        //  otherwise, we will stay outside of enemy shooting range
+        if (!rc.isCoreReady()) {
+            return;
+        }
+
         RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.TANK.attackRadiusSquared, enemyTeam);
         int enemyCount = enemiesInAttackRange.length;
         if (enemyCount == 0) {
+            int poiToAttack = rc.readBroadcast(Channel.POI_TO_ATTACK);
+            Direction bfsDirection = Bfs.getDirection(currentLocation, poiToAttack);
+            if (bfsDirection != Direction.NONE) {
+                Direction direction = Bfs.getDirection(currentLocation, poiToAttack);
+                Debug.setString(1, String.format("bfs direction is %s", direction), rc);
+
+                direction = BasicNav.getNavigableDirectionClosestTo(direction);
+                if (direction != Direction.NONE) {
+                    rc.move(direction);
+                    return;
+                }
+            }
+
+            MapLocation structureToAttack = Radio.readMapLocationFromChannel(Channel.POI_ABSOLUTE[poiToAttack]);
             SafeBug.setDestination(structureToAttack);
 
             RobotInfo[] friendles = rc.senseNearbyRobots(RobotType.TANK.sensorRadiusSquared, myTeam);
             int nearbyTanks = Helper.getRobotsOfType(friendles, RobotType.TANK);
             if (nearbyTanks < 5
-                && currentLocation.distanceSquaredTo(structureToAttack) <= 36) {
-                    return;
-                }
+                    && currentLocation.distanceSquaredTo(structureToAttack) <= 36) {
+                return;
+            }
 
             Direction direction = SafeBug.getDirection(currentLocation, structureToAttack);
             if (rc.isCoreReady()
                     && direction != Direction.NONE) {
                 rc.move(direction);
+                return;
             }
 
             return;

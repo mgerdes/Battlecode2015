@@ -27,8 +27,6 @@ public class Drone {
 
     private static boolean deliveringSupply = false;
 
-    private static boolean sizeAndCornersBroadcasted = false;
-
     private static boolean reflectionFoundFirstEdge = false;
     private static boolean reflectionFoundSegment = false;
     private static boolean onFullPass = false;
@@ -40,6 +38,10 @@ public class Drone {
 
     private static int valueAtBeginningOfPass;
     private static Direction segmentTravelDirection;
+
+    //--Used by surveyor
+    private static Direction followDirection;
+    private static boolean wasOnWall;
 
     public static void run(RobotController rcC) {
         rc = rcC;
@@ -101,16 +103,22 @@ public class Drone {
             return;
         }
 
-        int robotID = Radio.getRobotIdThatNeedsSupply();
-        if (robotID == 0) {
-            //--There is no robot to supply, we call this method to get the default order.
-            doYourThing();
-            return;
-        }
-
         MapLocation currentLocation = rc.getLocation();
         RobotInfo[] enemiesInSensor = rc.senseNearbyRobots(RobotType.DRONE.sensorRadiusSquared, enemyTeam);
         RobotType[] enemiesToIgnore = new RobotType[]{RobotType.BEAVER, RobotType.DRONE};
+
+        int robotID = Radio.getRobotIdThatNeedsSupply();
+
+        //--If there is no robot to supply, go home
+        if (robotID == 0) {
+            SafeBug.setDestination(myHqLocation);
+            Direction direction = SafeBug.getDirection(currentLocation, null, enemiesInSensor, enemiesToIgnore);
+            if (direction != Direction.NONE) {
+                rc.move(direction);
+            }
+
+            return;
+        }
 
         double currentSupply = rc.getSupplyLevel();
         //--Go back to HQ if we are delivering supply and we have less than 1000
@@ -158,22 +166,6 @@ public class Drone {
             return;
         }
 
-        if (sizeAndCornersBroadcasted) {
-            MapLocation destination = Radio.readMapLocationFromChannel(Channel.LOCATION_TO_SURVEY);
-            if (destination == null) {
-                return;
-            }
-            else {
-                Debug.setString(1, "going to " + destination.toString(), rc);
-
-                SafeBug.setDestination(destination);
-                Direction direction = SafeBug.getDirection(rc.getLocation());
-                if (direction != Direction.NONE) {
-                    rc.move(direction);
-                }
-            }
-        }
-
         if (symmetry == Symmetry.UNKNOWN) {
             symmetry = rc.readBroadcast(Channel.MAP_SYMMETRY);
         }
@@ -208,7 +200,6 @@ public class Drone {
             Radio.setMapLocationOnChannel(new MapLocation(westEdge, southEdge), Channel.SW_MAP_CORNER);
             Radio.setMapLocationOnChannel(new MapLocation(westEdge, northEdge), Channel.NW_MAP_CORNER);
             rc.broadcast(Channel.PERIMETER_SURVEY_COMPLETE, 1);
-            sizeAndCornersBroadcasted = true;
         }
     }
 
@@ -327,7 +318,6 @@ public class Drone {
 
             Direction cornerDirection = getCornerDirection(currentLocation);
             broadcastFourCorners(currentLocation, cornerDirection, mapWidth, mapHeight);
-            sizeAndCornersBroadcasted = true;
             return;
         }
 
@@ -336,17 +326,29 @@ public class Drone {
             return;
         }
 
-        int dx = myHqLocation.x - enemyHqLocation.x;
-        int dy = myHqLocation.y - enemyHqLocation.y;
-        MapLocation destination = myHqLocation.add(dx * 1000, dy * 1000);
-        SafeBug.setDestination(destination);
+        //--Go away from enemy Hq until we hit a wall
+        if (!wasOnWall
+                && isOnWall(currentLocation)) {
+            if (followDirection == null) {
+                followDirection = awayFromEnemyHq;
+                while (!rc.canMove(followDirection)) {
+                    followDirection = followDirection.rotateLeft();
+                }
+            }
 
-        //--Need to pass in enemies for extra safety
-        Direction directionTowardsCorner = SafeBug.getDirection(currentLocation);
-        Debug.setString(2, "direction is " + directionTowardsCorner.toString(), rc);
+            SafeBug.setDestination(currentLocation.add(followDirection, 100));
+            wasOnWall = true;
+        }
+        else {
+            MapLocation destination = myHqLocation.add(awayFromEnemyHq, 100);
+            SafeBug.setDestination(destination);
+        }
 
-        if (directionTowardsCorner != Direction.NONE) {
-            rc.move(directionTowardsCorner);
+        Direction bugDirection = SafeBug.getDirection(currentLocation);
+        Debug.setString(2, "direction is " + bugDirection.toString(), rc);
+
+        if (bugDirection != Direction.NONE) {
+            rc.move(bugDirection);
         }
     }
 
@@ -404,12 +406,26 @@ public class Drone {
         return Direction.SOUTH_EAST;
     }
 
-    private static boolean isMapCorner(MapLocation currentLocation) {
+    private static boolean isMapCorner(MapLocation location) {
         int edgeCount = 0;
         for (int i = 0; i < 8; i += 2) {
-            if (rc.senseTerrainTile(currentLocation.add(Helper.getDirection(i))) == TerrainTile.OFF_MAP) {
+            if (rc.senseTerrainTile(location.add(Helper.getDirection(i))) == TerrainTile.OFF_MAP) {
                 edgeCount++;
                 if (edgeCount > 1) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean isOnWall(MapLocation location) {
+        int edgeCount = 0;
+        for (int i = 0; i < 8; i += 2) {
+            if (rc.senseTerrainTile(location.add(Helper.getDirection(i))) == TerrainTile.OFF_MAP) {
+                edgeCount++;
+                if (edgeCount > 0) {
                     return true;
                 }
             }
@@ -523,7 +539,7 @@ public class Drone {
                 if (!isCoreReady) {
                     return;
                 }
-                
+
                 Direction away = Helper.getDirectionAwayFrom(robotsCanAttackMe, currentLocation);
                 if (away == Direction.NONE) {
                     //--Should we try to attack here since we can't move?
@@ -553,7 +569,8 @@ public class Drone {
             }
             else {
                 if (isCoreReady) {
-                    Direction away = BasicNav.getNavigableDirectionClosestTo(enemyLocation.directionTo(currentLocation));
+                    Direction away =
+                            BasicNav.getNavigableDirectionClosestTo(enemyLocation.directionTo(currentLocation));
                     if (away != Direction.NONE) {
                         rc.move(away);
                     }
@@ -569,7 +586,7 @@ public class Drone {
             return;
         }
 
-        RobotType[] typesToIgnore = new RobotType[] {RobotType.BEAVER, RobotType.MINER};
+        RobotType[] typesToIgnore = new RobotType[]{RobotType.BEAVER, RobotType.MINER};
         Direction direction = SafeBug.getDirection(currentLocation, null, enemiesInSensorRange, typesToIgnore);
         if (direction == Direction.NONE) {
             return;
