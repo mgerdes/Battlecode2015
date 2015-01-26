@@ -2,11 +2,9 @@ package team030;
 
 import team030.communication.Channel;
 import battlecode.common.*;
-import team030.communication.HqOrders;
 import team030.communication.Radio;
 import team030.constants.Order;
 import team030.constants.Symmetry;
-import team030.navigation.BasicNav;
 import team030.navigation.Bug;
 import team030.navigation.CircleNav;
 import team030.navigation.SafeBug;
@@ -22,10 +20,13 @@ public class Drone {
     private static Direction awayFromEnemyHq;
     private static Team myTeam;
 
+    private static final int[] directions = new int[]{0, -1, 1, -2, 2};
 
     private static int symmetry = 0;
 
     private static boolean deliveringSupply = false;
+
+    private static boolean sizeAndCornersBroadcasted = false;
 
     private static boolean reflectionFoundFirstEdge = false;
     private static boolean reflectionFoundSegment = false;
@@ -39,10 +40,6 @@ public class Drone {
     private static int valueAtBeginningOfPass;
     private static Direction segmentTravelDirection;
 
-    //--Used by surveyor
-    private static Direction followDirection;
-    private static boolean wasOnWall;
-
     public static void run(RobotController rcC) {
         rc = rcC;
 
@@ -52,12 +49,11 @@ public class Drone {
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
 
-        BasicNav.init(rcC);
         Bug.init(rcC);
         SafeBug.init(rcC);
         SupplySharing.init(rcC);
         Radio.init(rcC);
-        HqOrders.init(rcC);
+        MessageBoard.init(rcC);
 
         loop();
     }
@@ -74,7 +70,7 @@ public class Drone {
     }
 
     private static void doYourThing() throws GameActionException {
-        Order order = HqOrders.getOrder(RobotType.DRONE);
+        Order order = MessageBoard.getOrder(RobotType.DRONE);
         switch (order) {
             case SurveyMap:
                 Debug.setString(0, "surveying...", rc);
@@ -82,9 +78,9 @@ public class Drone {
                 surveyMap();
                 break;
             case Swarm:
-                Debug.setString(0, "swarming...", rc);
+                Debug.setString(0, "attack miners...", rc);
                 SupplySharing.shareOnlyWithType(RobotType.DRONE);
-                swarmMicro();
+                swarm();
                 break;
             case Rally:
                 Debug.setString(0, "rally...", rc);
@@ -105,20 +101,7 @@ public class Drone {
 
         MapLocation currentLocation = rc.getLocation();
         RobotInfo[] enemiesInSensor = rc.senseNearbyRobots(RobotType.DRONE.sensorRadiusSquared, enemyTeam);
-        RobotType[] enemiesToIgnore = new RobotType[]{RobotType.BEAVER, RobotType.DRONE};
-
-        int robotID = Radio.getRobotIdThatNeedsSupply();
-
-        //--If there is no robot to supply, go home
-        if (robotID == 0) {
-            SafeBug.setDestination(myHqLocation);
-            Direction direction = SafeBug.getDirection(currentLocation, null, enemiesInSensor, enemiesToIgnore);
-            if (direction != Direction.NONE) {
-                rc.move(direction);
-            }
-
-            return;
-        }
+        RobotType[] enemiesToIgnore = new RobotType[] {RobotType.BEAVER, RobotType.DRONE};
 
         double currentSupply = rc.getSupplyLevel();
         //--Go back to HQ if we are delivering supply and we have less than 1000
@@ -142,13 +125,19 @@ public class Drone {
             deliveringSupply = true;
         }
 
+        int robotID = Radio.getRobotIdThatNeedsSupply();
+        if (robotID == 0) {
+            //--There is no robot to supply, we call this method to get the default order.
+            doYourThing();
+            return;
+        }
+
         MapLocation robotToSupplyLocation = rc.senseRobot(robotID).location;
         if (robotToSupplyLocation.distanceSquaredTo(currentLocation) <= GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED) {
-            rc.transferSupplies((int) rc.getSupplyLevel() - 500, robotToSupplyLocation);
-            Debug.setString(
-                    1,
-                    String.format("passed supply to robot %d at location %s\n", robotID, robotToSupplyLocation),
-                    rc);
+            rc.transferSupplies((int) rc.getSupplyLevel(), robotToSupplyLocation);
+            Debug.setString(1,
+                            String.format("passed supply to robot %d at location %s\n", robotID, robotToSupplyLocation),
+                            rc);
             return;
         }
 
@@ -164,6 +153,22 @@ public class Drone {
     private static void surveyMap() throws GameActionException {
         if (!rc.isCoreReady()) {
             return;
+        }
+
+        if (sizeAndCornersBroadcasted) {
+            MapLocation destination = Radio.readMapLocationFromChannel(Channel.LOCATION_TO_SURVEY);
+            if (destination == null) {
+                return;
+            }
+            else {
+                Debug.setString(1, "going to " + destination.toString(), rc);
+
+                SafeBug.setDestination(destination);
+                Direction direction = SafeBug.getDirection(rc.getLocation());
+                if (direction != Direction.NONE) {
+                    rc.move(direction);
+                }
+            }
         }
 
         if (symmetry == Symmetry.UNKNOWN) {
@@ -200,6 +205,7 @@ public class Drone {
             Radio.setMapLocationOnChannel(new MapLocation(westEdge, southEdge), Channel.SW_MAP_CORNER);
             Radio.setMapLocationOnChannel(new MapLocation(westEdge, northEdge), Channel.NW_MAP_CORNER);
             rc.broadcast(Channel.PERIMETER_SURVEY_COMPLETE, 1);
+            sizeAndCornersBroadcasted = true;
         }
     }
 
@@ -318,6 +324,7 @@ public class Drone {
 
             Direction cornerDirection = getCornerDirection(currentLocation);
             broadcastFourCorners(currentLocation, cornerDirection, mapWidth, mapHeight);
+            sizeAndCornersBroadcasted = true;
             return;
         }
 
@@ -326,34 +333,17 @@ public class Drone {
             return;
         }
 
-        //--Go away from enemy Hq until we hit a wall
-        if (!wasOnWall
-                && isOnWall(currentLocation)) {
-            if (followDirection == null) {
-                followDirection = awayFromEnemyHq;
-            }
+        int dx = myHqLocation.x - enemyHqLocation.x;
+        int dy = myHqLocation.y - enemyHqLocation.y;
+        MapLocation destination = myHqLocation.add(dx * 1000, dy * 1000);
+        SafeBug.setDestination(destination);
 
-            while (rc.senseTerrainTile(currentLocation.add(followDirection)) == TerrainTile.OFF_MAP) {
-                followDirection = followDirection.rotateLeft();
-            }
-            
-            SafeBug.setDestination(currentLocation.add(followDirection, 100));
-            wasOnWall = true;
-        }
-        else {
-            if (followDirection == null) {
-                followDirection = awayFromEnemyHq;
-            }
+        //--Need to pass in enemies for extra safety
+        Direction directionTowardsCorner = SafeBug.getDirection(currentLocation);
+        Debug.setString(2, "direction is " + directionTowardsCorner.toString(), rc);
 
-            MapLocation destination = myHqLocation.add(followDirection, 100);
-            SafeBug.setDestination(destination);
-        }
-
-        Direction bugDirection = SafeBug.getDirection(currentLocation);
-        Debug.setString(2, "direction is " + bugDirection.toString(), rc);
-
-        if (bugDirection != Direction.NONE) {
-            rc.move(bugDirection);
+        if (directionTowardsCorner != Direction.NONE) {
+            rc.move(directionTowardsCorner);
         }
     }
 
@@ -411,26 +401,12 @@ public class Drone {
         return Direction.SOUTH_EAST;
     }
 
-    private static boolean isMapCorner(MapLocation location) {
+    private static boolean isMapCorner(MapLocation currentLocation) {
         int edgeCount = 0;
         for (int i = 0; i < 8; i += 2) {
-            if (rc.senseTerrainTile(location.add(Helper.getDirection(i))) == TerrainTile.OFF_MAP) {
+            if (rc.senseTerrainTile(currentLocation.add(Helper.getDirection(i))) == TerrainTile.OFF_MAP) {
                 edgeCount++;
                 if (edgeCount > 1) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    private static boolean isOnWall(MapLocation location) {
-        int edgeCount = 0;
-        for (int i = 0; i < 8; i += 2) {
-            if (rc.senseTerrainTile(location.add(Helper.getDirection(i))) == TerrainTile.OFF_MAP) {
-                edgeCount++;
-                if (edgeCount > 0) {
                     return true;
                 }
             }
@@ -457,166 +433,6 @@ public class Drone {
         }
     }
 
-    private static void swarmMicro() throws GameActionException {
-        MapLocation currentLocation = rc.getLocation();
-        SafeBug.setDestination(enemyHqLocation);
-        boolean isCoreReady = rc.isCoreReady();
-        boolean isWeaponReady = rc.isWeaponReady();
-
-        if (rc.getSupplyLevel() < 500) {
-            Radio.iNeedSupply();
-        }
-
-        //--Find the enemies that can attack me
-        RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.DRONE.sensorRadiusSquared, enemyTeam);
-        RobotInfo[] robotsCanAttackMe = Helper.getRobotsCanAttackLocation(enemiesInSensorRange, currentLocation);
-        int canAttackMeCount = robotsCanAttackMe.length;
-
-        //--If more than two enemies can attack me, move away
-        if (canAttackMeCount > 2) {
-            if (!isCoreReady) {
-                return;
-            }
-
-            Direction away = Helper.getDirectionAwayFrom(robotsCanAttackMe, currentLocation);
-            if (away == Direction.NONE) {
-                //--Should we try to attack here since we can't move?
-                return;
-            }
-
-            Direction navigableAway = BasicNav.getNavigableDirectionClosestTo(away);
-            if (navigableAway == Direction.NONE) {
-                //--Should we try to attack here since we can't move?
-                return;
-            }
-
-            rc.move(navigableAway);
-            return;
-        }
-
-        //--If two enemies can attack me,
-        //    Run away if I cannot shoot either of them
-        //    Run away if I have no friends that can shoot one of them
-        if (canAttackMeCount == 2) {
-            boolean[] iCanShoot = new boolean[2];
-            int myRange = RobotType.DRONE.attackRadiusSquared;
-            iCanShoot[0] = myRange >= currentLocation.distanceSquaredTo(robotsCanAttackMe[0].location);
-            iCanShoot[1] = myRange >= currentLocation.distanceSquaredTo(robotsCanAttackMe[1].location);
-            if (!iCanShoot[0]
-                    && !iCanShoot[1]) {
-                return;
-            }
-
-            boolean friendCanHelp = false;
-            RobotInfo[] friendliesInSensorRange = rc.senseNearbyRobots(RobotType.DRONE.sensorRadiusSquared, myTeam);
-            int friendlyCount = friendliesInSensorRange.length;
-            for (int i = 0; i < friendlyCount; i++) {
-                int attackRadiusSqured = friendliesInSensorRange[i].type.attackRadiusSquared;
-                MapLocation friendlyLocation = friendliesInSensorRange[i].location;
-                if (attackRadiusSqured >= friendlyLocation.distanceSquaredTo(robotsCanAttackMe[0].location)
-                        || attackRadiusSqured >= friendlyLocation.distanceSquaredTo(robotsCanAttackMe[1].location)) {
-                    friendCanHelp = true;
-                    break;
-                }
-            }
-
-            //--We can shoot one of the enemies, but we a need a friend to help
-            if (friendCanHelp) {
-                //--Attack the enemy with the lowest HP
-                if (!isWeaponReady) {
-                    return;
-                }
-
-                if (iCanShoot[0]
-                        && iCanShoot[1]) {
-                    int indexToShoot = robotsCanAttackMe[0].health < robotsCanAttackMe[1].health ? 0 : 1;
-                    rc.attackLocation(robotsCanAttackMe[indexToShoot].location);
-                }
-                else if (iCanShoot[0]) {
-                    rc.attackLocation(robotsCanAttackMe[0].location);
-                }
-                else {
-                    rc.attackLocation(robotsCanAttackMe[1].location);
-                }
-            }
-            else {
-                //--No friend can help. time to go away.
-                if (!isCoreReady) {
-                    return;
-                }
-
-                Direction away = Helper.getDirectionAwayFrom(robotsCanAttackMe, currentLocation);
-                if (away == Direction.NONE) {
-                    //--Should we try to attack here since we can't move?
-                    return;
-                }
-
-                Direction navigableAway = BasicNav.getNavigableDirectionClosestTo(away);
-                if (navigableAway == Direction.NONE) {
-                    //--Should we try to attack here since we can't move?
-                    return;
-                }
-
-                rc.move(navigableAway);
-            }
-
-            return;
-        }
-
-        //--If one enemy can attack me, engage if I have more HP?
-        //    Run away if I cannot shoot it
-        if (canAttackMeCount == 1) {
-            MapLocation enemyLocation = robotsCanAttackMe[0].location;
-            if (currentLocation.distanceSquaredTo(enemyLocation) <= RobotType.DRONE.attackRadiusSquared) {
-                if (isWeaponReady) {
-                    rc.attackLocation(enemyLocation);
-                }
-            }
-            else {
-                if (isCoreReady) {
-                    Direction away =
-                            BasicNav.getNavigableDirectionClosestTo(enemyLocation.directionTo(currentLocation));
-                    if (away != Direction.NONE) {
-                        rc.move(away);
-                    }
-                }
-            }
-
-            return;
-        }
-
-        //--No enemies are nearby that can attack me
-        //--Go to destination (if it is safe)
-        if (!isCoreReady) {
-            return;
-        }
-
-        RobotType[] typesToIgnore = new RobotType[]{RobotType.BEAVER, RobotType.MINER};
-        Direction direction = SafeBug.getDirection(currentLocation, null, enemiesInSensorRange, typesToIgnore);
-        if (direction == Direction.NONE) {
-            return;
-        }
-
-        //--Check if the direction will be safe
-        MapLocation next = currentLocation.add(direction);
-        RobotInfo[] robotsCanAttackDestination = Helper.getRobotsCanAttackLocation(enemiesInSensorRange, next);
-        int canAttackDestinationCount = robotsCanAttackDestination.length;
-        if (canAttackDestinationCount > 1) {
-            return;
-        }
-
-        //--Did the safe bug already check for this?
-        if (canAttackDestinationCount == 1) {
-            RobotType enemyType = robotsCanAttackDestination[0].type;
-            if (enemyType != RobotType.MINER
-                    && enemyType != RobotType.BEAVER) {
-                return;
-            }
-        }
-
-        rc.move(direction);
-    }
-
     private static void swarm() throws GameActionException {
         MapLocation currentLocation = rc.getLocation();
         SafeBug.setDestination(enemyHqLocation);
@@ -641,6 +457,7 @@ public class Drone {
                             null,
                             enemiesInSensorRange,
                             typesToIgnore);
+                    Debug.setString(0, runawayDirection.toString(), rc);
                     if (runawayDirection != Direction.NONE) {
                         rc.move(runawayDirection);
                         return;
@@ -649,11 +466,7 @@ public class Drone {
                         //--We could not find a runaway direction... turn around!
                         runawayDirection = SafeBug.getPreviousDirection().opposite();
                         if (runawayDirection != Direction.NONE) {
-                            Direction navigableRunaway = BasicNav.getNavigableDirectionClosestTo(runawayDirection);
-                            if (navigableRunaway != Direction.NONE) {
-                                rc.move(navigableRunaway);
-                            }
-
+                            tryMove(runawayDirection);
                             return;
                         }
                     }
@@ -683,6 +496,17 @@ public class Drone {
             Direction direction = SafeBug.getDirection(currentLocation, null, enemiesInSensorRange, typesToIgnore);
             if (direction != Direction.NONE) {
                 rc.move(direction);
+            }
+        }
+    }
+
+    private static void tryMove(Direction initial) throws GameActionException {
+        int initialDirectionValue = Helper.getInt(initial);
+        for (int i = 0; i < directions.length; i++) {
+            Direction direction = Helper.getDirection(initialDirectionValue + i);
+            if (rc.canMove(direction)) {
+                rc.move(direction);
+                return;
             }
         }
     }

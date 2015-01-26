@@ -5,7 +5,7 @@ import team030.communication.Radio;
 import team030.util.Debug;
 import team030.util.Helper;
 import battlecode.common.*;
-import team030.navigation.SafeBug;
+import team030.navigation.Bug;
 
 public class Miner {
     private static RobotController rc;
@@ -27,10 +27,9 @@ public class Miner {
         Direction toEnemyHq = myHqLocation.directionTo(enemyHqLocation);
         defaultLocation = getDefaultLocation(toEnemyHq);
 
-        SafeBug.init(rcC);
+        Bug.init(rcC);
         SupplySharing.init(rcC);
         Radio.init(rcC);
-        PathBuilder.init(rcC);
 
         loop();
     }
@@ -53,11 +52,6 @@ public class Miner {
             Radio.iNeedSupply();
         }
 
-        if (rc.readBroadcast(Channel.READY_FOR_BFS) == 1
-                && !PathBuilder.isComplete()) {
-            PathBuilder.build(Clock.getBytecodesLeft() - 1000);
-        }
-
         MapLocation currentLocation = rc.getLocation();
         updateMinerRadius(currentLocation);
 
@@ -78,28 +72,23 @@ public class Miner {
             int minersThatAreVeryClose = Helper.getRobotsOfType(teammatesThatAreVeryClose, RobotType.MINER);
             if (minersThatAreVeryClose > 2) {
                 Direction direction = findDirectionMostAwayFromOurHqWithOre(currentLocation);
-                Debug.setString(1, "special method returned " + direction, rc);
                 if (direction == null) {
-                    SafeBug.setDestination(defaultLocation);
-                    direction = SafeBug.getDirection(currentLocation);
+                    Bug.setDestination(defaultLocation);
+                    direction = Bug.getDirection(currentLocation);
                 }
 
-                if (direction != Direction.NONE) {
-                    rc.move(direction);
-                    return;
-                }
+                rc.move(direction);
+                return;
             }
             else if (rc.senseOre(currentLocation) == 0) {
                 Direction direction = findDirectionMostAwayFromEnemyHqWithOre(currentLocation);
                 if (direction == null) {
-                    SafeBug.setDestination(defaultLocation);
-                    direction = SafeBug.getDirection(currentLocation);
+                    Bug.setDestination(defaultLocation);
+                    direction = Bug.getDirection(currentLocation);
                 }
 
-                if (direction != Direction.NONE) {
-                    rc.move(direction);
-                    return;
-                }
+                rc.move(direction);
+                return;
             }
             else {
                 rc.mine();
@@ -108,17 +97,13 @@ public class Miner {
     }
 
     private static Direction findDirectionMostAwayFromOurHqWithOre(MapLocation currentLocation) {
-        MapLocation[] enemyTowers = rc.senseEnemyTowerLocations();
-        int enemyTowerCount = enemyTowers.length;
         int directionAwayFromOurHq = Helper.getInt(myHqLocation.directionTo(currentLocation));
         int[] directions = new int[]{0, -1, 1, -2, 2, -3, 3, -4};
         for (int n : directions) {
             Direction direction = Helper.getDirection(directionAwayFromOurHq + n);
             MapLocation nextLocation = currentLocation.add(direction);
             if (rc.senseOre(nextLocation) > 0
-                    && rc.canMove(direction)
-                    && !Helper.canBeAttackedByTowers(nextLocation, enemyTowers)
-                    && !Helper.canBeDamagedByHq(nextLocation, enemyHqLocation, enemyTowerCount)) {
+                    && rc.canMove(direction)) {
                 return direction;
             }
         }
@@ -149,17 +134,13 @@ public class Miner {
     }
 
     private static Direction findDirectionMostAwayFromEnemyHqWithOre(MapLocation currentLocation) {
-        MapLocation[] enemyTowers = rc.senseEnemyTowerLocations();
-        int enemyTowerCount = enemyTowers.length;
         int directionAwayFromHq = Helper.getInt(enemyHqLocation.directionTo(myHqLocation));
         int[] directions = new int[]{0, -1, 1, -2, 2, -3, 3, -4};
         for (int n : directions) {
             Direction direction = Helper.getDirection(directionAwayFromHq + n);
             MapLocation nextLocation = currentLocation.add(direction);
             if (rc.senseOre(nextLocation) > 0
-                    && rc.canMove(direction)
-                    && !Helper.canBeAttackedByTowers(nextLocation, enemyTowers)
-                    && !Helper.canBeDamagedByHq(nextLocation, enemyHqLocation, enemyTowerCount)) {
+                    && rc.canMove(direction)) {
                 return direction;
             }
         }

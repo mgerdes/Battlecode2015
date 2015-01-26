@@ -10,21 +10,12 @@ public class Radio {
     private static int myType;
     private static int myId;
 
-    private static int[] supplyPriority;
-
     public static void init(RobotController rcC) {
         rc = rcC;
 
         myHq = rc.senseHQLocation();
         myType = rc.getType().ordinal();
         myId = rc.getID();
-
-        supplyPriority = new int[20];
-        supplyPriority[RobotType.BEAVER.ordinal()] = 0;
-        supplyPriority[RobotType.MINER.ordinal()] = 1;
-        supplyPriority[RobotType.SOLDIER.ordinal()] = 2;
-        supplyPriority[RobotType.LAUNCHER.ordinal()] = 3;
-        supplyPriority[RobotType.TANK.ordinal()] = 4;
     }
 
     public static void iNeedSupply() throws GameActionException {
@@ -57,7 +48,7 @@ public class Radio {
 
         //--If my type is a higher priority, I can overwrite it
         int currentType = supplyContextValue / 10000;
-        if (supplyPriority[myType] > supplyPriority[currentType]) {
+        if (myType > currentType) {
             rc.broadcast(Channel.NEED_SUPPLY_ROBOT_ID, myId);
             rc.broadcast(
                     Channel.NEED_SUPPLY_CONTEXT,

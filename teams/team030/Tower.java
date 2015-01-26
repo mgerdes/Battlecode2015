@@ -1,15 +1,12 @@
 package team030;
 
 import battlecode.common.*;
-import team030.communication.Channel;
 import team030.communication.Radio;
-import team030.constants.Config;
 
 public class Tower {
     private static RobotController rc;
     private static Team enemyTeam;
     private static MapLocation myLocation;
-    private static MapLocation[] nearbySquares;
 
     public static void run(RobotController rcC) throws GameActionException {
         rc = rcC;
@@ -33,16 +30,19 @@ public class Tower {
         }
     }
 
+    private static void checkNearbySquares() throws GameActionException {
+        MapLocation[] nearbySquares = MapLocation.getAllMapLocationsWithinRadiusSq(myLocation, RobotType.TOWER.sensorRadiusSquared);
+        int voidCount = 0;
+        for (MapLocation location : nearbySquares) {
+            if (rc.senseTerrainTile(location) == TerrainTile.VOID) {
+                voidCount++;
+            }
+        }
+
+        Radio.towerReportVoidSquareCount(myLocation, voidCount);
+    }
+
     private static void doYourThing() throws GameActionException {
-        int roundNumber = Clock.getRoundNum();
-        if (roundNumber == 0) {
-            checkNearbySquares();
-        }
-
-        if (roundNumber == Config.COUNT_ORE_ROUND_NUMBER) {
-            broadcastOreEstimate();
-        }
-
         RobotInfo[] enemiesInSensorRange = rc.senseNearbyRobots(RobotType.TOWER.sensorRadiusSquared, enemyTeam);
         int numberOfEnemies = enemiesInSensorRange.length;
         if (numberOfEnemies > 0) {
@@ -55,30 +55,5 @@ public class Tower {
                 rc.attackLocation(enemiesInAttackRange[0].location);
             }
         }
-    }
-
-    private static void checkNearbySquares() throws GameActionException {
-        nearbySquares = MapLocation.getAllMapLocationsWithinRadiusSq(myLocation, RobotType.TOWER.sensorRadiusSquared);
-        int voidCount = 0;
-        for (MapLocation location : nearbySquares) {
-            if (rc.senseTerrainTile(location) == TerrainTile.VOID) {
-                voidCount++;
-            }
-        }
-
-        Radio.towerReportVoidSquareCount(myLocation, voidCount);
-    }
-
-    private static void broadcastOreEstimate() throws GameActionException {
-        double oreAmount = 0;
-        for (MapLocation location : nearbySquares) {
-            oreAmount += rc.senseOre(location);
-        }
-
-        System.out.printf("found %f ore\n", oreAmount);
-
-        int currentValue = rc.readBroadcast(Channel.ORE_ESTIMATE);
-        int newValue = (int) (currentValue + oreAmount);
-        rc.broadcast(Channel.ORE_ESTIMATE, newValue);
     }
 }
