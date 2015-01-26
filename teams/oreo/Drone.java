@@ -144,7 +144,7 @@ public class Drone {
 
         MapLocation robotToSupplyLocation = rc.senseRobot(robotID).location;
         if (robotToSupplyLocation.distanceSquaredTo(currentLocation) <= GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED) {
-            rc.transferSupplies((int) rc.getSupplyLevel(), robotToSupplyLocation);
+            rc.transferSupplies((int) rc.getSupplyLevel() - 500, robotToSupplyLocation);
             Debug.setString(
                     1,
                     String.format("passed supply to robot %d at location %s\n", robotID, robotToSupplyLocation),
