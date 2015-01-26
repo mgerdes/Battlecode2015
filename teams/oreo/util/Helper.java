@@ -136,6 +136,18 @@ public class Helper {
         return false;
     }
 
+    public static MapLocation getTowerLocationThatCanAttackLocation(MapLocation location,
+                                                                    MapLocation[] towerLocations) {
+        int towerCount = towerLocations.length;
+        for (int i = 0; i < towerCount; i++) {
+            if (location.distanceSquaredTo(towerLocations[i]) <= RobotType.TOWER.attackRadiusSquared) {
+                return location;
+            }
+        }
+
+        return null;
+    }
+
     public static boolean canBeDamagedByHq(MapLocation location, MapLocation hq, int towerCount) {
         int attackRadiusSquared;
         if (towerCount > 4) {

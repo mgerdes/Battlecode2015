@@ -8,6 +8,7 @@ import oreo.constants.Order;
 import oreo.navigation.BasicNav;
 import oreo.navigation.Bfs;
 import oreo.navigation.SafeBug;
+import oreo.util.Debug;
 import oreo.util.Helper;
 
 public class Launcher {
@@ -79,6 +80,7 @@ public class Launcher {
     private static void attackEnemyStructure() throws GameActionException {
         MapLocation currentLocation = rc.getLocation();
 
+        //--Check supply
         if (rc.getSupplyLevel() < 600) {
             if (currentLocation.distanceSquaredTo(myHq) < MAXIMUM_DISTANCE_SQUARED_TO_GO_TO_HQ_FOR_SUPPLY) {
                 SafeBug.setDestination(myHq);
@@ -99,6 +101,7 @@ public class Launcher {
 
         //--If there are no nearby enemies, move closer
         if (enemiesInSensorRange.length == 0) {
+            Debug.setString(1, "no enemy", rc);
             int poiToAttack = rc.readBroadcast(Channel.POI_TO_ATTACK);
             MapLocation structureToAttack = Radio.readMapLocationFromChannel(Channel.POI_ABSOLUTE[poiToAttack]);
             Direction direction = Bfs.getDirection(currentLocation, poiToAttack);
@@ -112,8 +115,19 @@ public class Launcher {
                 direction = SafeBug.getDirection(currentLocation, structureToAttack);
             }
 
+            //--Check if going here would put us un range of a different tower
+            MapLocation next = currentLocation.add(direction);
+            MapLocation enemyTower = Helper.getTowerLocationThatCanAttackLocation(next, rc.senseEnemyTowerLocations());
+
+            //--If it would, let's attack that tower
+            if (enemyTower != null) {
+                Debug.setString(2, "attacking " + enemyTower.toString() + " instead", rc);
+                structureToAttack = enemyTower;
+            }
+
             //--See if our missiles would be close enough to attack
             MapLocation missileLocation = currentLocation.add(direction);
+            Debug.setString(0, missileLocation.toString() + " " + structureToAttack.toString(), rc);
             if (missileLocation.distanceSquaredTo(structureToAttack) <= RobotType.MISSILE.sensorRadiusSquared) {
                 if (rc.canLaunch(direction)) {
                     rc.launchMissile(direction);
@@ -134,6 +148,7 @@ public class Launcher {
             for (int i = 0; i < enemiesInSensorCount; i++) {
                 if (currentLocation.distanceSquaredTo(enemiesInSensorRange[i].location) <= 5) {
                     tryMove(enemiesInSensorRange[i].location.directionTo(currentLocation));
+                    Debug.setString(1, "enemy too close", rc);
                     break;
                 }
             }
@@ -142,6 +157,7 @@ public class Launcher {
         //--Attack a non-missile enemy
         int nonMissileEnemyCount = Helper.getRobotsExcludingType(enemiesInSensorRange, RobotType.MISSILE);
         if (nonMissileEnemyCount != 0) {
+            Debug.setString(2, "enemies to attack", rc);
             int index = 0;
             for (int i = 0; i < enemiesInSensorRange.length; i++) {
                 if (enemiesInSensorRange[i].type != RobotType.MISSILE) {
