@@ -144,7 +144,7 @@ public class Drone {
 
         MapLocation robotToSupplyLocation = rc.senseRobot(robotID).location;
         if (robotToSupplyLocation.distanceSquaredTo(currentLocation) <= GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED) {
-            rc.transferSupplies((int) rc.getSupplyLevel(), robotToSupplyLocation);
+            rc.transferSupplies((int) rc.getSupplyLevel() - 500, robotToSupplyLocation);
             Debug.setString(
                     1,
                     String.format("passed supply to robot %d at location %s\n", robotID, robotToSupplyLocation),
@@ -331,16 +331,21 @@ public class Drone {
                 && isOnWall(currentLocation)) {
             if (followDirection == null) {
                 followDirection = awayFromEnemyHq;
-                while (!rc.canMove(followDirection)) {
-                    followDirection = followDirection.rotateLeft();
-                }
             }
 
+            while (rc.senseTerrainTile(currentLocation.add(followDirection)) == TerrainTile.OFF_MAP) {
+                followDirection = followDirection.rotateLeft();
+            }
+            
             SafeBug.setDestination(currentLocation.add(followDirection, 100));
             wasOnWall = true;
         }
         else {
-            MapLocation destination = myHqLocation.add(awayFromEnemyHq, 100);
+            if (followDirection == null) {
+                followDirection = awayFromEnemyHq;
+            }
+
+            MapLocation destination = myHqLocation.add(followDirection, 100);
             SafeBug.setDestination(destination);
         }
 
