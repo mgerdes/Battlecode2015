@@ -333,7 +333,7 @@ public class Drone {
                 followDirection = awayFromEnemyHq;
             }
 
-            while (!rc.canMove(followDirection)) {
+            while (rc.senseTerrainTile(currentLocation.add(followDirection)) == TerrainTile.OFF_MAP) {
                 followDirection = followDirection.rotateLeft();
             }
             
