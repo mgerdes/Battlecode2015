@@ -1,9 +1,9 @@
-package justInTime;
+package justInTime2;
 
 import battlecode.common.*;
-import justInTime.communication.Channel;
-import justInTime.communication.Radio;
-import justInTime.constants.Symmetry;
+import justInTime2.communication.Channel;
+import justInTime2.communication.Radio;
+import justInTime2.constants.Symmetry;
 
 public class MapBuilder {
     private static RobotController rc;
@@ -12,104 +12,32 @@ public class MapBuilder {
     private static int mapHeight;
     private static int minX;
     private static int minY;
-
-    private static MapLocation myHq;
-
     private static int symmetryType;
+
+    private static int totalTileCount;
+    private static int tilesBroadcastCount;
 
     private static int xLoop = 0;
     private static int yLoop = 0;
 
-    private static int debugWaitingForLocation = 0;
-    private static int debugStopForBytecodes = 0;
-
-    private static final int MAX_BYTECODES_CONSUMED_IN_ONE_LOOP_PASS = 220;
-
+    private static final int MAX_BYTECODES_CONSUMED_IN_ONE_LOOP_PASS = 240;
     private static boolean[][] wasBroadcast;
 
-    public static void init(int mapWidthC,
-                            int mapHeightC,
-                            MapLocation nwCornerC,
-                            int symmetryTypeC,
-                            MapLocation myHqC,
-                            RobotController rcC) {
-        mapWidth = mapWidthC;
-        mapHeight = mapHeightC;
-        minX = nwCornerC.x;
-        minY = nwCornerC.y;
-        symmetryType = symmetryTypeC;
-        myHq = myHqC;
+    public static void init(RobotController rcC) throws GameActionException {
         rc = rcC;
 
+        Radio.init(rcC);
+
+        MapLocation nwMapCorner = Radio.readMapLocationFromChannel(Channel.NW_MAP_CORNER);
+        minX = nwMapCorner.x;
+        minY = nwMapCorner.y;
+
+        symmetryType = rc.readBroadcast(Channel.MAP_SYMMETRY);
+        mapWidth = rcC.readBroadcast(Channel.MAP_WIDTH);
+        mapHeight = rcC.readBroadcast(Channel.MAP_HEIGHT);
+
+        totalTileCount = mapHeight * mapWidth;
         wasBroadcast = new boolean[mapWidth][mapHeight];
-    }
-
-    public static boolean processUntilComplete(int bytecodeLimit) throws GameActionException {
-        //--Broadcast terrain tiles
-        //--When we reach an unknown, check its symmetrical point
-        //--If both are unknown, return that location (the one that we can go to easier)
-
-        int initialBytecodeValue = Clock.getBytecodeNum();
-        int finalBytecodeValue = initialBytecodeValue + bytecodeLimit;
-        for (; xLoop < mapWidth; xLoop++) {
-            for (; yLoop < mapHeight; yLoop++) {
-                if (Clock.getBytecodeNum() > finalBytecodeValue - MAX_BYTECODES_CONSUMED_IN_ONE_LOOP_PASS) {
-                    debugStopForBytecodes++;
-                    return false;
-                }
-
-                if (wasBroadcast[xLoop][yLoop]) {
-                    continue;
-                }
-
-                MapLocation locationToCheck = getAbsoluteMapLocationForRelativeCoordinates(xLoop, yLoop);
-                MapLocation reflected = getReflectedMapLocation(locationToCheck);
-                TerrainTile tile = rc.senseTerrainTile(locationToCheck);
-                if (tile == TerrainTile.UNKNOWN) {
-                    tile = rc.senseTerrainTile(reflected);
-                }
-
-                if (tile == TerrainTile.UNKNOWN) {
-                    MapLocation closerToOurHq =
-                            myHq.distanceSquaredTo(locationToCheck) < myHq.distanceSquaredTo(reflected) ?
-                            locationToCheck
-                            : reflected;
-                    Radio.setMapLocationOnChannel(closerToOurHq, Channel.LOCATION_TO_SURVEY);
-
-//                    System.out.println("need location original " + locationToCheck);
-//                    System.out.println("need location reflected " + closerToOurHq);
-                    debugWaitingForLocation++;
-                    return false;
-                }
-                else {
-                    int offsetForFirstLocation = getHashForRelativeCoordinates(xLoop, yLoop);
-                    int offsetForReflectedLocation = getReflectedChannelOffset(offsetForFirstLocation);
-                    rc.broadcast(
-                            Channel.NW_CORNER_TERRAIN_TILE + offsetForFirstLocation,
-                            tile.ordinal());
-                    rc.broadcast(
-                            Channel.NW_CORNER_TERRAIN_TILE + offsetForReflectedLocation,
-                            tile.ordinal());
-                    wasBroadcast[getXValue(offsetForFirstLocation)][getYValue(offsetForFirstLocation)] = true;
-                    wasBroadcast[getXValue(offsetForReflectedLocation)][getYValue(offsetForReflectedLocation)] = true;
-                }
-            }
-
-            if (xLoop < mapWidth - 1) {
-                yLoop = 0;
-            }
-        }
-
-        System.out.printf(
-                "\nWaited for location %d times\nBytecode break %d times\n",
-                debugWaitingForLocation,
-                debugStopForBytecodes);
-
-        return true;
-    }
-
-    private static MapLocation getAbsoluteMapLocationForRelativeCoordinates(int x, int y) {
-        return new MapLocation(minX + x, minY + y);
     }
 
     public static MapLocation getReflectedMapLocation(MapLocation location) {
@@ -127,7 +55,67 @@ public class MapBuilder {
         return null;
     }
 
-    public static int getReflectedChannelOffset(int relativeAddress) {
+    //--This method should be called by one robot
+    //--It will broadcast all of the terrain tiles that it can either sense or infer from symmetry
+    public static boolean processUntilComplete(int bytecodeLimit) throws GameActionException {
+        int initialBytecodeValue = Clock.getBytecodeNum();
+        int finalBytecodeValue = initialBytecodeValue + bytecodeLimit;
+
+        //--Start the loop where we left off
+        for (; xLoop < mapWidth; xLoop++) {
+            for (; yLoop < mapHeight; yLoop++) {
+                //--Stop when we run out of bytecodes
+                if (Clock.getBytecodeNum() > finalBytecodeValue - MAX_BYTECODES_CONSUMED_IN_ONE_LOOP_PASS) {
+                    return false;
+                }
+
+                if (wasBroadcast[xLoop][yLoop]) {
+                    continue;
+                }
+
+                MapLocation locationToCheck = getAbsoluteMapLocationForRelativeCoordinates(xLoop, yLoop);
+                MapLocation reflected = getReflectedMapLocation(locationToCheck);
+                TerrainTile tile = rc.senseTerrainTile(locationToCheck);
+
+                //--If tile is unknown check reflected tile
+                if (tile == TerrainTile.UNKNOWN) {
+                    tile = rc.senseTerrainTile(reflected);
+                }
+
+                //--If reflected tile is unknown, keep going.
+                //--Our BFS pathfinding will treat unknown as VOID
+                if (tile == TerrainTile.UNKNOWN) {
+                    continue;
+                }
+
+                int offsetForFirstLocation = getHashForRelativeCoordinates(xLoop, yLoop);
+                int offsetForReflectedLocation = getReflectedChannelOffset(offsetForFirstLocation);
+                rc.broadcast(
+                        Channel.NW_CORNER_TERRAIN_TILE + offsetForFirstLocation,
+                        tile.ordinal() + 1);
+                rc.broadcast(
+                        Channel.NW_CORNER_TERRAIN_TILE + offsetForReflectedLocation,
+                        tile.ordinal() + 1);
+
+                wasBroadcast[getXValue(offsetForFirstLocation)][getYValue(offsetForFirstLocation)] = true;
+                wasBroadcast[getXValue(offsetForReflectedLocation)][getYValue(offsetForReflectedLocation)] = true;
+
+                tilesBroadcastCount += 2;
+            }
+
+            yLoop = 0;
+        }
+
+        System.out.printf("Broadcasted %f percent of tiles\n", (double) tilesBroadcastCount / totalTileCount * 100);
+        rc.broadcast(Channel.READY_FOR_BFS, 1);
+        return true;
+    }
+
+    private static MapLocation getAbsoluteMapLocationForRelativeCoordinates(int x, int y) {
+        return new MapLocation(minX + x, minY + y);
+    }
+
+    private static int getReflectedChannelOffset(int relativeAddress) {
         switch (symmetryType) {
             case Symmetry.VERTICAL:
                 int verticalX = mapWidth - getXValue(relativeAddress) - 1;

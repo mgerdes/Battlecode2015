@@ -1,8 +1,9 @@
-package justInTime;
+package justInTime2;
 
-import justInTime.communication.Channel;
-import justInTime.util.Debug;
-import justInTime.util.Helper;
+import justInTime2.communication.Channel;
+import justInTime2.communication.HqOrders;
+import justInTime2.util.Debug;
+import justInTime2.util.Helper;
 import battlecode.common.*;
 
 public class Spawner {
@@ -16,7 +17,7 @@ public class Spawner {
 
         myTeam = rc.getTeam();
 
-        MessageBoard.init(rcC);
+        HqOrders.init(rcC);
 
         buildUnitData();
 
@@ -52,7 +53,7 @@ public class Spawner {
     private static void tryToSpawn() throws GameActionException {
         for (RobotType type : typesBuiltHere) {
             if (rc.getTeamOre() >= type.oreCost
-                    && MessageBoard.shouldSpawn(type)) {
+                    && HqOrders.shouldSpawn(type)) {
                 spawn(type);
                 return;
             }

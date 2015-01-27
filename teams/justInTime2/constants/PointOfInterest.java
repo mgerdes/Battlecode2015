@@ -1,4 +1,4 @@
-package justInTime.constants;
+package justInTime2.constants;
 
 public class PointOfInterest {
     public static final int TOWER_1 = 1;

@@ -1,6 +1,6 @@
-package justInTime;
+package justInTime2;
 
-import justInTime.communication.Channel;
+import justInTime2.communication.Channel;
 import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;

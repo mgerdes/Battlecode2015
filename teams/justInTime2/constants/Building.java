@@ -1,4 +1,4 @@
-package justInTime.constants;
+package justInTime2.constants;
 
 public class Building {
     //--Values must be less than 20 (see array in BuildingQueue that handles delays)

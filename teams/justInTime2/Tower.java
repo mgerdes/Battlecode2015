@@ -1,7 +1,7 @@
-package justInTime;
+package justInTime2;
 
 import battlecode.common.*;
-import justInTime.communication.Radio;
+import justInTime2.communication.Radio;
 
 public class Tower {
     private static RobotController rc;

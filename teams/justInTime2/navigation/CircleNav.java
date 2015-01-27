@@ -1,10 +1,10 @@
-package justInTime.navigation;
+package justInTime2.navigation;
 
 import battlecode.common.Direction;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.TerrainTile;
-import justInTime.util.Helper;
+import justInTime2.util.Helper;
 
 public class CircleNav {
     private static RobotController rc;

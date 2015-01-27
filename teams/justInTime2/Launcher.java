@@ -1,11 +1,15 @@
-package justInTime;
+package justInTime2;
 
 import battlecode.common.*;
-import justInTime.communication.Channel;
-import justInTime.communication.Radio;
-import justInTime.constants.Order;
-import justInTime.navigation.SafeBug;
-import justInTime.util.Helper;
+import justInTime2.communication.Channel;
+import justInTime2.communication.HqOrders;
+import justInTime2.communication.Radio;
+import justInTime2.constants.Order;
+import justInTime2.navigation.BasicNav;
+import justInTime2.navigation.Bfs;
+import justInTime2.navigation.SafeBug;
+import justInTime2.util.Debug;
+import justInTime2.util.Helper;
 
 public class Launcher {
     private static RobotController rc;
@@ -27,7 +31,9 @@ public class Launcher {
         SafeBug.init(rcC);
         SupplySharing.init(rcC);
         Radio.init(rcC);
-        MessageBoard.init(rcC);
+        HqOrders.init(rcC);
+        Bfs.init(rcC);
+        BasicNav.init(rcC);
 
         loop();
     }
@@ -46,7 +52,7 @@ public class Launcher {
     private static void doYourThing() throws GameActionException {
         SupplySharing.shareOnlyWithType(RobotType.LAUNCHER);
 
-        Order order = MessageBoard.getOrder(RobotType.LAUNCHER);
+        Order order = HqOrders.getOrder(RobotType.LAUNCHER);
         switch (order) {
             case Rally:
                 rally();
@@ -77,6 +83,7 @@ public class Launcher {
     private static void attackEnemyStructure() throws GameActionException {
         MapLocation currentLocation = rc.getLocation();
 
+        //--Check supply
         if (rc.getSupplyLevel() < 600) {
             if (currentLocation.distanceSquaredTo(myHq) < MAXIMUM_DISTANCE_SQUARED_TO_GO_TO_HQ_FOR_SUPPLY) {
                 SafeBug.setDestination(myHq);
@@ -97,12 +104,33 @@ public class Launcher {
 
         //--If there are no nearby enemies, move closer
         if (enemiesInSensorRange.length == 0) {
-            MapLocation structureToAttack = Radio.readMapLocationFromChannel(Channel.STRUCTURE_TO_ATTACK);
-            SafeBug.setDestination(structureToAttack);
-            Direction direction = SafeBug.getDirection(currentLocation, structureToAttack);
+            Debug.setString(1, "no enemy", rc);
+            int poiToAttack = rc.readBroadcast(Channel.POI_TO_ATTACK);
+            MapLocation structureToAttack = Radio.readMapLocationFromChannel(Channel.POI_ABSOLUTE[poiToAttack]);
+            Direction direction = Bfs.getDirection(currentLocation, poiToAttack);
+            if (direction != Direction.NONE) {
+                direction = BasicNav.getNavigableDirectionClosestTo(direction);
+            }
+
+            //--If bfs doesn't work, use bug direction
+            if (direction == Direction.NONE) {
+                SafeBug.setDestination(structureToAttack);
+                direction = SafeBug.getDirection(currentLocation, structureToAttack);
+            }
+
+            //--Check if going here would put us un range of a different tower
+            MapLocation next = currentLocation.add(direction);
+            MapLocation enemyTower = Helper.getTowerLocationThatCanAttackLocation(next, rc.senseEnemyTowerLocations());
+
+            //--If it would, let's attack that tower
+            if (enemyTower != null) {
+                Debug.setString(2, "attacking " + enemyTower.toString() + " instead", rc);
+                structureToAttack = enemyTower;
+            }
 
             //--See if our missiles would be close enough to attack
             MapLocation missileLocation = currentLocation.add(direction);
+            Debug.setString(0, missileLocation.toString() + " " + structureToAttack.toString(), rc);
             if (missileLocation.distanceSquaredTo(structureToAttack) <= RobotType.MISSILE.sensorRadiusSquared) {
                 if (rc.canLaunch(direction)) {
                     rc.launchMissile(direction);
@@ -123,16 +151,29 @@ public class Launcher {
             for (int i = 0; i < enemiesInSensorCount; i++) {
                 if (currentLocation.distanceSquaredTo(enemiesInSensorRange[i].location) <= 5) {
                     tryMove(enemiesInSensorRange[i].location.directionTo(currentLocation));
+                    Debug.setString(1, "enemy too close", rc);
                     break;
                 }
             }
         }
 
-        //--Attack the enemies
-        MapLocation locationToAttack = enemiesInSensorRange[0].location;
-        Direction attackDirection = currentLocation.directionTo(locationToAttack);
-        if (rc.canLaunch(attackDirection)) {
-            rc.launchMissile(attackDirection);
+        //--Attack a non-missile enemy
+        int nonMissileEnemyCount = Helper.getRobotsExcludingType(enemiesInSensorRange, RobotType.MISSILE);
+        if (nonMissileEnemyCount != 0) {
+            Debug.setString(2, "enemies to attack", rc);
+            int index = 0;
+            for (int i = 0; i < enemiesInSensorRange.length; i++) {
+                if (enemiesInSensorRange[i].type != RobotType.MISSILE) {
+                    index = i;
+                    break;
+                }
+            }
+
+            MapLocation locationToAttack = enemiesInSensorRange[index].location;
+            Direction attackDirection = currentLocation.directionTo(locationToAttack);
+            if (rc.canLaunch(attackDirection)) {
+                rc.launchMissile(attackDirection);
+            }
         }
     }
 

@@ -1,9 +1,9 @@
-package justInTime;
+package justInTime2;
 
-import justInTime.constants.Building;
-import justInTime.util.Helper;
+import justInTime2.constants.Building;
+import justInTime2.util.Helper;
 import battlecode.common.*;
-import justInTime.navigation.Bug;
+import justInTime2.navigation.Bug;
 
 import java.util.Random;
 

@@ -1,4 +1,4 @@
-package justInTime.navigation;
+package justInTime2.navigation;
 
 //--Version 1.0.4
 

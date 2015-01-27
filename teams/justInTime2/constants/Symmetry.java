@@ -1,4 +1,4 @@
-package justInTime.constants;
+package justInTime2.constants;
 
 public class Symmetry {
     public static final int UNKNOWN = 0;

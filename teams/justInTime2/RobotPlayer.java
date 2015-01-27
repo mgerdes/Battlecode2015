@@ -1,4 +1,4 @@
-package justInTime;
+package justInTime2;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;

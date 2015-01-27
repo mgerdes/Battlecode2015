@@ -1,4 +1,4 @@
-package justInTime.navigation;
+package justInTime2.navigation;
 
 import battlecode.common.*;
 

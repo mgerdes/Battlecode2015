@@ -1,4 +1,4 @@
-package justInTime;
+package justInTime2;
 
 import battlecode.common.Direction;
 import battlecode.common.MapLocation;

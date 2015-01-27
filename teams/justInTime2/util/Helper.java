@@ -1,4 +1,4 @@
-package justInTime.util;
+package justInTime2.util;
 
 import battlecode.common.MapLocation;
 import battlecode.common.Direction;
@@ -25,6 +25,127 @@ public class Helper {
         }
 
         return count;
+    }
+
+    public static RobotInfo[] getRobotsCanAttackLocation(RobotInfo[] robots, MapLocation location) {
+        int allRobotCount = robots.length;
+        int attackRobotCount = 0;
+        boolean[] canAttack = new boolean[allRobotCount];
+
+        for (int i = 0; i < allRobotCount; i++) {
+            if (robots[i].location.distanceSquaredTo(location) <= robots[i].type.attackRadiusSquared) {
+                attackRobotCount++;
+                canAttack[i] = true;
+            }
+        }
+
+        RobotInfo[] robotsCanAttack = new RobotInfo[attackRobotCount];
+        int index = 0;
+        for (int i = 0; i < allRobotCount; i++) {
+            if (canAttack[i]) {
+                robotsCanAttack[index++] = robots[i];
+            }
+        }
+
+        return robotsCanAttack;
+    }
+
+    public static boolean canBeAttackedByTowers(MapLocation location, MapLocation[] towerLocations) {
+        int towerCount = towerLocations.length;
+        for (int i = 0; i < towerCount; i++) {
+            if (location.distanceSquaredTo(towerLocations[i]) <= RobotType.TOWER.attackRadiusSquared) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static boolean canBeDamagedByHq(MapLocation location, MapLocation hq, int towerCount) {
+        int attackRadiusSquared;
+        if (towerCount > 4) {
+            attackRadiusSquared = 62;
+        }
+        else if (towerCount > 1) {
+            attackRadiusSquared = 35;
+        }
+        else {
+            attackRadiusSquared = 24;
+        }
+
+        return location.distanceSquaredTo(hq) <= attackRadiusSquared;
+    }
+
+    public static Direction getDirectionAwayFrom(RobotInfo[] robots, MapLocation currentLocation) {
+        int robotCount = robots.length;
+        if (robotCount == 1) {
+            return robots[0].location.directionTo(currentLocation);
+        }
+
+        int dx = 0;
+        int dy = 0;
+        for (int i = 0; i < robotCount; i++) {
+            Direction d = robots[i].location.directionTo(currentLocation);
+            dx += d.dx;
+            dy += d.dy;
+        }
+
+        if (dx > 0) {
+            if (dy < 0) {
+                return Direction.NORTH_EAST;
+            }
+            else if (dy > 0) {
+                return Direction.SOUTH_EAST;
+            }
+            else {
+                return Direction.EAST;
+            }
+        }
+        else if (dx < 0) {
+            if (dy < 0) {
+                return Direction.NORTH_WEST;
+            }
+            else if (dy > 0) {
+                return Direction.SOUTH_WEST;
+            }
+            else {
+                return Direction.WEST;
+            }
+        }
+        else {
+            if (dy < 0) {
+                return Direction.NORTH;
+            }
+            else if (dy > 0) {
+                return Direction.SOUTH;
+            }
+        }
+
+        return Direction.NONE;
+    }
+
+    public static int getRobotsExcludingType(RobotInfo[] robots, RobotType typeToExclude) {
+        int count = 0;
+        int length = robots.length;
+        for (int i = 0; i < length; i++) {
+            if (robots[i].type != typeToExclude) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    public static MapLocation getTowerLocationThatCanAttackLocation(MapLocation location,
+                                                                    MapLocation[] towerLocations) {
+        int towerCount = towerLocations.length;
+        for (int i = 0; i < towerCount; i++) {
+            if (location.distanceSquaredTo(towerLocations[i]) <= RobotType.TOWER.attackRadiusSquared) {
+                return location;
+            }
+        }
+
+        return null;
     }
 
     public static int getRobotsOfATypeWithNoSupply(RobotInfo[] robots, RobotType type, int max) {
@@ -124,5 +245,23 @@ public class Helper {
         }
 
         return Direction.NONE;
+    }
+
+    public static int getIndexOfClosestRobot(RobotInfo[] robots, MapLocation location) {
+        int count = robots.length;
+        if (count == 1) {
+            return 0;
+        }
+
+        int smallestDistance = location.distanceSquaredTo(robots[0].location);
+        int index = 0;
+        for (int i = 1; i < count; i++) {
+            int distance = location.distanceSquaredTo(robots[i].location);
+            if (distance < smallestDistance) {
+                index = i;
+            }
+        }
+
+        return index;
     }
 }

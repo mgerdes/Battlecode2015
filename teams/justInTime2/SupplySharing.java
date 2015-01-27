@@ -1,7 +1,7 @@
-package justInTime;
+package justInTime2;
 
 import battlecode.common.*;
-import justInTime.util.Debug;
+import justInTime2.util.Debug;
 
 public class SupplySharing {
     private static RobotController rc;
@@ -91,9 +91,11 @@ public class SupplySharing {
             return;
         }
 
+        int roundNumber = Clock.getRoundNum();
         for (RobotInfo robot : teamInTransferRange) {
             if (robot.type.isBuilding
-                    || robot.type == RobotType.BEAVER) {
+                    || (roundNumber > 50
+                        && robot.type == RobotType.BEAVER)) {
                 continue;
             }
 

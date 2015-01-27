@@ -1,7 +1,7 @@
-package justInTime;
+package justInTime2;
 
 import battlecode.common.RobotController;
-import justInTime.communication.Radio;
+import justInTime2.communication.Radio;
 
 public class SupplyDepot {
     private static RobotController rc;
