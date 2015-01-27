@@ -1,6 +1,7 @@
 package team030;
 
 import team030.communication.Channel;
+import team030.communication.HqOrders;
 import team030.util.Debug;
 import team030.util.Helper;
 import battlecode.common.*;
@@ -16,7 +17,7 @@ public class Spawner {
 
         myTeam = rc.getTeam();
 
-        MessageBoard.init(rcC);
+        HqOrders.init(rcC);
 
         buildUnitData();
 
@@ -52,7 +53,7 @@ public class Spawner {
     private static void tryToSpawn() throws GameActionException {
         for (RobotType type : typesBuiltHere) {
             if (rc.getTeamOre() >= type.oreCost
-                    && MessageBoard.shouldSpawn(type)) {
+                    && HqOrders.shouldSpawn(type)) {
                 spawn(type);
                 return;
             }

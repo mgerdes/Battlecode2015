@@ -2,8 +2,11 @@ package team030;
 
 import battlecode.common.*;
 import team030.communication.Channel;
+import team030.communication.HqOrders;
 import team030.communication.Radio;
 import team030.constants.Order;
+import team030.navigation.BasicNav;
+import team030.navigation.Bfs;
 import team030.navigation.SafeBug;
 import team030.util.Helper;
 
@@ -28,7 +31,9 @@ public class Soldier {
         SafeBug.init(rcC);
         SupplySharing.init(rcC);
         Radio.init(rcC);
-        MessageBoard.init(rcC);
+        HqOrders.init(rcC);
+        BasicNav.init(rcC);
+        Bfs.init(rcC);
 
         loop();
     }
@@ -47,11 +52,14 @@ public class Soldier {
     private static void doYourThing() throws GameActionException {
         SupplySharing.share();
 
-        Order order = MessageBoard.getOrder(rc.getType());
+        Order order = HqOrders.getOrder(rc.getType());
 
         switch (order) {
             case DefendMiners:
                 defendMiners();
+                break;
+            case AttackEnemyStructure:
+                attackEnemyStructure();
                 break;
         }
     }
@@ -122,6 +130,52 @@ public class Soldier {
         Direction direction = SafeBug.getDirection(currentLocation);
         if (direction != Direction.NONE) {
             rc.move(direction);
+        }
+    }
+
+    private static void attackEnemyStructure() throws GameActionException {
+        MapLocation currentLocation = rc.getLocation();
+
+        //--Check supply
+        if (rc.getSupplyLevel() < 300) {
+            Radio.iNeedSupply();
+        }
+
+        RobotInfo[] enemiesInAttackRange = rc.senseNearbyRobots(RobotType.SOLDIER.attackRadiusSquared, enemyTeam);
+
+        //--If there are no nearby enemies, move closer
+        if (enemiesInAttackRange.length == 0) {
+            int poiToAttack = rc.readBroadcast(Channel.POI_TO_ATTACK);
+            MapLocation structureToAttack = Radio.readMapLocationFromChannel(Channel.POI_ABSOLUTE[poiToAttack]);
+            Direction direction = Bfs.getDirection(currentLocation, poiToAttack);
+            if (direction != Direction.NONE) {
+                direction = BasicNav.getNavigableDirectionClosestTo(direction);
+            }
+
+            //--If bfs doesn't work, use bug direction
+            if (direction == Direction.NONE) {
+                SafeBug.setDestination(structureToAttack);
+                direction = SafeBug.getDirection(currentLocation, structureToAttack);
+            }
+
+            //--Check if going here would put us un range of a different tower
+            MapLocation next = currentLocation.add(direction);
+            MapLocation enemyTower = Helper.getTowerLocationThatCanAttackLocation(next, rc.senseEnemyTowerLocations());
+
+            if (enemyTower == null
+                    && rc.isCoreReady()
+                    && direction != Direction.NONE) {
+                rc.move(direction);
+            }
+
+            return;
+        }
+
+        //--Attack an enemy
+        int closest = Helper.getIndexOfClosestRobot(enemiesInAttackRange, currentLocation);
+        MapLocation locationToAttack = enemiesInAttackRange[closest].location;
+        if (rc.isWeaponReady()) {
+            rc.attackLocation(locationToAttack);
         }
     }
 

@@ -91,9 +91,11 @@ public class SupplySharing {
             return;
         }
 
+        int roundNumber = Clock.getRoundNum();
         for (RobotInfo robot : teamInTransferRange) {
             if (robot.type.isBuilding
-                    || robot.type == RobotType.BEAVER) {
+                    || (roundNumber > 50
+                        && robot.type == RobotType.BEAVER)) {
                 continue;
             }
 
